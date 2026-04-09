@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Income PRO • King Blue</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+    @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+    body {
+        margin: 0; font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+        background: linear-gradient(135deg, #0a1625, #1e40af); /* default */
+        background-size: 400% 400%;
+        animation: gradientMove 30s ease infinite;
+        color: white; min-height: 100vh;
+    }
+    .container {
+        backdrop-filter: blur(40px); background: rgba(255,255,255,0.09);
+        padding: 25px; border-radius: 30px; width: 92%; max-width: 440px;
+        margin: 30px auto; border: 1px solid rgba(147,197,253,0.4);
+        box-shadow: 0 25px 50px rgba(30,64,175,0.35);
+    }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .header h1 { margin: 0; font-size: 1.7em; text-shadow: 0 4px 20px rgba(147,197,253,0.6); }
+    .gear { font-size: 30px; cursor: pointer; transition: all 0.4s; }
+    .gear:hover { transform: rotate(120deg); color: #60a5fa; }
+
+    input, select, button {
+        width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 18px;
+        font-size: 16px; box-shadow: inset 0 3px 12px rgba(0,0,0,0.2);
+    }
+    button {
+        background: linear-gradient(90deg, #1e40af, #3b82f6); color: white;
+        font-weight: bold; position: relative; overflow: hidden;
+    }
+    button:active::after {
+        content: ''; position: absolute; top: 50%; left: 50%;
+        width: 25px; height: 25px; background: rgba(255,255,255,0.7);
+        border-radius: 50%; animation: ripple 0.7s linear;
+        transform: translate(-50%, -50%);
+    }
+    button:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(59,130,246,0.7); }
+
+    .item { background: rgba(255,255,255,0.15); padding: 16px; margin: 12px 0; border-radius: 22px;
+        display: flex; justify-content: space-between; align-items: center;
+        transition: all 0.4s; animation: fadeInUp 0.5s ease backwards;
+    }
+    .item:hover { background: rgba(147,197,253,0.25); transform: translateX(12px); }
+
+    #totals { text-align: center; font-size: 1.5em; margin: 20px 0; padding: 18px;
+        background: rgba(255,255,255,0.1); border-radius: 20px; }
+    canvas { border-radius: 22px; background: rgba(255,255,255,0.08); padding: 15px; margin: 20px 0; }
+
+    .modal {
+        display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(10,22,37,0.95); z-index: 999; align-items: center; justify-content: center;
+    }
+    .modal-content {
+        background: rgba(255,255,255,0.1); backdrop-filter: blur(30px);
+        padding: 30px; border-radius: 28px; width: 90%; max-width: 420px;
+        border: 1px solid rgba(147,197,253,0.4); max-height: 90vh; overflow-y: auto;
+    }
+    .theme-preview {
+        width: 100%; height: 80px; border-radius: 16px; margin: 8px 0;
+        background-size: 400% 400%; animation: gradientMove 8s ease infinite;
+        cursor: pointer; border: 3px solid rgba(255,255,255,0.3);
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💎 Income PRO</h1>
+        <span class="gear" onclick="openSettings()">⚙️</span>
+    </div>
+
+    <div id="loginScreen">
+        <h2>🔐 تسجيل الدخول</h2>
+        <input id="email" placeholder="البريد الإلكتروني" type="email">
+        <input id="password" type="password" placeholder="كلمة المرور">
+        <button onclick="login()">دخول / إنشاء حساب</button>
+    </div>
+
+    <div id="mainScreen" style="display:none;">
+        <div id="userInfo" style="text-align:center; margin-bottom:15px; font-size:1.1em;">
+            مرحباً، <span id="userEmail" style="color:#60a5fa;"></span>
+        </div>
+
+        <h2>💰 الإيرادات</h2>
+        <input type="number" id="amount" placeholder="المبلغ">
+        <select id="currency">
+            <option value="usd">دولار أمريكي $</option>
+            <option value="syp">ليرة سورية ل.س</option>
+        </select>
+        <input type="number" id="rate" placeholder="سعر الصرف" value="1">
+        <select id="category">
+            <option value="">اختر الفئة</option>
+            <option value="راتب">راتب</option>
+            <option value="مشروع">مشروع</option>
+            <option value="استثمار">استثمار</option>
+            <option value="هدية">هدية</option>
+            <option value="اخرى">أخرى</option>
+        </select>
+        <input type="text" id="note" placeholder="ملاحظات">
+        <input type="date" id="entryDate">
+
+        <select id="filter" onchange="render()">
+            <option value="all">الكل</option>
+            <option value="day">اليوم</option>
+            <option value="month">هذا الشهر</option>
+        </select>
+        <input type="text" id="search" placeholder="🔍 بحث..." oninput="render()">
+
+        <button onclick="add()" id="addBtn">إضافة إيراد</button>
+
+        <h3 id="totals"></h3>
+        <div id="goalProgress" style="margin:15px 0; text-align:center;">
+            <small>تقدم الهدف الشهري</small>
+            <div style="background:rgba(255,255,255,0.2); height:12px; border-radius:10px; overflow:hidden;">
+                <div id="progressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#60a5fa,#a5f3fc);"></div>
+            </div>
+            <small id="goalText"></small>
+        </div>
+
+        <div id="list"></div>
+        <canvas id="chart"></canvas>
+
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button onclick="pdf()" style="flex:1;">📄 تقرير PDF ملكي</button>
+            <button onclick="backup()" style="flex:1;">💾 Backup</button>
+        </div>
+    </div>
+</div>
+
+<!-- إعدادات فخمة -->
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <h2>⚙️ الإعدادات</h2>
+
+        <!-- اختيار الخلفيات -->
+        <label>اختر الخلفية (متحركة وزجاجية)</label>
+        <div id="themesContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+
+        <label>الهدف الشهري (دولار)</label>
+        <input type="number" id="monthlyGoal" value="2000">
+        <label>سعر الصرف الافتراضي</label>
+        <input type="number" id="defaultRate" value="1">
+        <label>العملة الافتراضية</label>
+        <select id="defaultCurrency">
+            <option value="usd">دولار</option>
+            <option value="syp">ليرة سورية</option>
+        </select>
+
+        <h3>🗑️ سلة المحذوفات</h3>
+        <div id="trashList" style="max-height:200px; overflow-y:auto; background:rgba(255,255,255,0.1); padding:10px; border-radius:16px;"></div>
+
+        <button onclick="saveSettings()" style="background:#10b981; margin-top:15px;">حفظ الإعدادات</button>
+        <button onclick="exportCSV()" style="margin-top:8px;">📤 تصدير CSV</button>
+        <button onclick="clearAllData()" style="background:#ef4444; margin-top:8px;">🗑️ حذف كل البيانات</button>
+        <button onclick="clearTrash()" style="background:#64748b; margin-top:8px;">حذف سلة المحذوفات نهائياً</button>
+        <button onclick="logout()" style="background:#64748b; margin-top:15px;">تسجيل خروج</button>
+        <button onclick="closeSettings()" style="background:transparent; border:1px solid #fff; margin-top:10px;">إغلاق</button>
+        <p style="text-align:center; margin-top:20px; opacity:0.7;">Income PRO v2.1 • King Edition</p>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyACPVxprQrys1w-6Re_75UFISJ3Nm8r-D0", authDomain: "income-app-e6b07.firebaseapp.com", projectId: "income-app-e6b07" };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
+
+let currentUser = null;
+let allData = [];
+let trashData = JSON.parse(localStorage.getItem('trashData')) || [];
+let currentEditId = null;
+let chartInstance = null;
+let monthlyGoal = 2000;
+
+const themes = [
+    {name:"Blue King", color:"linear-gradient(135deg, #0a1625, #1e40af)"},
+    {name:"Teal Luxury", color:"linear-gradient(135deg, #134e4a, #2dd4bf)"},
+    {name:"Navy Calm", color:"linear-gradient(135deg, #1e2937, #64748b)"},
+    {name:"Indigo Glow", color:"linear-gradient(135deg, #1e1b4b, #6366f1)"},
+    {name:"Ocean Deep", color:"linear-gradient(135deg, #0c4a6e, #22d3ee)"}
+];
+
+function applyTheme(themeColor) {
+    document.body.style.background = themeColor;
+    document.body.style.backgroundSize = "400% 400%";
+    document.body.style.animation = "gradientMove 30s ease infinite";
+    localStorage.setItem('selectedTheme', themeColor);
+}
+
+const loginScreen = document.getElementById('loginScreen');
+const mainScreen = document.getElementById('mainScreen');
+const userEmailEl = document.getElementById('userEmail');
+const amountInput = document.getElementById('amount');
+const currencySelect = document.getElementById('currency');
+const rateInput = document.getElementById('rate');
+const categorySelect = document.getElementById('category');
+const noteInput = document.getElementById('note');
+const entryDateInput = document.getElementById('entryDate');
+const filterSelect = document.getElementById('filter');
+const searchInput = document.getElementById('search');
+const listEl = document.getElementById('list');
+const totalsEl = document.getElementById('totals');
+const chartEl = document.getElementById('chart');
+const addBtn = document.getElementById('addBtn');
+const progressBar = document.getElementById('progressBar');
+const goalText = document.getElementById('goalText');
+
+window.login = async function() {
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('password').value.trim();
+    if (!email || !pass) return alert("❌ يرجى ملء الحقول");
+    try {
+        let userCred = await signInWithEmailAndPassword(auth, email, pass);
+        currentUser = userCred.user;
+    } catch {
+        let userCred = await createUserWithEmailAndPassword(auth, email, pass);
+        currentUser = userCred.user;
+    }
+    loginScreen.style.display = 'none';
+    mainScreen.style.display = 'block';
+    userEmailEl.textContent = currentUser.email;
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme) applyTheme(savedTheme);
+    load();
+};
+
+window.add = async function() {
+    if (!currentUser) return;
+    const amount = Number(amountInput.value);
+    if (!amount || amount <= 0) return alert("أدخل مبلغ صحيح");
+    const currency = currencySelect.value;
+    const rate = Number(rateInput.value) || 1;
+    const usd = currency === "usd" ? amount : amount / rate;
+    const syp = currency === "syp" ? amount : amount * rate;
+
+    const data = {
+        usd: Number(usd.toFixed(2)), syp: Number(syp.toFixed(0)),
+        category: categorySelect.value || "اخرى",
+        note: noteInput.value.trim(),
+        uid: currentUser.uid,
+        date: entryDateInput.value ? new Date(entryDateInput.value).toISOString() : new Date().toISOString()
+    };
+
+    if (currentEditId) {
+        await updateDoc(doc(db, "income", currentEditId), data); // updateDoc imported but not used before - now fixed
+        currentEditId = null;
+        addBtn.innerText = "إضافة إيراد";
+    } else {
+        await addDoc(collection(db, "income"), data);
+    }
+    amountInput.value = noteInput.value = entryDateInput.value = '';
+    load();
+};
+
+async function load() {
+    const snap = await getDocs(collection(db, "income"));
+    allData = [];
+    snap.forEach(d => {
+        const data = d.data();
+        if (data.uid === currentUser.uid) allData.push({...data, id: d.id});
+    });
+    allData.sort((a,b) => new Date(b.date) - new Date(a.date));
+    render();
+}
+
+function render() {
+    let listHTML = "";
+    let totalUSD = 0, totalSYP = 0;
+    const filter = filterSelect.value;
+    const today = new Date().toDateString();
+    const month = new Date().getMonth();
+    const searchTerm = searchInput.value.toLowerCase().trim();
+
+    const filtered = allData.filter(d => {
+        const dDate = new Date(d.date);
+        if (filter === "day" && dDate.toDateString() !== today) return false;
+        if (filter === "month" && dDate.getMonth() !== month) return false;
+        if (searchTerm) return (d.category || "").toLowerCase().includes(searchTerm) || (d.note || "").toLowerCase().includes(searchTerm);
+        return true;
+    });
+
+    filtered.forEach((d, i) => {
+        totalUSD += d.usd || 0;
+        totalSYP += d.syp || 0;
+        const dateFormatted = new Date(d.date).toLocaleDateString('ar-SY', {year:'numeric', month:'short', day:'numeric'});
+        listHTML += `
+        <div class="item" style="animation-delay: ${i*40}ms">
+            <div>
+                <strong>${d.category}</strong> — ${dateFormatted}<br>
+                <small>${d.note || ''}</small><br>
+                <span style="color:#60a5fa;">${d.usd.toFixed(2)}$</span> | <span style="color:#a5f3fc;">${d.syp.toFixed(0)} ل.س</span>
+            </div>
+            <div>
+                <button onclick="editItem('${d.id}')" style="background:#60a5fa; padding:8px 14px; border-radius:12px; margin-left:6px;">✏️</button>
+                <button onclick="del('${d.id}')" style="background:#ef4444; padding:8px 14px; border-radius:12px;">❌</button>
+            </div>
+        </div>`;
+    });
+
+    listEl.innerHTML = listHTML || '<p style="text-align:center;opacity:0.7;padding:40px 20px;">ابدأ بإضافة إيراداتك ✨</p>';
+    totalsEl.innerHTML = `الإجمالي: <strong>$${totalUSD.toFixed(2)}</strong> | <strong>ل.س ${totalSYP.toFixed(0)}</strong><br><small>${filtered.length} إدخال • متوسط: $${(filtered.length ? (totalUSD/filtered.length).toFixed(0) : 0)}</small>`;
+
+    const monthTotal = totalUSD;
+    const progress = Math.min((monthTotal / monthlyGoal) * 100, 100);
+    progressBar.style.width = `${progress}%`;
+    goalText.innerHTML = `${monthTotal.toFixed(0)} / ${monthlyGoal} دولار`;
+    drawChart(totalUSD, totalSYP);
+}
+
+window.editItem = function(id) {
+    const item = allData.find(d => d.id === id);
+    if (!item) return;
+    currentEditId = id;
+    addBtn.innerText = "تحديث";
+    amountInput.value = item.usd;
+    currencySelect.value = "usd";
+    rateInput.value = 1;
+    categorySelect.value = item.category;
+    noteInput.value = item.note || "";
+    entryDateInput.value = new Date(item.date).toISOString().split('T')[0];
+};
+
+window.del = async function(id) {
+    if (!confirm("🗑️ نقل إلى سلة المحذوفات؟")) return;
+    const item = allData.find(d => d.id === id);
+    if (item) {
+        trashData.unshift({...item, deletedAt: new Date().toISOString()});
+        localStorage.setItem('trashData', JSON.stringify(trashData));
+        await deleteDoc(doc(db, "income", id));
+        allData = allData.filter(d => d.id !== id);
+        render();
+    }
+};
+
+function drawChart(usd, syp) {
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(chartEl, {
+        type: "bar",
+        data: { labels: ["USD", "SYP"], datasets: [{ data: [usd, syp], backgroundColor: ["#1e40af", "#3b82f6"], borderColor: "#fff", borderWidth: 4 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: "rgba(255,255,255,0.15)" }, ticks: { color: "#fff" } }, x: { grid: { color: "rgba(255,255,255,0.15)" }, ticks: { color: "#fff" } } } }
+    });
+}
+
+window.pdf = function() {
+    if (!allData.length) return alert("لا توجد بيانات");
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    doc.setFillColor(10, 22, 37);
+    doc.rect(0, 0, 210, 45, 'F');
+    doc.setTextColor(96, 165, 250);
+    doc.setFontSize(32);
+    doc.text("Income PRO", 105, 28, { align: "center" });
+    doc.setFontSize(18);
+    doc.setTextColor(255,255,255);
+    doc.text("تقرير الإيرادات الملكي", 105, 40, { align: "center" });
+    doc.setTextColor(0);
+    doc.setFontSize(12);
+    doc.text(`التاريخ: ${new Date().toLocaleDateString('ar-SA')}`, 15, 60);
+    doc.text(`المستخدم: ${currentUser.email}`, 15, 68);
+    let y = 85;
+    doc.setFillColor(30, 64, 175);
+    doc.rect(10, y-8, 190, 15, 'F');
+    doc.setTextColor(255);
+    doc.text("التاريخ", 18, y+4);
+    doc.text("الفئة", 65, y+4);
+    doc.text("الملاحظات", 115, y+4);
+    doc.text("USD", 155, y+4);
+    doc.text("ل.س", 185, y+4);
+    y += 20;
+    let totalUSD = 0, totalSYP = 0;
+    allData.forEach(d => {
+        if (y > 260) { doc.addPage(); y = 30; }
+        const dateFormatted = new Date(d.date).toLocaleDateString('ar-SA');
+        doc.setTextColor(0);
+        doc.text(dateFormatted, 18, y);
+        doc.text(d.category || '-', 65, y);
+        doc.text((d.note || '-').substring(0,18), 115, y);
+        doc.text(d.usd.toFixed(2), 155, y);
+        doc.text(d.syp.toFixed(0), 185, y);
+        totalUSD += d.usd || 0;
+        totalSYP += d.syp || 0;
+        y += 12;
+    });
+    y += 10;
+    doc.setFillColor(234, 179, 8);
+    doc.rect(10, y, 190, 22, 'F');
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(18);
+    doc.text(`الإجمالي النهائي: $${totalUSD.toFixed(2)} | ل.س ${totalSYP.toFixed(0)}`, 105, y + 15, { align: "center" });
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text("Income PRO • King Edition • © 2026", 105, 290, { align: "center" });
+    doc.save("تقرير_Income_PRO_ملكي.pdf");
+};
+
+window.openSettings = function() {
+    const container = document.getElementById('themesContainer');
+    container.innerHTML = '';
+    themes.forEach(t => {
+        const div = document.createElement('div');
+        div.innerHTML = `<div class="theme-preview" style="background:${t.color};" onclick="applyTheme('${t.color}');"></div><small style="display:block;text-align:center;">${t.name}</small>`;
+        container.appendChild(div);
+    });
+    document.getElementById('monthlyGoal').value = monthlyGoal;
+    document.getElementById('settingsModal').style.display = 'flex';
+    renderTrash();
+};
+
+function renderTrash() {
+    const trashEl = document.getElementById('trashList');
+    let html = '';
+    trashData.forEach((item, i) => {
+        html += `
+        <div style="background:rgba(255,255,255,0.15); padding:10px; margin:6px 0; border-radius:12px; display:flex; justify-content:space-between;">
+            <div>
+                <strong>${item.category}</strong> — ${item.usd.toFixed(2)}$<br>
+                <small>${new Date(item.deletedAt).toLocaleDateString('ar-SY')}</small>
+            </div>
+            <div>
+                <button onclick="restoreFromTrash(${i});" style="background:#10b981; padding:4px 10px; border-radius:8px;">استرجاع</button>
+                <button onclick="permanentDeleteTrash(${i});" style="background:#ef4444; padding:4px 10px; border-radius:8px;">🗑️</button>
+            </div>
+        </div>`;
+    });
+    trashEl.innerHTML = html || '<p style="text-align:center;opacity:0.6;">سلة المحذوفات فارغة</p>';
+}
+
+window.restoreFromTrash = async function(i) {
+    const item = trashData[i];
+    await addDoc(collection(db, "income"), {...item, uid: currentUser.uid});
+    trashData.splice(i, 1);
+    localStorage.setItem('trashData', JSON.stringify(trashData));
+    renderTrash();
+    load();
+};
+
+window.permanentDeleteTrash = function(i) {
+    if (confirm("حذف نهائي من السلة؟")) {
+        trashData.splice(i, 1);
+        localStorage.setItem('trashData', JSON.stringify(trashData));
+        renderTrash();
+    }
+};
+
+window.clearTrash = function() {
+    if (confirm("حذف كل سلة المحذوفات نهائياً؟")) {
+        trashData = [];
+        localStorage.setItem('trashData', JSON.stringify(trashData));
+        renderTrash();
+    }
+};
+
+window.saveSettings = function() {
+    monthlyGoal = Number(document.getElementById('monthlyGoal').value) || 2000;
+    closeSettings();
+    render();
+    alert("✅ تم حفظ الإعدادات بنجاح");
+};
+
+window.closeSettings = function() {
+    document.getElementById('settingsModal').style.display = 'none';
+};
+
+window.exportCSV = function() {
+    let csv = "التاريخ,الفئة,الملاحظات,USD,ل.س\n";
+    allData.forEach(d => {
+        const date = new Date(d.date).toLocaleDateString('ar-SA');
+        csv += `${date},${d.category || ''},${d.note || ''},${d.usd},${d.syp}\n`;
+    });
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "income_report.csv";
+    a.click();
+};
+
+window.backup = function() {
+    const blob = new Blob([JSON.stringify(allData, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "income_backup.json";
+    a.click();
+};
+
+window.clearAllData = async function() {
+    if (confirm("⚠️ حذف كل الإيرادات نهائياً؟")) {
+        const snap = await getDocs(collection(db, "income"));
+        for (let d of snap.docs) {
+            if (d.data().uid === currentUser.uid) await deleteDoc(d.ref);
+        }
+        allData = [];
+        render();
+        closeSettings();
+    }
+};
+
+window.logout = async function() {
+    if (confirm("تسجيل الخروج؟")) {
+        await signOut(auth);
+        location.reload();
+    }
+};
+</script>
+</body>
+</html>
