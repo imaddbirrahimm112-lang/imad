@@ -1,0 +1,840 @@
+import { useState, useEffect, useRef } from “react”;
+
+// ─── Glassmorphism Backgrounds ────────────────────────────────────────────────
+const GlassBackground1 = () => (
+
+  <div style={{ position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)" }}>
+    {[...Array(6)].map((_, i) => (
+      <div key={i} style={{
+        position: "absolute",
+        borderRadius: "50%",
+        background: `radial-gradient(circle, ${["#a78bfa44","#818cf844","#38bdf844","#34d39944","#f472b644","#fb923c44"][i]} 0%, transparent 70%)`,
+        width: `${[600,400,500,350,450,300][i]}px`,
+        height: `${[600,400,500,350,450,300][i]}px`,
+        top: `${["-10%","60%","30%","80%","-5%","40%"][i]}`,
+        left: `${["20%","70%","-5%","10%","60%","85%"][i]}`,
+        animation: `float${i} ${[8,10,12,9,11,7][i]}s ease-in-out infinite`,
+        filter: "blur(60px)",
+      }} />
+    ))}
+    <style>{`
+      @keyframes float0{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-40px) scale(1.1)}}
+      @keyframes float1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-40px,30px) scale(0.9)}}
+      @keyframes float2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(50px,20px) scale(1.05)}}
+      @keyframes float3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20px,-50px) scale(1.1)}}
+      @keyframes float4{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,40px) scale(0.95)}}
+      @keyframes float5{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,20px) scale(1.08)}}
+    `}</style>
+  </div>
+);
+
+const GlassBackground2 = () => (
+
+  <div style={{ position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", background: "linear-gradient(160deg, #0a0a1a 0%, #1a0a2e 50%, #0d1b2a 100%)" }}>
+    {[...Array(8)].map((_, i) => (
+      <div key={i} style={{
+        position: "absolute",
+        width: `${[2,3,2,4,2,3,2,3][i]}px`,
+        height: `${[2,3,2,4,2,3,2,3][i]}px`,
+        borderRadius: "50%",
+        background: "#fff",
+        top: `${[10,25,50,70,85,15,40,65][i]}%`,
+        left: `${[15,45,80,20,60,90,35,75][i]}%`,
+        animation: `twinkle${i} ${[2,3,2.5,4,3.5,2,4.5,3][i]}s ease-in-out infinite`,
+        opacity: 0.7,
+      }} />
+    ))}
+    <div style={{
+      position: "absolute", bottom: "-100px", left: "50%", transform: "translateX(-50%)",
+      width: "800px", height: "400px",
+      background: "linear-gradient(to top, #7c3aed33, transparent)",
+      borderRadius: "50% 50% 0 0",
+      filter: "blur(40px)",
+    }} />
+    <style>{`
+      @keyframes twinkle0{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:.2;transform:scale(0.5)}}
+      @keyframes twinkle1{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.5)}}
+      @keyframes twinkle2{0%,100%{opacity:.8;transform:scale(1)}50%{opacity:.3;transform:scale(0.7)}}
+      @keyframes twinkle3{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:.9;transform:scale(1.3)}}
+      @keyframes twinkle4{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:.1;transform:scale(0.8)}}
+      @keyframes twinkle5{0%,100%{opacity:.9;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+      @keyframes twinkle6{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.8;transform:scale(0.6)}}
+      @keyframes twinkle7{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:.2;transform:scale(1.2)}}
+    `}</style>
+  </div>
+);
+
+const GlassBackground3 = () => (
+
+  <div style={{ position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", background: "#030712" }}>
+    <div style={{
+      position: "absolute", inset: 0,
+      backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+      backgroundSize: "50px 50px",
+    }} />
+    {[...Array(4)].map((_, i) => (
+      <div key={i} style={{
+        position: "absolute",
+        width: `${[300,200,250,180][i]}px`,
+        height: `${[300,200,250,180][i]}px`,
+        border: `1px solid ${["#a78bfa22","#38bdf822","#34d39922","#f472b622"][i]}`,
+        borderRadius: "50%",
+        top: `${[20,60,10,75][i]}%`,
+        left: `${[10,70,55,25][i]}%`,
+        animation: `spin${i} ${[20,15,25,18][i]}s linear infinite`,
+      }} />
+    ))}
+    <div style={{
+      position: "absolute", top: "30%", left: "40%", transform: "translate(-50%,-50%)",
+      width: "600px", height: "600px",
+      background: "radial-gradient(circle, #7c3aed11, transparent 70%)",
+      animation: "pulse 4s ease-in-out infinite",
+    }} />
+    <style>{`
+      @keyframes spin0{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+      @keyframes spin1{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+      @keyframes spin2{from{transform:rotate(0deg) scale(1)}to{transform:rotate(360deg) scale(1.1)}}
+      @keyframes spin3{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+      @keyframes pulse{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}}
+    `}</style>
+  </div>
+);
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+const monthlyData = [
+{ month: “يناير”, revenue: 45000, expenses: 28000, profit: 17000 },
+{ month: “فبراير”, revenue: 52000, expenses: 31000, profit: 21000 },
+{ month: “مارس”, revenue: 48000, expenses: 29000, profit: 19000 },
+{ month: “أبريل”, revenue: 61000, expenses: 35000, profit: 26000 },
+{ month: “مايو”, revenue: 55000, expenses: 32000, profit: 23000 },
+{ month: “يونيو”, revenue: 67000, expenses: 38000, profit: 29000 },
+];
+
+const topProducts = [
+{ name: “المنتج الأول”, sales: 1240, revenue: 62000, growth: 12.5 },
+{ name: “المنتج الثاني”, sales: 980, revenue: 49000, growth: 8.3 },
+{ name: “المنتج الثالث”, sales: 756, revenue: 37800, growth: -2.1 },
+{ name: “المنتج الرابع”, sales: 654, revenue: 32700, growth: 15.7 },
+];
+
+const transactions = [
+{ id: “#TRX-001”, client: “شركة النور”, amount: 12500, status: “مكتمل”, date: “2024-06-10” },
+{ id: “#TRX-002”, client: “مؤسسة الفجر”, amount: 8300, status: “معلق”, date: “2024-06-09” },
+{ id: “#TRX-003”, client: “شركة الأمل”, amount: 15700, status: “مكتمل”, date: “2024-06-08” },
+{ id: “#TRX-004”, client: “مجموعة الرياض”, amount: 6200, status: “ملغي”, date: “2024-06-07” },
+];
+
+// ─── Styles ────────────────────────────────────────────────────────────────────
+const glass = (opacity = 0.1) => ({
+background: `rgba(255,255,255,${opacity})`,
+backdropFilter: “blur(20px)”,
+WebkitBackdropFilter: “blur(20px)”,
+border: “1px solid rgba(255,255,255,0.15)”,
+borderRadius: “16px”,
+});
+
+// ─── MiniChart ────────────────────────────────────────────────────────────────
+const MiniChart = ({ data, color }) => {
+const max = Math.max(…data);
+const points = data.map((v, i) => `${(i / (data.length - 1)) * 200},${80 - (v / max) * 70}`).join(” “);
+return (
+<svg width="200" height="80" viewBox="0 0 200 80">
+<defs>
+<linearGradient id={`g-${color}`} x1=“0” x2=“0” y1=“0” y2=“1”>
+<stop offset="0%" stopColor={color} stopOpacity="0.4" />
+<stop offset="100%" stopColor={color} stopOpacity="0" />
+</linearGradient>
+</defs>
+<polygon points={`0,80 ${points} 200,80`} fill={`url(#g-${color})`} />
+<polyline points={points} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+</svg>
+);
+};
+
+// ─── BarChart ─────────────────────────────────────────────────────────────────
+const BarChart = ({ data }) => {
+const max = Math.max(…data.map(d => d.revenue));
+return (
+<div style={{ display: “flex”, alignItems: “flex-end”, gap: “12px”, height: “160px”, padding: “0 8px” }}>
+{data.map((d, i) => (
+<div key={i} style={{ flex: 1, display: “flex”, flexDirection: “column”, alignItems: “center”, gap: “6px” }}>
+<div style={{ display: “flex”, gap: “4px”, alignItems: “flex-end”, height: “130px” }}>
+<div style={{
+width: “14px”, borderRadius: “6px 6px 0 0”,
+height: `${(d.revenue / max) * 120}px`,
+background: “linear-gradient(to top, #7c3aed, #a78bfa)”,
+transition: “height 0.8s ease”,
+}} />
+<div style={{
+width: “14px”, borderRadius: “6px 6px 0 0”,
+height: `${(d.profit / max) * 120}px`,
+background: “linear-gradient(to top, #059669, #34d399)”,
+transition: “height 0.8s ease”,
+}} />
+</div>
+<span style={{ fontSize: “10px”, color: “rgba(255,255,255,0.5)” }}>{d.month.slice(0, 3)}</span>
+</div>
+))}
+</div>
+);
+};
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+export default function App() {
+const [screen, setScreen] = useState(“login”);
+const [activePage, setActivePage] = useState(“dashboard”);
+const [settingsTab, setSettingsTab] = useState(“profile”);
+const [selectedBg, setSelectedBg] = useState(0);
+const [notification, setNotification] = useState(””);
+const [loginForm, setLoginForm] = useState({ email: “”, password: “”, remember: false });
+const [loginError, setLoginError] = useState(””);
+const [profile, setProfile] = useState({
+name: “أحمد محمد”,
+email: “ahmed@company.com”,
+phone: “+966 50 123 4567”,
+role: “مدير المالية”,
+company: “شركة الأفق”,
+bio: “مدير مالي محترف مع خبرة 10 سنوات في إدارة الإيرادات.”,
+avatar: “أم”,
+notifications: true,
+twoFactor: false,
+language: “ar”,
+currency: “SAR”,
+theme: “dark”,
+});
+const [editProfile, setEditProfile] = useState({ …profile });
+const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+const bgs = [GlassBackground1, GlassBackground2, GlassBackground3];
+const BgComponent = bgs[selectedBg];
+
+const bgNames = [“موجات الضوء”, “سماء الليل”, “شبكة الكون”];
+const bgPreviews = [
+“linear-gradient(135deg, #0f0c29, #302b63, #24243e)”,
+“linear-gradient(160deg, #0a0a1a, #1a0a2e, #0d1b2a)”,
+“linear-gradient(135deg, #030712, #1a0a2e)”,
+];
+
+function handleLogin(e) {
+e.preventDefault();
+if (!loginForm.email || !loginForm.password) {
+setLoginError(“يرجى إدخال البريد الإلكتروني وكلمة المرور”);
+return;
+}
+if (loginForm.password.length < 4) {
+setLoginError(“كلمة المرور غير صحيحة”);
+return;
+}
+setScreen(“app”);
+}
+
+function showNotif(msg) {
+setNotification(msg);
+setTimeout(() => setNotification(””), 3000);
+}
+
+function saveProfile() {
+setProfile({ …editProfile });
+showNotif(“✅ تم حفظ التغييرات بنجاح”);
+}
+
+const totalRevenue = monthlyData.reduce((s, d) => s + d.revenue, 0);
+const totalProfit = monthlyData.reduce((s, d) => s + d.profit, 0);
+const totalExpenses = monthlyData.reduce((s, d) => s + d.expenses, 0);
+
+const sidebarItems = [
+{ id: “dashboard”, icon: “⊞”, label: “لوحة التحكم” },
+{ id: “revenue”, icon: “📈”, label: “الإيرادات” },
+{ id: “transactions”, icon: “💳”, label: “المعاملات” },
+{ id: “products”, icon: “📦”, label: “المنتجات” },
+{ id: “reports”, icon: “📊”, label: “التقارير” },
+{ id: “settings”, icon: “⚙️”, label: “الإعدادات” },
+];
+
+// ── LOGIN ──────────────────────────────────────────────────────────────────
+if (screen === “login”) return (
+<div dir=“rtl” style={{ fontFamily: “‘Segoe UI’, Tahoma, Arial, sans-serif”, minHeight: “100vh”, display: “flex”, alignItems: “center”, justifyContent: “center” }}>
+<BgComponent />
+<div style={{ position: “relative”, zIndex: 1, width: “420px”, padding: “48px 40px”, …glass(0.12) }}>
+{/* Logo */}
+<div style={{ textAlign: “center”, marginBottom: “36px” }}>
+<div style={{
+width: “64px”, height: “64px”, borderRadius: “18px”,
+background: “linear-gradient(135deg, #7c3aed, #a78bfa)”,
+display: “inline-flex”, alignItems: “center”, justifyContent: “center”,
+fontSize: “28px”, marginBottom: “16px”,
+boxShadow: “0 8px 32px #7c3aed66”,
+}}>📊</div>
+<h1 style={{ color: “#fff”, fontSize: “24px”, margin: “0 0 6px”, fontWeight: 700 }}>لوحة الإيرادات</h1>
+<p style={{ color: “rgba(255,255,255,0.5)”, fontSize: “14px”, margin: 0 }}>سجّل دخولك للمتابعة</p>
+</div>
+
+```
+    {loginError && (
+      <div style={{ background: "#ef444422", border: "1px solid #ef4444", borderRadius: "10px", padding: "12px 16px", color: "#fca5a5", fontSize: "14px", marginBottom: "20px", textAlign: "center" }}>
+        {loginError}
+      </div>
+    )}
+
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div>
+        <label style={{ display: "block", color: "rgba(255,255,255,0.7)", fontSize: "13px", marginBottom: "8px", fontWeight: 500 }}>البريد الإلكتروني</label>
+        <input
+          type="email" placeholder="example@company.com"
+          value={loginForm.email}
+          onChange={e => setLoginForm(p => ({ ...p, email: e.target.value }))}
+          style={{ width: "100%", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "10px", padding: "12px 16px", color: "#fff", fontSize: "14px", outline: "none", boxSizing: "border-box", direction: "ltr", textAlign: "right" }}
+        />
+      </div>
+      <div>
+        <label style={{ display: "block", color: "rgba(255,255,255,0.7)", fontSize: "13px", marginBottom: "8px", fontWeight: 500 }}>كلمة المرور</label>
+        <input
+          type="password" placeholder="••••••••"
+          value={loginForm.password}
+          onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))}
+          onKeyDown={e => e.key === "Enter" && handleLogin(e)}
+          style={{ width: "100%", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "10px", padding: "12px 16px", color: "#fff", fontSize: "14px", outline: "none", boxSizing: "border-box", direction: "ltr", textAlign: "right" }}
+        />
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", color: "rgba(255,255,255,0.6)", fontSize: "13px", cursor: "pointer" }}>
+          <input type="checkbox" checked={loginForm.remember} onChange={e => setLoginForm(p => ({ ...p, remember: e.target.checked }))} />
+          تذكرني
+        </label>
+        <span style={{ color: "#a78bfa", fontSize: "13px", cursor: "pointer" }}>نسيت كلمة المرور؟</span>
+      </div>
+      <button
+        onClick={handleLogin}
+        style={{ background: "linear-gradient(135deg, #7c3aed, #a78bfa)", border: "none", borderRadius: "10px", padding: "14px", color: "#fff", fontSize: "15px", fontWeight: 700, cursor: "pointer", width: "100%", marginTop: "8px", boxShadow: "0 4px 24px #7c3aed55", transition: "transform 0.2s" }}
+        onMouseEnter={e => e.target.style.transform = "translateY(-2px)"}
+        onMouseLeave={e => e.target.style.transform = "translateY(0)"}
+      >
+        تسجيل الدخول
+      </button>
+    </div>
+
+    <div style={{ textAlign: "center", marginTop: "24px", color: "rgba(255,255,255,0.4)", fontSize: "12px" }}>
+      ليس لديك حساب؟ <span style={{ color: "#a78bfa", cursor: "pointer" }}>تواصل مع المسؤول</span>
+    </div>
+  </div>
+
+  <style>{`input::placeholder{color:rgba(255,255,255,0.3)!important}`}</style>
+</div>
+```
+
+);
+
+// ── MAIN APP ───────────────────────────────────────────────────────────────
+return (
+<div dir=“rtl” style={{ fontFamily: “‘Segoe UI’, Tahoma, Arial, sans-serif”, minHeight: “100vh”, display: “flex”, color: “#fff”, position: “relative” }}>
+<BgComponent />
+
+```
+  {/* Notification Toast */}
+  {notification && (
+    <div style={{ position: "fixed", top: "24px", left: "50%", transform: "translateX(-50%)", zIndex: 9999, background: "rgba(5,150,105,0.9)", backdropFilter: "blur(12px)", borderRadius: "12px", padding: "12px 24px", color: "#fff", fontSize: "14px", fontWeight: 600, boxShadow: "0 8px 32px #05966955" }}>
+      {notification}
+    </div>
+  )}
+
+  {/* Sidebar */}
+  <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, width: "240px", zIndex: 100, ...glass(0.08), borderRadius: "0", borderRight: "none", borderTop: "none", borderBottom: "none", display: "flex", flexDirection: "column" }}>
+    {/* Logo */}
+    <div style={{ padding: "24px 20px", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg, #7c3aed, #a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>📊</div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: "15px" }}>لوحة الإيرادات</div>
+          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>إصدار 2.0</div>
+        </div>
+      </div>
+    </div>
+
+    {/* Nav */}
+    <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: "4px" }}>
+      {sidebarItems.map(item => (
+        <button key={item.id} onClick={() => setActivePage(item.id)} style={{
+          display: "flex", alignItems: "center", gap: "12px", padding: "11px 14px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: activePage === item.id ? 600 : 400, width: "100%", textAlign: "right", transition: "all 0.2s",
+          background: activePage === item.id ? "linear-gradient(135deg, #7c3aed33, #a78bfa22)" : "transparent",
+          color: activePage === item.id ? "#a78bfa" : "rgba(255,255,255,0.6)",
+          borderRight: activePage === item.id ? "3px solid #a78bfa" : "3px solid transparent",
+        }}>
+          <span>{item.icon}</span>
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </nav>
+
+    {/* User */}
+    <div style={{ padding: "16px 12px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.05)", cursor: "pointer" }} onClick={() => { setActivePage("settings"); setSettingsTab("profile"); }}>
+        <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "linear-gradient(135deg, #7c3aed, #a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700 }}>{profile.name.slice(0, 2)}</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: "13px", fontWeight: 600 }}>{profile.name}</div>
+          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>{profile.role}</div>
+        </div>
+        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px" }}>⚙️</span>
+      </div>
+      <button onClick={() => setScreen("login")} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", border: "none", background: "transparent", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "13px", width: "100%", marginTop: "4px", borderRadius: "8px" }}
+        onMouseEnter={e => e.currentTarget.style.color = "#f87171"}
+        onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}>
+        <span>🚪</span><span>تسجيل الخروج</span>
+      </button>
+    </div>
+  </div>
+
+  {/* Main Content */}
+  <div style={{ marginRight: "240px", flex: 1, padding: "28px", minHeight: "100vh", position: "relative", zIndex: 1 }}>
+
+    {/* Header */}
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
+      <div>
+        <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 700 }}>
+          {sidebarItems.find(i => i.id === activePage)?.label}
+        </h1>
+        <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.4)", fontSize: "13px" }}>
+          {new Date().toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+        </p>
+      </div>
+      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ ...glass(0.1), padding: "9px 16px", borderRadius: "10px", fontSize: "13px", cursor: "pointer" }}>🔔</div>
+        <div style={{ ...glass(0.1), padding: "9px 16px", borderRadius: "10px", fontSize: "13px", cursor: "pointer" }}>🔍</div>
+        <div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "linear-gradient(135deg, #7c3aed, #a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, cursor: "pointer" }} onClick={() => { setActivePage("settings"); setSettingsTab("profile"); }}>
+          {profile.name.slice(0, 2)}
+        </div>
+      </div>
+    </div>
+
+    {/* ── DASHBOARD ── */}
+    {activePage === "dashboard" && (
+      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        {/* KPI Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px" }}>
+          {[
+            { label: "إجمالي الإيرادات", value: `${(totalRevenue / 1000).toFixed(0)}K ر.س`, change: "+12.5%", color: "#a78bfa", icon: "💰", data: monthlyData.map(d => d.revenue) },
+            { label: "صافي الأرباح", value: `${(totalProfit / 1000).toFixed(0)}K ر.س`, change: "+8.3%", color: "#34d399", icon: "📈", data: monthlyData.map(d => d.profit) },
+            { label: "المصروفات", value: `${(totalExpenses / 1000).toFixed(0)}K ر.س`, change: "-2.1%", color: "#f472b6", icon: "📉", data: monthlyData.map(d => d.expenses) },
+            { label: "عدد العملاء", value: "1,284", change: "+5.7%", color: "#38bdf8", icon: "👥", data: [80, 95, 88, 110, 105, 120] },
+          ].map((kpi, i) => (
+            <div key={i} style={{ ...glass(0.1), padding: "20px", position: "relative", overflow: "hidden" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                <div>
+                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", marginBottom: "6px" }}>{kpi.label}</div>
+                  <div style={{ fontSize: "22px", fontWeight: 700 }}>{kpi.value}</div>
+                  <div style={{ fontSize: "12px", color: kpi.change.startsWith("+") ? "#34d399" : "#f87171", marginTop: "4px" }}>{kpi.change} هذا الشهر</div>
+                </div>
+                <div style={{ fontSize: "24px" }}>{kpi.icon}</div>
+              </div>
+              <MiniChart data={kpi.data} color={kpi.color} />
+            </div>
+          ))}
+        </div>
+
+        {/* Charts Row */}
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px" }}>
+          <div style={{ ...glass(0.1), padding: "24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>الأداء الشهري</h3>
+              <div style={{ display: "flex", gap: "16px", fontSize: "12px" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#7c3aed", display: "inline-block" }} /> الإيرادات</span>
+                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#34d399", display: "inline-block" }} /> الأرباح</span>
+              </div>
+            </div>
+            <BarChart data={monthlyData} />
+          </div>
+          <div style={{ ...glass(0.1), padding: "24px" }}>
+            <h3 style={{ margin: "0 0 20px", fontSize: "16px", fontWeight: 600 }}>توزيع الإيرادات</h3>
+            {[
+              { label: "منتجات", pct: 45, color: "#a78bfa" },
+              { label: "خدمات", pct: 32, color: "#34d399" },
+              { label: "استشارات", pct: 15, color: "#38bdf8" },
+              { label: "أخرى", pct: 8, color: "#f472b6" },
+            ].map((item, i) => (
+              <div key={i} style={{ marginBottom: "14px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "6px" }}>
+                  <span style={{ color: "rgba(255,255,255,0.7)" }}>{item.label}</span>
+                  <span style={{ color: item.color, fontWeight: 600 }}>{item.pct}%</span>
+                </div>
+                <div style={{ height: "6px", borderRadius: "3px", background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${item.pct}%`, borderRadius: "3px", background: `linear-gradient(90deg, ${item.color}, ${item.color}88)`, transition: "width 1s ease" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Transactions */}
+        <div style={{ ...glass(0.1), padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>آخر المعاملات</h3>
+            <button onClick={() => setActivePage("transactions")} style={{ background: "rgba(124,58,237,0.3)", border: "1px solid #7c3aed55", borderRadius: "8px", padding: "6px 14px", color: "#a78bfa", cursor: "pointer", fontSize: "13px" }}>عرض الكل</button>
+          </div>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                {["المعرف", "العميل", "المبلغ", "الحالة", "التاريخ"].map(h => (
+                  <th key={h} style={{ textAlign: "right", padding: "10px", fontSize: "12px", color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((t, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                  <td style={{ padding: "12px 10px", fontSize: "13px", color: "#a78bfa" }}>{t.id}</td>
+                  <td style={{ padding: "12px 10px", fontSize: "13px" }}>{t.client}</td>
+                  <td style={{ padding: "12px 10px", fontSize: "13px", fontWeight: 600 }}>{t.amount.toLocaleString()} ر.س</td>
+                  <td style={{ padding: "12px 10px" }}>
+                    <span style={{ background: t.status === "مكتمل" ? "#05966922" : t.status === "معلق" ? "#d9770622" : "#ef444422", color: t.status === "مكتمل" ? "#34d399" : t.status === "معلق" ? "#fb923c" : "#f87171", borderRadius: "6px", padding: "4px 10px", fontSize: "12px" }}>{t.status}</span>
+                  </td>
+                  <td style={{ padding: "12px 10px", fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>{t.date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+
+    {/* ── REVENUE ── */}
+    {activePage === "revenue" && (
+      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "16px" }}>
+          {monthlyData.map((d, i) => (
+            <div key={i} style={{ ...glass(0.1), padding: "20px" }}>
+              <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", marginBottom: "12px" }}>{d.month}</div>
+              <div style={{ display: "flex", gap: "20px" }}>
+                {[
+                  { label: "إيرادات", val: d.revenue, color: "#a78bfa" },
+                  { label: "مصروف", val: d.expenses, color: "#f472b6" },
+                  { label: "ربح", val: d.profit, color: "#34d399" },
+                ].map((item, j) => (
+                  <div key={j}>
+                    <div style={{ fontSize: "11px", color: item.color, marginBottom: "4px" }}>{item.label}</div>
+                    <div style={{ fontSize: "16px", fontWeight: 700 }}>{(item.val / 1000).toFixed(0)}K</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: "12px", height: "4px", borderRadius: "2px", background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${(d.profit / d.revenue) * 100}%`, background: "linear-gradient(90deg, #a78bfa, #34d399)", borderRadius: "2px" }} />
+              </div>
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "6px" }}>هامش الربح: {((d.profit / d.revenue) * 100).toFixed(1)}%</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* ── TRANSACTIONS ── */}
+    {activePage === "transactions" && (
+      <div style={{ ...glass(0.1), padding: "24px" }}>
+        <h3 style={{ margin: "0 0 20px", fontSize: "16px", fontWeight: 600 }}>جميع المعاملات</h3>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+              {["المعرف", "العميل", "المبلغ", "الحالة", "التاريخ", "إجراء"].map(h => (
+                <th key={h} style={{ textAlign: "right", padding: "10px", fontSize: "12px", color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {transactions.map((t, i) => (
+              <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <td style={{ padding: "14px 10px", fontSize: "13px", color: "#a78bfa" }}>{t.id}</td>
+                <td style={{ padding: "14px 10px", fontSize: "13px" }}>{t.client}</td>
+                <td style={{ padding: "14px 10px", fontSize: "13px", fontWeight: 600 }}>{t.amount.toLocaleString()} ر.س</td>
+                <td style={{ padding: "14px 10px" }}>
+                  <span style={{ background: t.status === "مكتمل" ? "#05966922" : t.status === "معلق" ? "#d9770622" : "#ef444422", color: t.status === "مكتمل" ? "#34d399" : t.status === "معلق" ? "#fb923c" : "#f87171", borderRadius: "6px", padding: "4px 10px", fontSize: "12px" }}>{t.status}</span>
+                </td>
+                <td style={{ padding: "14px 10px", fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>{t.date}</td>
+                <td style={{ padding: "14px 10px" }}>
+                  <button style={{ background: "rgba(124,58,237,0.2)", border: "1px solid #7c3aed44", borderRadius: "6px", padding: "5px 12px", color: "#a78bfa", cursor: "pointer", fontSize: "12px" }}>تفاصيل</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+
+    {/* ── PRODUCTS ── */}
+    {activePage === "products" && (
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {topProducts.map((p, i) => (
+          <div key={i} style={{ ...glass(0.1), padding: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: `linear-gradient(135deg, ${["#7c3aed","#059669","#d97706","#dc2626"][i]}, ${["#a78bfa","#34d399","#fb923c","#f87171"][i]})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>📦</div>
+              <div>
+                <div style={{ fontWeight: 600, marginBottom: "4px" }}>{p.name}</div>
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>{p.sales.toLocaleString()} مبيعة</div>
+              </div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontWeight: 700, fontSize: "16px" }}>{p.revenue.toLocaleString()} ر.س</div>
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>إجمالي</div>
+            </div>
+            <div style={{ color: p.growth > 0 ? "#34d399" : "#f87171", fontWeight: 600, fontSize: "15px" }}>
+              {p.growth > 0 ? "↑" : "↓"} {Math.abs(p.growth)}%
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* ── REPORTS ── */}
+    {activePage === "reports" && (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "16px" }}>
+        {[
+          { title: "تقرير الإيرادات الشهري", icon: "📊", date: "يونيو 2024", size: "2.4 MB" },
+          { title: "تحليل المنتجات", icon: "📦", date: "يونيو 2024", size: "1.8 MB" },
+          { title: "تقرير المعاملات", icon: "💳", date: "مايو 2024", size: "3.1 MB" },
+          { title: "تقرير العملاء", icon: "👥", date: "مايو 2024", size: "1.2 MB" },
+        ].map((r, i) => (
+          <div key={i} style={{ ...glass(0.1), padding: "24px", display: "flex", gap: "16px", alignItems: "center" }}>
+            <div style={{ fontSize: "32px" }}>{r.icon}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, marginBottom: "6px" }}>{r.title}</div>
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>{r.date} • {r.size}</div>
+            </div>
+            <button style={{ background: "rgba(124,58,237,0.2)", border: "1px solid #7c3aed44", borderRadius: "8px", padding: "8px 16px", color: "#a78bfa", cursor: "pointer", fontSize: "13px" }}>تحميل</button>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* ── SETTINGS ── */}
+    {activePage === "settings" && (
+      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: "20px" }}>
+        {/* Settings Sidebar */}
+        <div style={{ ...glass(0.08), padding: "16px", display: "flex", flexDirection: "column", gap: "4px" }}>
+          {[
+            { id: "profile", icon: "👤", label: "الملف الشخصي" },
+            { id: "security", icon: "🔐", label: "الأمان" },
+            { id: "notifications", icon: "🔔", label: "الإشعارات" },
+            { id: "appearance", icon: "🎨", label: "المظهر والخلفيات" },
+            { id: "billing", icon: "💳", label: "الفاتورة" },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setSettingsTab(tab.id)} style={{
+              display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "14px", width: "100%", textAlign: "right", transition: "all 0.2s",
+              background: settingsTab === tab.id ? "rgba(124,58,237,0.25)" : "transparent",
+              color: settingsTab === tab.id ? "#a78bfa" : "rgba(255,255,255,0.6)",
+            }}>
+              <span>{tab.icon}</span><span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Settings Content */}
+        <div>
+          {/* Profile Tab */}
+          {settingsTab === "profile" && (
+            <div style={{ ...glass(0.1), padding: "32px" }}>
+              <h3 style={{ margin: "0 0 28px", fontSize: "18px", fontWeight: 700 }}>الملف الشخصي</h3>
+              {/* Avatar */}
+              <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "32px", padding: "20px", background: "rgba(255,255,255,0.05)", borderRadius: "12px" }}>
+                <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: "linear-gradient(135deg, #7c3aed, #a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", fontWeight: 700, boxShadow: "0 4px 24px #7c3aed44" }}>{profile.name.slice(0, 2)}</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: "18px", marginBottom: "4px" }}>{profile.name}</div>
+                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px", marginBottom: "12px" }}>{profile.role} • {profile.company}</div>
+                  <button style={{ background: "rgba(124,58,237,0.3)", border: "1px solid #7c3aed55", borderRadius: "8px", padding: "7px 16px", color: "#a78bfa", cursor: "pointer", fontSize: "13px" }}>تغيير الصورة</button>
+                </div>
+              </div>
+              {/* Fields */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+                {[
+                  { label: "الاسم الكامل", key: "name", type: "text" },
+                  { label: "البريد الإلكتروني", key: "email", type: "email" },
+                  { label: "رقم الهاتف", key: "phone", type: "text" },
+                  { label: "المسمى الوظيفي", key: "role", type: "text" },
+                  { label: "الشركة", key: "company", type: "text" },
+                ].map(f => (
+                  <div key={f.key}>
+                    <label style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.5)", marginBottom: "7px" }}>{f.label}</label>
+                    <input type={f.type} value={editProfile[f.key] || ""} onChange={e => setEditProfile(p => ({ ...p, [f.key]: e.target.value }))}
+                      style={{ width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", padding: "10px 14px", color: "#fff", fontSize: "14px", outline: "none", boxSizing: "border-box" }} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.5)", marginBottom: "7px" }}>نبذة شخصية</label>
+                <textarea rows={3} value={editProfile.bio || ""} onChange={e => setEditProfile(p => ({ ...p, bio: e.target.value }))}
+                  style={{ width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", padding: "10px 14px", color: "#fff", fontSize: "14px", outline: "none", resize: "none", boxSizing: "border-box" }} />
+              </div>
+              <button onClick={saveProfile} style={{ background: "linear-gradient(135deg, #7c3aed, #a78bfa)", border: "none", borderRadius: "10px", padding: "12px 32px", color: "#fff", fontSize: "15px", fontWeight: 700, cursor: "pointer" }}>
+                حفظ التغييرات
+              </button>
+            </div>
+          )}
+
+          {/* Security Tab */}
+          {settingsTab === "security" && (
+            <div style={{ ...glass(0.1), padding: "32px" }}>
+              <h3 style={{ margin: "0 0 28px", fontSize: "18px", fontWeight: 700 }}>الأمان وكلمة المرور</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {[
+                  { label: "كلمة المرور الحالية", ph: "••••••••" },
+                  { label: "كلمة المرور الجديدة", ph: "••••••••" },
+                  { label: "تأكيد كلمة المرور", ph: "••••••••" },
+                ].map((f, i) => (
+                  <div key={i}>
+                    <label style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.5)", marginBottom: "7px" }}>{f.label}</label>
+                    <input type="password" placeholder={f.ph}
+                      style={{ width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", padding: "10px 14px", color: "#fff", fontSize: "14px", outline: "none", boxSizing: "border-box" }} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", marginTop: "24px" }}>
+                <div>
+                  <div style={{ fontWeight: 600, marginBottom: "4px" }}>المصادقة الثنائية</div>
+                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>طبقة حماية إضافية لحسابك</div>
+                </div>
+                <div
+                  onClick={() => { setEditProfile(p => ({ ...p, twoFactor: !p.twoFactor })); showNotif(editProfile.twoFactor ? "تم تعطيل المصادقة الثنائية" : "تم تفعيل المصادقة الثنائية"); }}
+                  style={{ width: "48px", height: "26px", borderRadius: "13px", background: editProfile.twoFactor ? "#7c3aed" : "rgba(255,255,255,0.2)", cursor: "pointer", position: "relative", transition: "background 0.3s" }}>
+                  <div style={{ position: "absolute", top: "3px", width: "20px", height: "20px", borderRadius: "50%", background: "#fff", transition: "left 0.3s", left: editProfile.twoFactor ? "25px" : "3px" }} />
+                </div>
+              </div>
+              <button onClick={() => showNotif("✅ تم تحديث كلمة المرور")} style={{ background: "linear-gradient(135deg, #7c3aed, #a78bfa)", border: "none", borderRadius: "10px", padding: "12px 32px", color: "#fff", fontSize: "15px", fontWeight: 700, cursor: "pointer", marginTop: "24px" }}>
+                تحديث كلمة المرور
+              </button>
+            </div>
+          )}
+
+          {/* Notifications Tab */}
+          {settingsTab === "notifications" && (
+            <div style={{ ...glass(0.1), padding: "32px" }}>
+              <h3 style={{ margin: "0 0 28px", fontSize: "18px", fontWeight: 700 }}>إعدادات الإشعارات</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {[
+                  { label: "إشعارات المعاملات الجديدة", desc: "عند إضافة معاملة جديدة", key: "notifications" },
+                  { label: "تقارير الأداء الأسبوعية", desc: "ملخص أسبوعي بالبريد الإلكتروني", key: "weeklyReports" },
+                  { label: "تنبيهات الأمان", desc: "عند تسجيل الدخول من جهاز جديد", key: "securityAlerts" },
+                  { label: "التحديثات والأخبار", desc: "أحدث ميزات المنصة", key: "updates" },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", background: "rgba(255,255,255,0.05)", borderRadius: "10px" }}>
+                    <div>
+                      <div style={{ fontWeight: 600, marginBottom: "4px", fontSize: "14px" }}>{item.label}</div>
+                      <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>{item.desc}</div>
+                    </div>
+                    <div onClick={() => setEditProfile(p => ({ ...p, [item.key]: !p[item.key] }))}
+                      style={{ width: "48px", height: "26px", borderRadius: "13px", background: editProfile[item.key] ? "#7c3aed" : "rgba(255,255,255,0.2)", cursor: "pointer", position: "relative", transition: "background 0.3s", flexShrink: 0 }}>
+                      <div style={{ position: "absolute", top: "3px", width: "20px", height: "20px", borderRadius: "50%", background: "#fff", transition: "left 0.3s", left: editProfile[item.key] ? "25px" : "3px" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Appearance Tab */}
+          {settingsTab === "appearance" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ ...glass(0.1), padding: "32px" }}>
+                <h3 style={{ margin: "0 0 8px", fontSize: "18px", fontWeight: 700 }}>الخلفيات المتحركة الزجاجية ✨</h3>
+                <p style={{ margin: "0 0 24px", color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>اختر الخلفية المناسبة للتطبيق</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "16px" }}>
+                  {bgPreviews.map((bg, i) => (
+                    <div key={i}
+                      onClick={() => { setSelectedBg(i); showNotif(`✅ تم تطبيق خلفية "${bgNames[i]}"`); }}
+                      style={{ cursor: "pointer", borderRadius: "14px", overflow: "hidden", border: `2px solid ${selectedBg === i ? "#a78bfa" : "rgba(255,255,255,0.1)"}`, transition: "all 0.3s", transform: selectedBg === i ? "scale(1.03)" : "scale(1)", boxShadow: selectedBg === i ? "0 0 24px #7c3aed66" : "none" }}>
+                      <div style={{ height: "120px", background: bg, position: "relative", overflow: "hidden" }}>
+                        {i === 0 && [...Array(3)].map((_, j) => (
+                          <div key={j} style={{ position: "absolute", borderRadius: "50%", background: ["#a78bfa44", "#38bdf844", "#34d39944"][j], width: ["120px", "90px", "100px"][j], height: ["120px", "90px", "100px"][j], top: ["-20px", "40px", "10px"][j], left: ["10px", "60px", "110px"][j], filter: "blur(20px)", animation: `float${j} ${[3, 4, 5][j]}s ease-in-out infinite` }} />
+                        ))}
+                        {i === 1 && [...Array(5)].map((_, j) => (
+                          <div key={j} style={{ position: "absolute", width: "3px", height: "3px", borderRadius: "50%", background: "#fff", top: `${[20, 50, 75, 35, 60][j]}%`, left: `${[15, 45, 75, 85, 30][j]}%`, opacity: 0.8 }} />
+                        ))}
+                        {i === 2 && (
+                          <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.05) 1px,transparent 1px)", backgroundSize: "20px 20px" }} />
+                        )}
+                        {selectedBg === i && (
+                          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <div style={{ background: "#7c3aed", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>✓</div>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ padding: "10px 14px", background: "rgba(0,0,0,0.3)" }}>
+                        <div style={{ fontWeight: 600, fontSize: "13px" }}>{bgNames[i]}</div>
+                        <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+                          {["تدرجات لونية متحركة", "نجوم لامعة", "شبكة هندسية"][i]}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ ...glass(0.1), padding: "24px" }}>
+                <h3 style={{ margin: "0 0 20px", fontSize: "16px", fontWeight: 700 }}>الإعدادات الأخرى</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.5)", marginBottom: "7px" }}>اللغة</label>
+                    <select value={editProfile.language} onChange={e => setEditProfile(p => ({ ...p, language: e.target.value }))}
+                      style={{ width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", padding: "10px 14px", color: "#fff", fontSize: "14px", outline: "none", boxSizing: "border-box" }}>
+                      <option value="ar" style={{ background: "#1a1a2e" }}>العربية</option>
+                      <option value="en" style={{ background: "#1a1a2e" }}>English</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.5)", marginBottom: "7px" }}>العملة</label>
+                    <select value={editProfile.currency} onChange={e => setEditProfile(p => ({ ...p, currency: e.target.value }))}
+                      style={{ width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", padding: "10px 14px", color: "#fff", fontSize: "14px", outline: "none", boxSizing: "border-box" }}>
+                      <option value="SAR" style={{ background: "#1a1a2e" }}>ريال سعودي</option>
+                      <option value="USD" style={{ background: "#1a1a2e" }}>دولار أمريكي</option>
+                      <option value="EUR" style={{ background: "#1a1a2e" }}>يورو</option>
+                    </select>
+                  </div>
+                </div>
+                <button onClick={saveProfile} style={{ background: "linear-gradient(135deg, #7c3aed, #a78bfa)", border: "none", borderRadius: "10px", padding: "12px 32px", color: "#fff", fontSize: "15px", fontWeight: 700, cursor: "pointer", marginTop: "20px" }}>
+                  حفظ
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Billing Tab */}
+          {settingsTab === "billing" && (
+            <div style={{ ...glass(0.1), padding: "32px" }}>
+              <h3 style={{ margin: "0 0 28px", fontSize: "18px", fontWeight: 700 }}>الفاتورة والاشتراك</h3>
+              <div style={{ background: "linear-gradient(135deg, #7c3aed22, #a78bfa11)", border: "1px solid #7c3aed44", borderRadius: "14px", padding: "24px", marginBottom: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: "12px", color: "#a78bfa", marginBottom: "4px", fontWeight: 600 }}>الخطة الحالية</div>
+                    <div style={{ fontSize: "24px", fontWeight: 800 }}>Pro ⭐</div>
+                    <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", marginTop: "4px" }}>يتجدد في 15 يوليو 2024</div>
+                  </div>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: "28px", fontWeight: 800 }}>99 ر.س</div>
+                    <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>/ شهر</div>
+                  </div>
+                </div>
+              </div>
+              {[
+                { label: "المعاملات المدفوعة هذا الشهر", value: "27,500 ر.س" },
+                { label: "إجمالي المعاملات", value: "124" },
+                { label: "تاريخ الاشتراك", value: "1 يناير 2024" },
+              ].map((item, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "14px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px" }}>{item.label}</span>
+                  <span style={{ fontWeight: 600, fontSize: "14px" }}>{item.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+
+  <style>{`
+    * { box-sizing: border-box; }
+    input:focus, textarea:focus, select:focus { border-color: #7c3aed !important; box-shadow: 0 0 0 2px #7c3aed33 !important; }
+    select option { background: #1a1a2e; color: #fff; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.4); border-radius: 3px; }
+  `}</style>
+</div>
+```
+
+);
+}
