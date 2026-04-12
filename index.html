@@ -176,7 +176,6 @@
       box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 55%, transparent);
     }
 
-    /* ===== White report canvas ===== */
     .report-page{
       background:#fff;
       color:#111827;
@@ -330,7 +329,6 @@
   <div class="bg-orb orb2"></div>
   <div class="bg-orb orb3"></div>
 
-  <!-- AUTH OVERLAY -->
   <div id="authOverlay" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop px-4">
     <div class="glass w-full max-w-lg p-6 md:p-8">
       <div class="flex items-center justify-between gap-3 mb-5">
@@ -362,7 +360,6 @@
     </div>
   </div>
 
-  <!-- APP -->
   <div id="appShell" class="hidden-important relative z-10 min-h-screen">
     <div class="topbar">
       <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -393,7 +390,6 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 md:px-6 pb-10">
-      <!-- DASHBOARD -->
       <section id="dashboardSection" class="space-y-6 fade-in">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="panel p-5">
@@ -443,7 +439,6 @@
         </div>
       </section>
 
-      <!-- TRANSACTIONS -->
       <section id="transactionsSection" class="hidden-important space-y-4 fade-in">
         <div class="panel p-5 md:p-6">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
@@ -514,7 +509,6 @@
         </div>
       </section>
 
-      <!-- REGIONS -->
       <section id="regionsSection" class="hidden-important space-y-4 fade-in">
         <div class="panel p-5 md:p-6">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
@@ -543,7 +537,6 @@
         </div>
       </section>
 
-      <!-- REPORTS -->
       <section id="reportsSection" class="hidden-important space-y-5 fade-in">
         <div class="panel p-5 md:p-6">
           <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
@@ -581,7 +574,6 @@
           </div>
         </div>
 
-        <!-- report canvas -->
         <div id="reportCanvas" class="report-page">
           <div class="report-head">
             <div>
@@ -663,7 +655,6 @@
         </div>
       </section>
 
-      <!-- SETTINGS -->
       <section id="settingsSection" class="hidden-important space-y-4 fade-in">
         <div class="panel p-5 md:p-6">
           <h3 class="text-lg font-bold mb-4">الإعدادات</h3>
@@ -702,7 +693,6 @@
         </div>
       </section>
 
-      <!-- PROFILE -->
       <section id="profileSection" class="hidden-important space-y-4 fade-in">
         <div class="panel p-5 md:p-6">
           <h3 class="text-lg font-bold mb-4">الملف الشخصي</h3>
@@ -786,6 +776,7 @@
     };
 
     const $ = (id) => document.getElementById(id);
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     const App = {
       user: null,
@@ -795,6 +786,7 @@
       profile: { name: "", title: "", bio: "" },
       chart: null,
       reportChart: null,
+      currentSection: "dashboardSection",
 
       getKey(key) {
         const uid = this.user?.uid || "guest";
@@ -883,6 +875,8 @@
       },
 
       showSection(sectionId) {
+        this.currentSection = sectionId;
+
         ["dashboardSection", "transactionsSection", "regionsSection", "reportsSection", "settingsSection", "profileSection"]
           .forEach(id => $(id).classList.add("hidden-important"));
 
@@ -1370,16 +1364,6 @@
 
         const chartData = grouped.length ? grouped.map(r => r.syp) : [1];
         const chartLabels = grouped.length ? grouped.map(r => r.region) : ["لا توجد بيانات"];
-        const chartColors = [
-          "#22c55e",
-          "#3b82f6",
-          "#8b5cf6",
-          "#f59e0b",
-          "#ef4444",
-          "#ec4899",
-          "#14b8a6",
-          "#64748b"
-        ];
 
         this.reportChart = new Chart(ctx, {
           type: "doughnut",
@@ -1388,7 +1372,9 @@
             datasets: [{
               data: chartData,
               borderWidth: 2,
-              backgroundColor: grouped.length ? chartColors : ["#e5e7eb"]
+              backgroundColor: grouped.length
+                ? ["#22c55e", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#ec4899", "#14b8a6", "#64748b"]
+                : ["#e5e7eb"]
             }]
           },
           options: {
@@ -1420,7 +1406,11 @@
       },
 
       async generatePDF() {
+        const previousSection = this.currentSection || "dashboardSection";
+        this.showSection("reportsSection");
         this.renderReport();
+
+        await sleep(500);
 
         const element = $("reportCanvas");
         const dayValue = $("reportDay").value || "all";
@@ -1428,7 +1418,13 @@
           margin: 0,
           filename: `report_${dayValue}.pdf`,
           image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            scrollX: 0,
+            scrollY: 0
+          },
           jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
           pagebreak: { mode: ["avoid-all", "css", "legacy"] }
         };
@@ -1438,6 +1434,8 @@
         } catch (e) {
           alert("تعذر إنشاء PDF الآن.");
           console.error(e);
+        } finally {
+          this.showSection(previousSection);
         }
       }
     };
