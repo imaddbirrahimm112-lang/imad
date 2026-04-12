@@ -1,0 +1,1545 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Revenue Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root{
+      --bg1:#07111f;
+      --bg2:#102840;
+      --bg3:#0f4c81;
+      --glass: rgba(255,255,255,.12);
+      --border: rgba(255,255,255,.16);
+      --text: #fff;
+      --muted: rgba(255,255,255,.74);
+      --accent: #66ccff;
+      --shadow: 0 10px 35px rgba(0,0,0,.24);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin:0; min-height:100%; }
+    body{
+      font-family: "Cairo", system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(120deg, var(--bg1), var(--bg2), var(--bg3));
+      background-size: 300% 300%;
+      animation: bgMove 18s ease infinite;
+      overflow-x:hidden;
+    }
+
+    @keyframes bgMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .bg-orb {
+      position: fixed;
+      width: 300px;
+      height: 300px;
+      border-radius: 999px;
+      filter: blur(16px);
+      opacity: .28;
+      pointer-events:none;
+      z-index:0;
+      animation: float 18s ease-in-out infinite;
+    }
+    .orb1 { top: 8%; right: 6%; background: radial-gradient(circle at 30% 30%, rgba(102,204,255,.95), rgba(102,204,255,0) 62%); }
+    .orb2 { bottom: 8%; left: 5%; background: radial-gradient(circle at 30% 30%, rgba(160,110,255,.95), rgba(160,110,255,0) 62%); animation-duration: 22s; }
+    .orb3 { top: 42%; left: 42%; background: radial-gradient(circle at 30% 30%, rgba(70,255,195,.95), rgba(70,255,195,0) 62%); animation-duration: 26s; }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-24px) scale(1.08); }
+    }
+
+    .glass{
+      background: var(--glass);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: 22px;
+    }
+
+    .panel{
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 20px;
+    }
+
+    .btn{ transition: .15s ease; }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0); opacity:.96; }
+
+    .input, .select, .textarea{
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.10);
+      color: #fff;
+      border-radius: 14px;
+      padding: 12px 14px;
+      outline: none;
+    }
+    .input::placeholder, .textarea::placeholder{ color: rgba(255,255,255,.62); }
+    .select option{ color:#111; }
+    .textarea{ min-height: 110px; resize: vertical; }
+
+    .nav-btn.active{
+      background: rgba(255,255,255,.18);
+      border-color: rgba(255,255,255,.26);
+    }
+
+    .hidden-important{ display:none !important; }
+
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 35;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: rgba(8,18,33,.40);
+      border-bottom: 1px solid rgba(255,255,255,.09);
+    }
+
+    .modal-backdrop{
+      background: rgba(0,0,0,.50);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .chip{
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+    }
+
+    .mini-label{
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 1100px;
+    }
+
+    th, td{
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th{
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.88);
+      font-weight: 700;
+    }
+
+    td{ color: rgba(255,255,255,.90); }
+
+    .compact-mode .panel,
+    .compact-mode .glass{ border-radius: 16px; }
+
+    .fade-in{
+      animation: fadeIn .18s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .accent-line{
+      height: 4px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 55%, transparent);
+    }
+
+    /* ===== PDF Overlay ===== */
+    #pdfOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: #fff;
+      font-family: "Cairo", sans-serif;
+    }
+    #pdfOverlay .spinner {
+      width: 52px;
+      height: 52px;
+      border: 4px solid rgba(255,255,255,.2);
+      border-top-color: #66ccff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #pdfOverlay p { font-size: 1.1rem; font-weight: 700; margin: 0; }
+
+    /* ===== Report - PDF TARGET ===== */
+    /*
+      CRITICAL: The report page must have a FIXED width so html2pdf
+      renders it predictably. For A4 landscape at scale=2:
+      A4 landscape = 297mm x 210mm ≈ 1122px x 794px @ 96dpi
+      We use 1050px as a safe fit-to-width target.
+    */
+    .report-page{
+      background: #fff;
+      color: #000;
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.10);
+      padding: 20px 22px;
+
+      /* FIXED WIDTH for reliable PDF capture */
+      width: 1050px;
+      min-width: 1050px;
+      max-width: 1050px;
+      overflow: hidden;
+    }
+
+    .report-page, .report-page *{ color: #000; }
+
+    .report-head{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      border-bottom: 3px solid #000;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    .report-title{
+      font-size: 22px;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    .report-sub{
+      margin-top: 4px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .report-pill-wrap{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .report-pill{
+      border: 1.5px solid #000;
+      background: #fff;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-weight: 800;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+
+    /* 4-column summary cards */
+    .report-cards{
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 10px 0 12px;
+    }
+
+    .report-card{
+      border-radius: 12px;
+      padding: 12px 14px;
+      text-align: center;
+      border: 2px solid #000;
+      background: #fff;
+    }
+
+    .report-card .label{
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .report-card .value{
+      font-size: 22px;
+      font-weight: 900;
+      margin-top: 4px;
+    }
+
+    /* 2-column layout: table left, chart right */
+    .report-layout{
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .report-section-title{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 900;
+      margin: 0 0 8px;
+    }
+
+    .report-table-wrap{
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1.5px solid #000;
+    }
+
+    .report-table{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      table-layout: fixed;
+    }
+
+    .report-table th, .report-table td{
+      border: 1px solid #000;
+      padding: 7px 8px;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .report-table th{
+      background: #f3f4f6;
+      font-weight: 900;
+      font-size: 11px;
+    }
+
+    .report-table tfoot td{
+      background: #e5e7eb;
+      font-weight: 900;
+    }
+
+    /* Chart column */
+    .report-right{
+      border: 1.5px solid #000;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .report-right canvas{
+      width: 220px !important;
+      height: 220px !important;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .report-legend{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .report-legend-item{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .report-footer{
+      margin-top: 12px;
+      border-top: 1px dashed #999;
+      padding-top: 8px;
+      font-size: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* hide chart in PDF if setting off */
+    .pdf-no-chart .report-right{ display: none !important; }
+    .pdf-no-chart .report-layout{ grid-template-columns: 1fr; }
+
+    /* ===== PRINT PREVIEW WRAPPER - limits width in UI ===== */
+    .report-scroll-wrap{
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    @media print {
+      body{ background:#fff !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+  <div class="bg-orb orb3"></div>
+
+  <!-- PDF progress overlay -->
+  <div id="pdfOverlay" class="hidden-important">
+    <div class="spinner"></div>
+    <p id="pdfOverlayMsg">جاري إنشاء PDF...</p>
+  </div>
+
+  <!-- Auth -->
+  <div id="authOverlay" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop px-4">
+    <div class="glass w-full max-w-lg p-6 md:p-8">
+      <div class="flex items-center justify-between gap-3 mb-5">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold">تسجيل الدخول</h1>
+          <p class="mini-label mt-1">إيميل + كلمة سر</p>
+        </div>
+        <div class="chip px-3 py-2 text-sm">Firebase</div>
+      </div>
+      <div class="accent-line mb-5"></div>
+      <div class="space-y-4">
+        <div>
+          <label class="block mb-2 text-sm">الإيميل</label>
+          <input id="authEmail" type="email" class="input" placeholder="name@example.com" autocomplete="email" />
+        </div>
+        <div>
+          <label class="block mb-2 text-sm">كلمة السر</label>
+          <input id="authPassword" type="password" class="input" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+          <button onclick="App.login()" class="btn glass py-3 font-semibold">دخول</button>
+          <button onclick="App.signup()" class="btn glass py-3 font-semibold">إنشاء حساب</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="appShell" class="hidden-important relative z-10 min-h-screen">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold">لوحة تحكم الإيرادات</h2>
+          <p id="userEmailTop" class="mini-label mt-1"></p>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="chip px-4 py-2">
+            <span class="text-sm">مرحبًا، </span>
+            <strong id="userNameTop">...</strong>
+          </div>
+          <button onclick="App.logout()" class="btn glass px-4 py-2 font-semibold">خروج</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-5">
+      <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <button id="navDashboard"    class="nav-btn active glass btn py-3" onclick="App.showSection('dashboardSection')">الرئيسية</button>
+        <button id="navTransactions" class="nav-btn glass btn py-3"        onclick="App.showSection('transactionsSection')">المعاملات</button>
+        <button id="navRegions"      class="nav-btn glass btn py-3"        onclick="App.showSection('regionsSection')">المناطق</button>
+        <button id="navReports"      class="nav-btn glass btn py-3"        onclick="App.showSection('reportsSection')">PDF</button>
+        <button id="navSettings"     class="nav-btn glass btn py-3"        onclick="App.showSection('settingsSection')">الإعدادات</button>
+        <button id="navProfile"      class="nav-btn glass btn py-3"        onclick="App.showSection('profileSection')">الملف الشخصي</button>
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 md:px-6 pb-10">
+
+      <!-- Dashboard -->
+      <section id="dashboardSection" class="space-y-6 fade-in">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="panel p-5">
+            <div class="mini-label">إجمالي المعاملات</div>
+            <div id="statCount" class="text-3xl font-black mt-2">0</div>
+          </div>
+          <div class="panel p-5">
+            <div class="mini-label">الإيراد الكلي SYP</div>
+            <div id="statTotalSYP" class="text-3xl font-black mt-2">0</div>
+          </div>
+          <div class="panel p-5">
+            <div class="mini-label">الإيراد الكلي USD</div>
+            <div id="statTotalUSD" class="text-3xl font-black mt-2">0</div>
+          </div>
+          <div class="panel p-5">
+            <div class="mini-label">عدد المناطق</div>
+            <div id="statRegions" class="text-3xl font-black mt-2">0</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div class="panel p-5 xl:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold">منحنى الإيراد</h3>
+              <div class="chip px-3 py-2 text-sm">Live</div>
+            </div>
+            <canvas id="revenueChart" height="110"></canvas>
+          </div>
+          <div class="panel p-5">
+            <h3 class="text-lg font-bold mb-4">ملخص سريع</h3>
+            <div class="space-y-3">
+              <div class="glass p-4">
+                <div class="mini-label">أكثر منطقة نشاطًا</div>
+                <div id="topRegion" class="font-bold mt-1">—</div>
+              </div>
+              <div class="glass p-4">
+                <div class="mini-label">آخر معاملة</div>
+                <div id="lastTx" class="font-bold mt-1">—</div>
+              </div>
+              <div class="glass p-4">
+                <div class="mini-label">سعر الصرف الافتراضي</div>
+                <div class="font-bold mt-1" id="ratePreview">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Transactions -->
+      <section id="transactionsSection" class="hidden-important space-y-4 fade-in">
+        <div class="panel p-5 md:p-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <h3 class="text-lg font-bold">إضافة معاملة</h3>
+            <div class="chip px-3 py-2 text-sm">العملة الأساسية SYP</div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+            <div>
+              <label class="block mb-2 text-sm">التاريخ</label>
+              <input id="txDate" type="date" class="input" />
+            </div>
+            <div>
+              <label class="block mb-2 text-sm">المنطقة</label>
+              <select id="txRegion" class="select"></select>
+            </div>
+            <div>
+              <label class="block mb-2 text-sm">النوع</label>
+              <select id="txType" class="select">
+                <option value="income">إيراد</option>
+                <option value="expense">مصروف</option>
+              </select>
+            </div>
+            <div>
+              <label class="block mb-2 text-sm">المبلغ SYP</label>
+              <input id="txAmountSYP" type="number" step="0.01" class="input" placeholder="0" />
+            </div>
+            <div>
+              <label class="block mb-2 text-sm">سعر الصرف لهذه المعاملة</label>
+              <input id="txRate" type="number" step="0.01" class="input" placeholder="مثلاً 15000" />
+            </div>
+            <div class="md:col-span-2 xl:col-span-4">
+              <label class="block mb-2 text-sm">البيان</label>
+              <input id="txNote" type="text" class="input" placeholder="تفاصيل المعاملة..." />
+            </div>
+            <div class="flex items-end">
+              <button onclick="App.addTransaction()" class="btn glass w-full py-3 font-semibold">حفظ المعاملة</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel p-5 md:p-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <h3 class="text-lg font-bold">قائمة المعاملات</h3>
+            <div class="flex gap-2 flex-wrap">
+              <button onclick="App.exportTransactionsCSV()" class="btn glass px-4 py-2 font-semibold">CSV</button>
+              <button onclick="App.generatePDF()" class="btn glass px-4 py-2 font-semibold">PDF</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ</th><th>المنطقة</th><th>النوع</th>
+                  <th>المبلغ SYP</th><th>سعر الصرف</th><th>المبلغ USD</th>
+                  <th>البيان</th><th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Regions -->
+      <section id="regionsSection" class="hidden-important space-y-4 fade-in">
+        <div class="panel p-5 md:p-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <h3 class="text-lg font-bold">أسماء المناطق</h3>
+            <div class="chip px-3 py-2 text-sm">محفوظة لكل مستخدم</div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block mb-2 text-sm">اسم المنطقة</label>
+              <input id="regionName" type="text" class="input" placeholder="مثلاً: Direct Sales Qamishli / 1" />
+            </div>
+            <div>
+              <label class="block mb-2 text-sm">ملاحظة</label>
+              <input id="regionNote" type="text" class="input" placeholder="اختياري" />
+            </div>
+            <div class="flex items-end">
+              <button onclick="App.addRegion()" class="btn glass w-full py-3 font-semibold">إضافة منطقة</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel p-5 md:p-6">
+          <h3 class="text-lg font-bold mb-4">القائمة الحالية</h3>
+          <div id="regionsList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+        </div>
+      </section>
+
+      <!-- Reports / PDF -->
+      <section id="reportsSection" class="hidden-important space-y-5 fade-in">
+        <div class="panel p-5 md:p-6">
+          <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <div>
+              <h3 class="text-lg font-bold">تقرير PDF</h3>
+              <p class="mini-label mt-1">تصفية حسب اليوم — معاينة حية ثم تصدير بضغطة.</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 flex-wrap">
+              <input id="reportDay" type="date" class="input" style="min-width:190px;">
+              <button onclick="App.setReportFilter('today')"     class="btn glass px-4 py-3 font-semibold">اليوم</button>
+              <button onclick="App.setReportFilter('yesterday')" class="btn glass px-4 py-3 font-semibold">أمس</button>
+              <button onclick="App.setReportFilter('all')"       class="btn glass px-4 py-3 font-semibold">الكل</button>
+              <button onclick="App.generatePDF()"                class="btn glass px-5 py-3 font-semibold" style="background:rgba(102,204,255,.18);">⬇ إنشاء PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="panel p-5">
+            <div class="mini-label">المعاملات</div>
+            <div id="reportCount" class="text-3xl font-black mt-2">0</div>
+          </div>
+          <div class="panel p-5">
+            <div class="mini-label">المناطق</div>
+            <div id="reportRegionCount" class="text-3xl font-black mt-2">0</div>
+          </div>
+          <div class="panel p-5">
+            <div class="mini-label">إجمالي SYP</div>
+            <div id="reportSYP" class="text-3xl font-black mt-2">0</div>
+          </div>
+          <div class="panel p-5">
+            <div class="mini-label">إجمالي USD</div>
+            <div id="reportUSD" class="text-3xl font-black mt-2">0</div>
+          </div>
+        </div>
+
+        <!-- PDF preview (scrollable in UI) -->
+        <div class="report-scroll-wrap">
+          <div id="reportCanvas" class="report-page">
+
+            <div class="report-head">
+              <div>
+                <h1 class="report-title">📊 ملخص إيرادات المناطق</h1>
+                <div id="reportSubtitle" class="report-sub">—</div>
+              </div>
+              <div class="report-pill-wrap">
+                <div class="report-pill" id="reportRateChip">SYP/USD 15,000</div>
+                <div class="report-pill" id="reportDayChip">—</div>
+              </div>
+            </div>
+
+            <div class="report-cards">
+              <div class="report-card">
+                <div class="label">المعاملات</div>
+                <div id="pdfCount" class="value">0</div>
+              </div>
+              <div class="report-card">
+                <div class="label">المناطق</div>
+                <div id="pdfRegions" class="value">0</div>
+              </div>
+              <div class="report-card">
+                <div class="label">ما يعادل USD</div>
+                <div id="pdfUSD" class="value">0</div>
+              </div>
+              <div class="report-card">
+                <div class="label">إجمالي SYP</div>
+                <div id="pdfSYP" class="value">0</div>
+              </div>
+            </div>
+
+            <div class="report-layout">
+              <!-- Left: table -->
+              <div>
+                <div class="report-section-title">
+                  <span>ملخص إيرادات المناطق</span>
+                  <span style="font-size:11px; font-weight:700;">حسب التصفية المحددة</span>
+                </div>
+                <div class="report-table-wrap">
+                  <table class="report-table">
+                    <thead>
+                      <tr>
+                        <th style="width:6%;">#</th>
+                        <th style="width:40%;">المنطقة</th>
+                        <th style="width:14%;">المعاملات</th>
+                        <th style="width:26%;">المجموع (SYP)</th>
+                        <th style="width:14%;">النسبة</th>
+                      </tr>
+                    </thead>
+                    <tbody id="reportTableBody"></tbody>
+                    <tfoot>
+                      <tr>
+                        <td>—</td>
+                        <td>المجموع الكلي</td>
+                        <td id="pdfTotalTx">0</td>
+                        <td id="pdfTotalSYP2">0</td>
+                        <td>100%</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Right: chart -->
+              <div class="report-right">
+                <div class="report-section-title" style="margin-top:0;">
+                  <span>توزيع الإيرادات</span>
+                </div>
+                <canvas id="reportChart"></canvas>
+                <div id="reportLegend" class="report-legend"></div>
+              </div>
+            </div>
+
+            <div class="report-footer">
+              <div>تم إنشاء هذا التقرير تلقائيًا من نظام إدارة الإيرادات.</div>
+              <div id="pdfFooterSummary">—</div>
+            </div>
+
+          </div><!-- /report-page -->
+        </div><!-- /report-scroll-wrap -->
+      </section>
+
+      <!-- Settings -->
+      <section id="settingsSection" class="hidden-important space-y-4 fade-in">
+        <div class="panel p-5 md:p-6">
+          <h3 class="text-lg font-bold mb-4">الإعدادات العامة</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block mb-2 text-sm">الخلفية</label>
+              <select id="themeSelect" class="select">
+                <option value="blue">أزرق زجاجي</option>
+                <option value="purple">بنفسجي فاخر</option>
+                <option value="emerald">أخضر زمردي</option>
+                <option value="dark">داكن أنيق</option>
+              </select>
+            </div>
+            <div>
+              <label class="block mb-2 text-sm">اللون الأساسي</label>
+              <input id="accentColor" type="color" value="#66ccff" class="input" style="height:48px;padding:6px 8px;" />
+            </div>
+            <div>
+              <label class="block mb-2 text-sm">سعر الصرف الافتراضي</label>
+              <input id="defaultRate" type="number" step="0.01" class="input" placeholder="مثلاً 15000" />
+            </div>
+            <div class="flex items-center justify-between glass px-4 py-4">
+              <div>
+                <div class="font-bold">وضع مختصر</div>
+                <div class="mini-label">واجهة أخف</div>
+              </div>
+              <input id="compactMode" type="checkbox" class="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        <!-- PDF Print Settings -->
+        <div class="panel p-5 md:p-6">
+          <h3 class="text-lg font-bold mb-1">إعدادات PDF الدقيقة</h3>
+          <p class="mini-label mb-4">تتحكم في جودة وتخطيط ملف PDF المُنشأ</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+
+            <div>
+              <label class="block mb-2 text-sm">اتجاه الصفحة</label>
+              <select id="printOrientation" class="select">
+                <option value="landscape">عرضي — Landscape (موصى به)</option>
+                <option value="portrait">عمودي — Portrait</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block mb-2 text-sm">حجم الورق</label>
+              <select id="printFormat" class="select">
+                <option value="a4">A4 (قياسي)</option>
+                <option value="a3">A3 (أكبر)</option>
+                <option value="letter">Letter (أمريكي)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block mb-2 text-sm">جودة التصيير (Scale) — كلما زاد كلما كانت الجودة أعلى</label>
+              <select id="printScale" class="select">
+                <option value="1">1× — سريع / خفيف</option>
+                <option value="2" selected>2× — جيد (افتراضي)</option>
+                <option value="3">3× — عالي الجودة</option>
+                <option value="4">4× — دقة عالية جداً</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block mb-2 text-sm">الهوامش (mm) — يسار / يمين / أعلى / أسفل</label>
+              <div class="grid grid-cols-4 gap-2">
+                <input id="printMarginTop"    type="number" min="0" max="30" class="input" placeholder="أعلى"  title="هامش أعلى" />
+                <input id="printMarginRight"  type="number" min="0" max="30" class="input" placeholder="يمين" title="هامش يمين" />
+                <input id="printMarginBottom" type="number" min="0" max="30" class="input" placeholder="أسفل" title="هامش أسفل" />
+                <input id="printMarginLeft"   type="number" min="0" max="30" class="input" placeholder="يسار" title="هامش يسار" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block mb-2 text-sm">جودة الصورة (0.1 – 1.0)</label>
+              <input id="printImageQuality" type="number" min="0.1" max="1" step="0.05" class="input" placeholder="0.98" />
+            </div>
+
+            <div>
+              <label class="block mb-2 text-sm">عرض العنصر المُصوَّر (px) — اتركه فارغاً للتلقائي 1050</label>
+              <input id="printWindowWidth" type="number" min="800" max="1600" class="input" placeholder="1050" />
+            </div>
+
+            <div class="flex items-center justify-between glass px-4 py-4">
+              <div>
+                <div class="font-bold">تضمين المخطط الدائري</div>
+                <div class="mini-label">إظهار الرسم البياني في PDF</div>
+              </div>
+              <input id="printIncludeChart" type="checkbox" class="w-5 h-5" />
+            </div>
+
+            <div class="flex items-center justify-between glass px-4 py-4">
+              <div>
+                <div class="font-bold">فرض ملاءمة صفحة واحدة</div>
+                <div class="mini-label">يضغط التقرير ليتناسب مع ورقة واحدة</div>
+              </div>
+              <input id="printFitOnePage" type="checkbox" class="w-5 h-5" />
+            </div>
+
+            <div class="flex items-center justify-between glass px-4 py-4">
+              <div>
+                <div class="font-bold">خلفية بيضاء صريحة</div>
+                <div class="mini-label">يمنع الخلفية الشفافة في PDF</div>
+              </div>
+              <input id="printWhiteBg" type="checkbox" class="w-5 h-5" />
+            </div>
+
+          </div>
+
+          <div class="mt-5 flex flex-wrap gap-3">
+            <button onclick="App.saveSettings()" class="btn glass px-4 py-3 font-semibold">💾 حفظ الإعدادات</button>
+            <button onclick="App.resetSettings()" class="btn glass px-4 py-3 font-semibold">↺ إعادة افتراضي</button>
+            <button onclick="App.generatePDF()"   class="btn glass px-4 py-3 font-semibold" style="background:rgba(102,204,255,.18);">⬇ اختبار PDF الآن</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile -->
+      <section id="profileSection" class="hidden-important space-y-4 fade-in">
+        <div class="panel p-5 md:p-6">
+          <h3 class="text-lg font-bold mb-4">الملف الشخصي</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block mb-2 text-sm">الاسم</label>
+              <input id="profileName" type="text" class="input" placeholder="اسمك" />
+            </div>
+            <div>
+              <label class="block mb-2 text-sm">الوظيفة / الوصف</label>
+              <input id="profileTitle" type="text" class="input" placeholder="مثلاً: مدير عمليات" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block mb-2 text-sm">ملاحظة</label>
+              <textarea id="profileBio" class="textarea" placeholder="ملاحظة قصيرة..."></textarea>
+            </div>
+          </div>
+          <div class="mt-5">
+            <button onclick="App.saveProfile()" class="btn glass px-4 py-3 font-semibold">حفظ الملف الشخصي</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged,
+      createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      signOut, updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyACPVxprQrys1w-6Re_75UFISJ3Nm8r-D0",
+      authDomain: "income-app-e6b07.firebaseapp.com",
+      projectId: "income-app-e6b07",
+      storageBucket: "income-app-e6b07.firebasestorage.app",
+      messagingSenderId: "420055247334",
+      appId: "1:420055247334:web:86f3a28ba6b2e20bf58e27"
+    };
+
+    const fbApp = initializeApp(firebaseConfig);
+    const auth  = getAuth(fbApp);
+
+    const LS = {
+      regions: "rd_regions",
+      transactions: "rd_transactions",
+      profile: "rd_profile",
+      settings: "rd_settings"
+    };
+
+    const REGIONS = [
+      { name: "Direct Sales Qamishli / 1", note: "" },
+      { name: "Direct Sales Qamishli / 2", note: "" },
+      { name: "Direct Sales Amude / Jiyan", note: "" },
+      { name: "Direct Sales Derik / Lelav", note: "" },
+      { name: "DSA-1", note: "" },
+      { name: "DSM - 1", note: "" },
+      { name: "DSH-", note: "" },
+      { name: "Civan Ahmad", note: "" },
+      { name: "Ali Hashim", note: "" },
+      { name: "Kawa Hasan-OC", note: "" },
+      { name: "Dilxwaz Esso-OC", note: "" },
+      { name: "Bashar Suleiman", note: "" },
+      { name: "Sharif Ibrahim", note: "" },
+      { name: "Youssef Al-Saleh", note: "" }
+    ];
+
+    const DEFAULT_SETTINGS = {
+      theme: "blue",
+      accentColor: "#66ccff",
+      defaultRate: 15000,
+      compactMode: false,
+      // PDF settings
+      printOrientation: "landscape",
+      printFormat: "a4",
+      printScale: 2,
+      printMarginTop: 6,
+      printMarginRight: 6,
+      printMarginBottom: 6,
+      printMarginLeft: 6,
+      printImageQuality: 0.98,
+      printWindowWidth: 1050,
+      printIncludeChart: true,
+      printFitOnePage: true,
+      printWhiteBg: true
+    };
+
+    const $ = id => document.getElementById(id);
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    const CHART_COLORS = [
+      "#16a34a","#3b82f6","#8b5cf6","#f59e0b",
+      "#ef4444","#ec4899","#14b8a6","#64748b",
+      "#f97316","#06b6d4","#84cc16","#a855f7"
+    ];
+
+    const App = {
+      user: null,
+      regions: [],
+      transactions: [],
+      settings: { ...DEFAULT_SETTINGS },
+      profile: { name:"", title:"", bio:"" },
+      chart: null,
+      reportChart: null,
+      currentSection: "dashboardSection",
+
+      getKey(key) { return `${key}_${this.user?.uid || "guest"}`; },
+
+      getJSON(key, fallback) {
+        try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; }
+        catch { return fallback; }
+      },
+      setJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
+
+      escape(str) {
+        return String(str)
+          .replaceAll("&","&amp;").replaceAll("<","&lt;")
+          .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+      },
+
+      load() {
+        this.regions      = this.getJSON(this.getKey(LS.regions),      REGIONS);
+        this.transactions = this.getJSON(this.getKey(LS.transactions),  []);
+        this.settings     = { ...DEFAULT_SETTINGS, ...this.getJSON(this.getKey(LS.settings), {}) };
+        this.profile      = { name:"", title:"", bio:"", ...this.getJSON(this.getKey(LS.profile), {}) };
+
+        this.applySettingsToUI();
+        this.initDate();
+        this.renderRegions();
+        this.renderTransactions();
+        this.renderSummary();
+        this.updateReportPreview();
+        this.initDashboardChart();
+        this.bindProfileToUI();
+
+        const sel = $("txRegion");
+        sel.innerHTML = this.regions.map(r => `<option value="${this.escape(r.name)}">${this.escape(r.name)}</option>`).join("");
+        if (this.regions.length) sel.value = this.regions[0].name;
+      },
+
+      initDate() {
+        const today = new Date().toISOString().slice(0,10);
+        $("txDate").value     = today;
+        $("reportDay").value  = today;
+        $("reportDayChip").textContent  = today;
+        $("reportSubtitle").textContent = `تاريخ التقرير: ${today}`;
+      },
+
+      applySettingsToUI() {
+        const themes = {
+          blue:    ["#07111f","#102840","#0f4c81"],
+          purple:  ["#160f30","#2a1b5e","#5b3fd1"],
+          emerald: ["#071a17","#0d3b3a","#0f766e"],
+          dark:    ["#05070d","#0c1424","#18223a"]
+        };
+        const t = themes[this.settings.theme] || themes.blue;
+        document.documentElement.style.setProperty("--bg1", t[0]);
+        document.documentElement.style.setProperty("--bg2", t[1]);
+        document.documentElement.style.setProperty("--bg3", t[2]);
+        document.documentElement.style.setProperty("--accent", this.settings.accentColor);
+        document.body.classList.toggle("compact-mode", !!this.settings.compactMode);
+
+        $("themeSelect").value  = this.settings.theme;
+        $("accentColor").value  = this.settings.accentColor;
+        $("defaultRate").value  = this.settings.defaultRate;
+        $("compactMode").checked = !!this.settings.compactMode;
+
+        $("printOrientation").value     = this.settings.printOrientation;
+        $("printFormat").value          = this.settings.printFormat;
+        $("printScale").value           = String(this.settings.printScale);
+        $("printMarginTop").value       = this.settings.printMarginTop;
+        $("printMarginRight").value     = this.settings.printMarginRight;
+        $("printMarginBottom").value    = this.settings.printMarginBottom;
+        $("printMarginLeft").value      = this.settings.printMarginLeft;
+        $("printImageQuality").value    = this.settings.printImageQuality;
+        $("printWindowWidth").value     = this.settings.printWindowWidth || "";
+        $("printIncludeChart").checked  = !!this.settings.printIncludeChart;
+        $("printFitOnePage").checked    = !!this.settings.printFitOnePage;
+        $("printWhiteBg").checked       = !!this.settings.printWhiteBg;
+
+        $("ratePreview").textContent    = `1 USD = ${this.formatMoney(this.settings.defaultRate)} SYP`;
+        $("reportRateChip").textContent = `SYP/USD ${this.formatMoney(this.settings.defaultRate)}`;
+      },
+
+      saveAll() {
+        this.setJSON(this.getKey(LS.regions),      this.regions);
+        this.setJSON(this.getKey(LS.transactions),  this.transactions);
+        this.setJSON(this.getKey(LS.settings),      this.settings);
+        this.setJSON(this.getKey(LS.profile),       this.profile);
+      },
+
+      showSection(sectionId) {
+        this.currentSection = sectionId;
+        ["dashboardSection","transactionsSection","regionsSection","reportsSection","settingsSection","profileSection"]
+          .forEach(id => $(id).classList.add("hidden-important"));
+        $(sectionId).classList.remove("hidden-important");
+
+        ["navDashboard","navTransactions","navRegions","navReports","navSettings","navProfile"]
+          .forEach(id => $(id).classList.remove("active"));
+        const map = {
+          dashboardSection:"navDashboard", transactionsSection:"navTransactions",
+          regionsSection:"navRegions",     reportsSection:"navReports",
+          settingsSection:"navSettings",   profileSection:"navProfile"
+        };
+        $(map[sectionId]).classList.add("active");
+
+        if (sectionId === "reportsSection") this.renderReport();
+      },
+
+      login: async function() {
+        const e = $("authEmail").value.trim(), p = $("authPassword").value;
+        if (!e || !p) return alert("أدخلي الإيميل وكلمة السر.");
+        try { await signInWithEmailAndPassword(auth, e, p); } catch(err){ alert(err.message); }
+      },
+      signup: async function() {
+        const e = $("authEmail").value.trim(), p = $("authPassword").value;
+        if (!e || !p) return alert("أدخلي الإيميل وكلمة السر.");
+        try { await createUserWithEmailAndPassword(auth, e, p); } catch(err){ alert(err.message); }
+      },
+      logout: async function() {
+        try { await signOut(auth); } catch(err){ alert(err.message); }
+      },
+
+      renderRegions() {
+        const el = $("regionsList");
+        if (!this.regions.length) { el.innerHTML = `<div class="glass p-4">لا توجد مناطق بعد.</div>`; return; }
+        el.innerHTML = this.regions.map((r, idx) => `
+          <div class="glass p-4 flex items-start justify-between gap-3">
+            <div>
+              <div class="font-bold">${this.escape(r.name)}</div>
+              <div class="mini-label mt-1">${this.escape(r.note || "")}</div>
+            </div>
+            <button class="chip px-3 py-2 text-sm" onclick="App.removeRegion(${idx})">حذف</button>
+          </div>`).join("");
+
+        const sel = $("txRegion"), cur = sel.value;
+        sel.innerHTML = this.regions.map(r => `<option value="${this.escape(r.name)}">${this.escape(r.name)}</option>`).join("");
+        if (this.regions.some(r => r.name === cur)) sel.value = cur;
+      },
+
+      addRegion() {
+        const name = $("regionName").value.trim(), note = $("regionNote").value.trim();
+        if (!name) return alert("أدخلي اسم المنطقة.");
+        if (this.regions.some(r => r.name.toLowerCase() === name.toLowerCase())) return alert("موجود مسبقًا.");
+        this.regions.push({ name, note });
+        this.saveAll(); this.renderRegions();
+        $("regionName").value = ""; $("regionNote").value = "";
+      },
+
+      removeRegion(idx) {
+        if (!confirm("حذف المنطقة؟")) return;
+        const rem = this.regions[idx];
+        this.regions.splice(idx, 1);
+        this.transactions = this.transactions.filter(tx => tx.region !== rem.name);
+        this.saveAll(); this.renderRegions(); this.renderTransactions();
+        this.renderSummary(); this.updateDashboardChart(); this.renderReport();
+      },
+
+      addTransaction() {
+        const date = $("txDate").value, region = $("txRegion").value;
+        const type = $("txType").value;
+        const amountSYP = parseFloat($("txAmountSYP").value);
+        const rate = parseFloat($("txRate").value) || Number(this.settings.defaultRate);
+        const note = $("txNote").value.trim();
+
+        if (!date || !region || !amountSYP || amountSYP <= 0) return alert("أدخلي التاريخ والمنطقة والمبلغ.");
+        if (!rate || rate <= 0) return alert("أدخلي سعر الصرف.");
+
+        const tx = {
+          id: crypto.randomUUID(), date, region, type,
+          amountSYP, rate, amountUSD: amountSYP / rate,
+          note, createdAt: Date.now()
+        };
+        this.transactions.unshift(tx);
+        this.saveAll(); this.renderTransactions(); this.renderSummary();
+        this.updateReportPreview(); this.updateDashboardChart(); this.renderReport();
+        $("txAmountSYP").value = ""; $("txRate").value = ""; $("txNote").value = "";
+      },
+
+      removeTransaction(id) {
+        if (!confirm("حذف المعاملة؟")) return;
+        this.transactions = this.transactions.filter(t => t.id !== id);
+        this.saveAll(); this.renderTransactions(); this.renderSummary();
+        this.updateReportPreview(); this.updateDashboardChart(); this.renderReport();
+      },
+
+      editTransaction(id) {
+        const tx = this.transactions.find(t => t.id === id);
+        if (!tx) return;
+        const amount = prompt("المبلغ SYP:", tx.amountSYP); if (amount === null) return;
+        const rate   = prompt("سعر الصرف:",  tx.rate);      if (rate   === null) return;
+        const note   = prompt("البيان:",      tx.note || ""); if (note  === null) return;
+        tx.amountSYP = parseFloat(amount) || tx.amountSYP;
+        tx.rate      = parseFloat(rate)   || tx.rate || this.settings.defaultRate;
+        tx.amountUSD = tx.amountSYP / tx.rate;
+        tx.note      = note;
+        this.saveAll(); this.renderTransactions(); this.renderSummary();
+        this.updateReportPreview(); this.updateDashboardChart(); this.renderReport();
+      },
+
+      formatMoney(n) {
+        return Number(n || 0).toLocaleString("en-US", { maximumFractionDigits:2, minimumFractionDigits:2 });
+      },
+
+      renderTransactions() {
+        const tbody = $("transactionsTable");
+        if (!this.transactions.length) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8" style="color:var(--muted);">لا توجد معاملات بعد.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = this.transactions.map(tx => {
+          const lbl   = tx.type === "income" ? "إيراد" : "مصروف";
+          const color = tx.type === "income" ? "color:#7CFFB2" : "color:#FFB7B7";
+          return `<tr>
+            <td>${this.escape(tx.date)}</td>
+            <td>${this.escape(tx.region)}</td>
+            <td style="${color}">${lbl}</td>
+            <td>${this.formatMoney(tx.amountSYP)}</td>
+            <td>${this.formatMoney(tx.rate)}</td>
+            <td>${this.formatMoney(tx.amountUSD)}</td>
+            <td>${this.escape(tx.note || "")}</td>
+            <td>
+              <div class="flex gap-2">
+                <button class="chip px-3 py-2 text-sm" onclick="App.editTransaction('${tx.id}')">تعديل</button>
+                <button class="chip px-3 py-2 text-sm" onclick="App.removeTransaction('${tx.id}')">حذف</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join("");
+      },
+
+      renderSummary() {
+        const netSYP = this.transactions.reduce((s,t) => s + (t.type==="income" ? +t.amountSYP : -+t.amountSYP), 0);
+        const netUSD = this.transactions.reduce((s,t) => s + (t.type==="income" ? +t.amountUSD : -+t.amountUSD), 0);
+        $("statCount").textContent    = this.transactions.length;
+        $("statTotalSYP").textContent = this.formatMoney(netSYP);
+        $("statTotalUSD").textContent = this.formatMoney(netUSD);
+        $("statRegions").textContent  = this.regions.length;
+        const counts = {};
+        this.transactions.forEach(t => { counts[t.region] = (counts[t.region]||0)+1; });
+        $("topRegion").textContent = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || "—";
+        const last = this.transactions[0];
+        $("lastTx").textContent = last ? `${last.region} — ${this.formatMoney(last.amountSYP)} SYP` : "—";
+        $("reportSYP").textContent = this.formatMoney(netSYP);
+        $("reportUSD").textContent = this.formatMoney(netUSD);
+      },
+
+      updateReportPreview() {
+        const day = $("reportDay").value || new Date().toISOString().slice(0,10);
+        $("reportSubtitle").textContent = `تاريخ التقرير: ${day}`;
+      },
+
+      initDashboardChart() {
+        const ctx = $("revenueChart"); if (!ctx) return;
+        if (this.chart) { this.chart.destroy(); this.chart = null; }
+        const { labels, data } = this._chartData();
+        this.chart = new Chart(ctx, {
+          type:"line",
+          data:{ labels, datasets:[{ label:"الإيراد SYP", data, borderWidth:2, tension:.35, fill:true }] },
+          options:{
+            responsive:true,
+            plugins:{ legend:{ display:false } },
+            scales:{
+              x:{ grid:{ color:"rgba(255,255,255,.08)" }, ticks:{ color:"rgba(255,255,255,.82)" } },
+              y:{ grid:{ color:"rgba(255,255,255,.08)" }, ticks:{ color:"rgba(255,255,255,.82)" } }
+            }
+          }
+        });
+      },
+
+      _chartData() {
+        const byDate = {};
+        this.transactions.forEach(t => {
+          byDate[t.date||"—"] = (byDate[t.date||"—"]||0) + (t.type==="income" ? +t.amountSYP : -+t.amountSYP);
+        });
+        const labels = Object.keys(byDate).slice(-8);
+        return { labels, data: labels.map(l => byDate[l]) };
+      },
+
+      updateDashboardChart() {
+        if (!this.chart) { this.initDashboardChart(); return; }
+        const { labels, data } = this._chartData();
+        this.chart.data.labels = labels;
+        this.chart.data.datasets[0].data = data;
+        this.chart.update();
+      },
+
+      saveSettings() {
+        this.settings.theme           = $("themeSelect").value;
+        this.settings.accentColor     = $("accentColor").value;
+        this.settings.defaultRate     = Number($("defaultRate").value || DEFAULT_SETTINGS.defaultRate);
+        this.settings.compactMode     = $("compactMode").checked;
+        this.settings.printOrientation    = $("printOrientation").value;
+        this.settings.printFormat         = $("printFormat").value;
+        this.settings.printScale          = Number($("printScale").value);
+        this.settings.printMarginTop      = Number($("printMarginTop").value)    || 6;
+        this.settings.printMarginRight    = Number($("printMarginRight").value)  || 6;
+        this.settings.printMarginBottom   = Number($("printMarginBottom").value) || 6;
+        this.settings.printMarginLeft     = Number($("printMarginLeft").value)   || 6;
+        this.settings.printImageQuality   = parseFloat($("printImageQuality").value) || 0.98;
+        this.settings.printWindowWidth    = Number($("printWindowWidth").value)  || 1050;
+        this.settings.printIncludeChart   = $("printIncludeChart").checked;
+        this.settings.printFitOnePage     = $("printFitOnePage").checked;
+        this.settings.printWhiteBg        = $("printWhiteBg").checked;
+        this.saveAll();
+        this.applySettingsToUI();
+        this.renderReport();
+        alert("✅ تم حفظ الإعدادات");
+      },
+
+      resetSettings() {
+        this.settings = { ...DEFAULT_SETTINGS };
+        this.saveAll();
+        this.applySettingsToUI();
+        this.renderReport();
+      },
+
+      bindProfileToUI() {
+        $("profileName").value  = this.profile.name  || "";
+        $("profileTitle").value = this.profile.title || "";
+        $("profileBio").value   = this.profile.bio   || "";
+      },
+
+      saveProfile() {
+        this.profile.name  = $("profileName").value.trim();
+        this.profile.title = $("profileTitle").value.trim();
+        this.profile.bio   = $("profileBio").value.trim();
+        this.saveAll();
+        if (this.user) {
+          updateProfile(this.user, { displayName: this.profile.name || null }).catch(()=>{});
+          $("userNameTop").textContent = this.profile.name || this.user.email;
+        }
+        alert("تم حفظ الملف الشخصي ✅");
+      },
+
+      exportTransactionsCSV() {
+        const rows = [["date","region","type","amount_syp","rate","amount_usd","note"]];
+        this.transactions.forEach(tx => rows.push([tx.date,tx.region,tx.type,tx.amountSYP,tx.rate,tx.amountUSD,tx.note||""]));
+        const csv  = rows.map(r => r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\n");
+        const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href = url; a.download = "transactions.csv"; a.click();
+        URL.revokeObjectURL(url);
+      },
+
+      getFilteredTransactions() {
+        const day = $("reportDay").value;
+        return day ? this.transactions.filter(tx => tx.date === day) : [...this.transactions];
+      },
+
+      groupByRegion(list) {
+        const map = {};
+        list.forEach(tx => {
+          const r = tx.region || "—";
+          if (!map[r]) map[r] = { region:r, count:0, syp:0, usd:0 };
+          map[r].count++;
+          map[r].syp += Number(tx.amountSYP||0);
+          map[r].usd += Number(tx.amountUSD||0);
+        });
+        return Object.values(map).sort((a,b) => b.syp - a.syp);
+      },
+
+      renderReport() {
+        const list    = this.getFilteredTransactions();
+        const grouped = this.groupByRegion(list);
+        const total   = (grouped.reduce((s,r) => s + r.syp, 0)) || 1;
+        const totalSYP = list.reduce((s,t) => s + (+t.amountSYP * (t.type==="income"?1:-1)), 0);
+        const totalUSD = list.reduce((s,t) => s + (+t.amountUSD * (t.type==="income"?1:-1)), 0);
+        const day  = $("reportDay").value || "كل الأيام";
+        const rate = this.settings.defaultRate || 15000;
+
+        // Update stat chips
+        $("reportSubtitle").textContent     = `تاريخ التقرير: ${day}`;
+        $("reportRateChip").textContent     = `SYP/USD ${this.formatMoney(rate)}`;
+        $("reportDayChip").textContent      = day;
+        $("reportCount").textContent        = list.length;
+        $("reportRegionCount").textContent  = grouped.length;
+        $("reportSYP").textContent          = this.formatMoney(totalSYP);
+        $("reportUSD").textContent          = this.formatMoney(totalUSD);
+        $("pdfCount").textContent           = list.length;
+        $("pdfRegions").textContent         = grouped.length;
+        $("pdfSYP").textContent             = this.formatMoney(totalSYP);
+        $("pdfUSD").textContent             = this.formatMoney(totalUSD);
+        $("pdfTotalTx").textContent         = list.length;
+        $("pdfTotalSYP2").textContent       = this.formatMoney(totalSYP);
+        $("pdfFooterSummary").textContent   = `سعر الصرف: ${this.formatMoney(rate)} SYP / USD — ${new Date().toLocaleString("ar-SY")}`;
+
+        // Table rows
+        $("reportTableBody").innerHTML = grouped.length
+          ? grouped.map((r,i) => {
+              const pct = ((r.syp / total) * 100).toFixed(1);
+              return `<tr>
+                <td>${i+1}</td>
+                <td style="font-weight:700;">${this.escape(r.region)}</td>
+                <td>${r.count}</td>
+                <td style="font-weight:800;">${this.formatMoney(r.syp)}</td>
+                <td>${pct}%</td>
+              </tr>`;
+            }).join("")
+          : `<tr><td colspan="5" style="padding:14px;text-align:center;">لا توجد بيانات</td></tr>`;
+
+        // Legend
+        $("reportLegend").innerHTML = grouped.length
+          ? grouped.slice(0, 8).map((r,i) => {
+              const pct = ((r.syp / total) * 100).toFixed(1);
+              const c   = CHART_COLORS[i % CHART_COLORS.length];
+              return `<div class="report-legend-item">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:999px;background:${c};flex-shrink:0;"></span>
+                  <span>${this.escape(r.region)}</span>
+                </div>
+                <span style="color:${c};font-weight:800;">${pct}%</span>
+              </div>`;
+            }).join("")
+          : "";
+
+        // Donut chart
+        const ctx = $("reportChart");
+        if (this.reportChart) { this.reportChart.destroy(); this.reportChart = null; }
+        const chartData   = grouped.length ? grouped.map(r => r.syp) : [1];
+        const chartLabels = grouped.length ? grouped.map(r => r.region) : ["لا توجد بيانات"];
+        this.reportChart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: chartLabels,
+            datasets: [{
+              data: chartData,
+              borderWidth: 2,
+              backgroundColor: grouped.length ? CHART_COLORS.slice(0, grouped.length) : ["#e5e7eb"]
+            }]
+          },
+          options: {
+            responsive: false,
+            animation: false,
+            cutout: "62%",
+            plugins: { legend: { display: false } }
+          }
+        });
+
+        // Toggle chart visibility
+        const reportPage = $("reportCanvas");
+        reportPage.classList.toggle("pdf-no-chart", !this.settings.printIncludeChart);
+      },
+
+      setReportFilter(mode) {
+        const input = $("reportDay");
+        const today = new Date();
+        const fmt   = d => d.toISOString().slice(0,10);
+        if      (mode === "today")     input.value = fmt(today);
+        else if (mode === "yesterday") { const y=new Date(today); y.setDate(y.getDate()-1); input.value=fmt(y); }
+        else if (mode === "all")       input.value = "";
+        this.renderReport();
+      },
+
+      /* ========================================================
+         generatePDF — rewritten for reliability and one-page fit
+         ======================================================== */
+      async generatePDF() {
+        const s = this.settings;
+
+        // Navigate to reports and render
+        const prevSection = this.currentSection;
+        this.showSection("reportsSection");
+        this.renderReport();
+
+        // Show overlay
+        const overlay = $("pdfOverlay");
+        overlay.classList.remove("hidden-important");
+        $("pdfOverlayMsg").textContent = "جاري تحضير التقرير...";
+
+        // Give chart time to paint
+        await sleep(400);
+
+        const el          = $("reportCanvas");
+        const dayValue    = $("reportDay").value || "all";
+        const orientation = s.printOrientation || "landscape";
+        const format      = s.printFormat      || "a4";
+        const scale       = Number(s.printScale || 2);
+        const quality     = Number(s.printImageQuality || 0.98);
+        const ww          = Number(s.printWindowWidth  || 1050);
+        const bgColor     = s.printWhiteBg ? "#ffffff" : "transparent";
+        const fitOne      = !!s.printFitOnePage;
+
+        const margin = [
+          Number(s.printMarginTop    || 6),
+          Number(s.printMarginRight  || 6),
+          Number(s.printMarginBottom || 6),
+          Number(s.printMarginLeft   || 6)
+        ];
+
+        $("pdfOverlayMsg").textContent = "جاري تصيير الصفحة...";
+
+        const options = {
+          margin,
+          filename: `report_${dayValue}.pdf`,
+          image: { type: "jpeg", quality },
+          html2canvas: {
+            scale,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: bgColor,
+            scrollX: 0,
+            scrollY: 0,
+            width: ww,
+            windowWidth: ww,
+            logging: false,
+            onclone(doc) {
+              // Ensure font is loaded in cloned doc
+              const link = doc.createElement("link");
+              link.rel = "stylesheet";
+              link.href = "https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap";
+              doc.head.appendChild(link);
+            }
+          },
+          jsPDF: {
+            unit: "mm",
+            format,
+            orientation,
+            compress: true,
+            putOnlyUsedFonts: true
+          },
+          pagebreak: { mode: fitOne ? "avoid-all" : ["css","legacy"] }
+        };
+
+        $("pdfOverlayMsg").textContent = "جاري إنشاء الملف...";
+
+        try {
+          if (fitOne) {
+            // Capture canvas → resize to fit exactly one page
+            const worker = html2pdf().set(options).from(el);
+            await worker.save();
+          } else {
+            await html2pdf().set(options).from(el).save();
+          }
+        } catch(err) {
+          console.error("PDF Error:", err);
+          alert("⚠️ تعذر إنشاء PDF: " + err.message);
+        } finally {
+          overlay.classList.add("hidden-important");
+          this.showSection(prevSection);
+        }
+      }
+    };
+
+    window.App = App;
+
+    onAuthStateChanged(auth, user => {
+      App.user = user || null;
+      if (!user) {
+        $("authOverlay").classList.remove("hidden-important");
+        $("appShell").classList.add("hidden-important");
+        return;
+      }
+      $("authOverlay").classList.add("hidden-important");
+      $("appShell").classList.remove("hidden-important");
+
+      App.load();
+
+      const savedProfile  = App.getJSON(App.getKey(LS.profile),   {});
+      const savedSettings = App.getJSON(App.getKey(LS.settings),  {});
+      App.profile  = { name:"", title:"", bio:"", ...savedProfile };
+      if (savedProfile.name || user.displayName) App.profile.name = savedProfile.name || user.displayName || "";
+      App.settings = { ...DEFAULT_SETTINGS, ...savedSettings };
+
+      App.bindProfileToUI();
+      App.applySettingsToUI();
+      App.renderRegions();
+      App.renderTransactions();
+      App.renderSummary();
+      App.updateReportPreview();
+      App.updateDashboardChart();
+      App.renderReport();
+
+      $("userNameTop").textContent = App.profile.name || user.email || "مستخدم";
+      $("userEmailTop").textContent = user.email || "";
+      App.showSection("dashboardSection");
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      App.load();
+      App.initDate();
+      $("reportDay").addEventListener("change", () => App.renderReport());
+      App.setReportFilter("today");
+    });
+  </script>
+</body>
+</html>
