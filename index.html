@@ -176,72 +176,86 @@
       box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 55%, transparent);
     }
 
+    /* ===== Report ===== */
     .report-page{
       background:#fff;
-      color:#111827;
+      color:#000;
       border-radius: 22px;
       box-shadow: 0 16px 40px rgba(0,0,0,.10);
       padding: 24px;
     }
+
+    .report-page, .report-page *{
+      color:#000;
+    }
+
     .report-head{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
       gap:16px;
-      border-bottom: 3px solid #24b47e;
+      border-bottom: 3px solid #000;
       padding-bottom: 14px;
       margin-bottom: 18px;
     }
+
     .report-title{
       font-size: 30px;
       font-weight: 900;
       margin: 0;
-      color:#0f172a;
+      color:#000;
     }
+
     .report-sub{
       margin-top: 6px;
-      color:#64748b;
+      color:#000;
       font-size: 14px;
       font-weight: 700;
     }
+
     .report-pill-wrap{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
       justify-content:flex-end;
     }
+
     .report-pill{
-      border: 1px solid #9ae6b4;
-      background: #f0fff4;
-      color: #166534;
+      border: 1px solid #000;
+      background: #fff;
+      color: #000;
       border-radius: 999px;
       padding: 10px 16px;
       font-weight: 800;
       white-space: nowrap;
     }
+
     .report-cards{
       display:grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
       margin: 16px 0 18px;
     }
+
     .report-card{
       border-radius: 18px;
       padding: 18px;
       text-align:center;
-      border: 3px solid #ddd;
+      border: 2px solid #000;
       background:#fff;
     }
+
     .report-card .label{
       font-size: 13px;
-      color:#64748b;
+      color:#000;
       font-weight: 800;
     }
+
     .report-card .value{
       font-size: 30px;
       font-weight: 900;
       margin-top: 6px;
-      color:#0f172a;
+      color:#000;
     }
 
     .report-layout{
@@ -257,40 +271,48 @@
       justify-content:space-between;
       font-size: 18px;
       font-weight: 900;
-      color: #0f172a;
+      color: #000;
       margin: 18px 0 12px;
     }
 
     .report-table-wrap{
       border-radius: 16px;
       overflow:hidden;
-      border:1px solid #e5e7eb;
+      border:1px solid #000;
       background:#fff;
     }
 
     .report-table{
       width:100%;
+      min-width: 0;
       border-collapse:collapse;
       font-size: 13px;
+      table-layout: fixed;
     }
+
     .report-table th, .report-table td{
-      border:1px solid #e5e7eb;
+      border:1px solid #000;
       padding:10px 8px;
       text-align:right;
-      white-space: nowrap;
+      white-space: normal;
+      word-break: break-word;
+      color:#000;
     }
+
     .report-table th{
-      background:#0f172a;
-      color:#fff;
-      font-weight:900;
-    }
-    .report-table tfoot td{
-      background:#dcfce7;
+      background:#f3f4f6;
+      color:#000;
       font-weight:900;
     }
 
+    .report-table tfoot td{
+      background:#e5e7eb;
+      font-weight:900;
+      color:#000;
+    }
+
     .report-right{
-      border:1px solid #e5e7eb;
+      border:1px solid #000;
       border-radius:18px;
       padding:18px;
       background:#fff;
@@ -302,24 +324,67 @@
       gap: 8px;
       margin-top: 12px;
     }
+
     .report-legend-item{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      border:1px solid #e5e7eb;
+      border:1px solid #000;
       border-radius:12px;
       padding:10px 12px;
       background:#fff;
       font-weight:700;
+      color:#000;
     }
 
     .report-footer{
       margin-top: 18px;
-      border-top:1px dashed #d1d5db;
+      border-top:1px dashed #000;
       padding-top:14px;
-      color:#64748b;
+      color:#000;
       font-size:12px;
+    }
+
+    .print-mode .report-page{
+      padding: 18px;
+    }
+
+    .print-mode .report-cards{
+      gap: 8px;
+    }
+
+    .print-mode .report-card .value{
+      font-size: 24px;
+    }
+
+    .print-mode .report-layout{
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .print-mode .report-table{
+      font-size: 11px;
+    }
+
+    .print-mode .report-table th,
+    .print-mode .report-table td{
+      padding: 6px 5px;
+    }
+
+    .print-mode .report-right{
+      padding: 12px;
+    }
+
+    .print-hide-chart .report-right canvas,
+    .print-hide-chart #reportLegend{
+      display:none !important;
+    }
+
+    @media print {
+      body{
+        background:#fff !important;
+      }
     }
   </style>
 </head>
@@ -542,7 +607,7 @@
           <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
             <div>
               <h3 class="text-lg font-bold">تقرير PDF</h3>
-              <p class="mini-label mt-1">تصفية حسب اليوم، وشكل واضح مثل الصورة.</p>
+              <p class="mini-label mt-1">تصفية حسب اليوم وشكل واضح قبل الطباعة.</p>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3">
@@ -588,21 +653,21 @@
           </div>
 
           <div class="report-cards">
-            <div class="report-card" style="border-color:#f5b642; background:#fff9eb;">
+            <div class="report-card" style="background:#fff;">
               <div class="label">المعاملات</div>
-              <div id="pdfCount" class="value" style="color:#b45309;">0</div>
+              <div id="pdfCount" class="value">0</div>
             </div>
-            <div class="report-card" style="border-color:#8b5cf6; background:#f7f2ff;">
+            <div class="report-card" style="background:#fff;">
               <div class="label">المناطق</div>
-              <div id="pdfRegions" class="value" style="color:#6d28d9;">0</div>
+              <div id="pdfRegions" class="value">0</div>
             </div>
-            <div class="report-card" style="border-color:#3b82f6; background:#eff6ff;">
+            <div class="report-card" style="background:#fff;">
               <div class="label">ما يعادل USD</div>
-              <div id="pdfUSD" class="value" style="color:#1d4ed8;">0</div>
+              <div id="pdfUSD" class="value">0</div>
             </div>
-            <div class="report-card" style="border-color:#34d399; background:#ecfdf5;">
+            <div class="report-card" style="background:#fff;">
               <div class="label">إجمالي SYP</div>
-              <div id="pdfSYP" class="value" style="color:#059669;">0</div>
+              <div id="pdfSYP" class="value">0</div>
             </div>
           </div>
 
@@ -610,18 +675,18 @@
             <div>
               <div class="report-section-title">
                 <span>ملخص إيرادات المناطق</span>
-                <span style="color:#64748b; font-size:14px; font-weight:700;">حسب التصفية المحددة</span>
+                <span style="font-size:14px; font-weight:700;">حسب التصفية المحددة</span>
               </div>
 
               <div class="report-table-wrap">
                 <table class="report-table">
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>المنطقة</th>
-                      <th>المعاملات</th>
-                      <th>المجموع (SYP)</th>
-                      <th>النسبة</th>
+                      <th style="width:10%;">#</th>
+                      <th style="width:34%;">المنطقة</th>
+                      <th style="width:16%;">المعاملات</th>
+                      <th style="width:24%;">المجموع (SYP)</th>
+                      <th style="width:16%;">النسبة</th>
                     </tr>
                   </thead>
                   <tbody id="reportTableBody"></tbody>
@@ -641,7 +706,7 @@
             <div class="report-right">
               <div class="report-section-title" style="margin-top:0;">
                 <span>توزيع الإيرادات</span>
-                <span style="color:#64748b; font-size:14px; font-weight:700;">Donut</span>
+                <span style="font-size:14px; font-weight:700;">Donut</span>
               </div>
               <canvas id="reportChart" width="420" height="420"></canvas>
               <div id="reportLegend" class="report-legend"></div>
@@ -683,6 +748,35 @@
                 <div class="mini-label">واجهة أخف</div>
               </div>
               <input id="compactMode" type="checkbox" class="w-5 h-5" />
+            </div>
+
+            <div>
+              <label class="block mb-2 text-sm">اتجاه PDF</label>
+              <select id="printOrientation" class="select">
+                <option value="landscape">عرضي</option>
+                <option value="portrait">عمودي</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block mb-2 text-sm">مقياس الطباعة</label>
+              <input id="printScale" type="number" step="0.1" min="1" max="3" class="input" placeholder="2" />
+            </div>
+
+            <div class="flex items-center justify-between glass px-4 py-4">
+              <div>
+                <div class="font-bold">تضمين المخطط</div>
+                <div class="mini-label">إظهار الرسم داخل PDF</div>
+              </div>
+              <input id="printIncludeChart" type="checkbox" class="w-5 h-5" />
+            </div>
+
+            <div class="flex items-center justify-between glass px-4 py-4">
+              <div>
+                <div class="font-bold">نمط طباعة مضغوط</div>
+                <div class="mini-label">يقلل المسافات والحجم</div>
+              </div>
+              <input id="printCompact" type="checkbox" class="w-5 h-5" />
             </div>
           </div>
 
@@ -772,7 +866,11 @@
       theme: "blue",
       accentColor: "#66ccff",
       defaultRate: 15000,
-      compactMode: false
+      compactMode: false,
+      printOrientation: "landscape",
+      printScale: 2,
+      printIncludeChart: true,
+      printCompact: true
     };
 
     const $ = (id) => document.getElementById(id);
@@ -863,6 +961,12 @@
         $("accentColor").value = this.settings.accentColor;
         $("defaultRate").value = this.settings.defaultRate;
         $("compactMode").checked = !!this.settings.compactMode;
+
+        $("printOrientation").value = this.settings.printOrientation || DEFAULT_SETTINGS.printOrientation;
+        $("printScale").value = this.settings.printScale || DEFAULT_SETTINGS.printScale;
+        $("printIncludeChart").checked = !!this.settings.printIncludeChart;
+        $("printCompact").checked = !!this.settings.printCompact;
+
         $("ratePreview").textContent = `1 USD = ${this.formatMoney(this.settings.defaultRate)} SYP`;
         $("reportRateChip").textContent = `SYP/USD ${this.formatMoney(this.settings.defaultRate)}`;
       },
@@ -1214,6 +1318,10 @@
         this.settings.accentColor = $("accentColor").value;
         this.settings.defaultRate = Number($("defaultRate").value || DEFAULT_SETTINGS.defaultRate);
         this.settings.compactMode = $("compactMode").checked;
+        this.settings.printOrientation = $("printOrientation").value;
+        this.settings.printScale = Number($("printScale").value || DEFAULT_SETTINGS.printScale);
+        this.settings.printIncludeChart = $("printIncludeChart").checked;
+        this.settings.printCompact = $("printCompact").checked;
         this.saveAll();
         this.applySettingsToUI();
         this.renderReport();
@@ -1313,24 +1421,24 @@
 
         $("reportTableBody").innerHTML = grouped.length
           ? grouped.map((r, i) => {
-              const pct = ((r.syp / total) * 100).toFixed(1);
+              const pct = total ? ((r.syp / total) * 100).toFixed(1) : "0.0";
               return `
                 <tr>
                   <td>${i + 1}</td>
                   <td style="font-weight:700;">${this.escape(r.region)}</td>
                   <td>${r.count}</td>
-                  <td style="color:#059669; font-weight:800;">${this.formatMoney(r.syp)}</td>
+                  <td style="font-weight:800;">${this.formatMoney(r.syp)}</td>
                   <td>${pct}%</td>
                 </tr>
               `;
             }).join("")
-          : `<tr><td colspan="5" style="padding:16px; text-align:center; color:#6b7280;">لا توجد بيانات</td></tr>`;
+          : `<tr><td colspan="5" style="padding:16px; text-align:center;">لا توجد بيانات</td></tr>`;
 
         const colors = ["#16a34a", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#ec4899", "#14b8a6", "#64748b"];
 
         $("reportLegend").innerHTML = grouped.length
           ? grouped.map((r, i) => {
-              const pct = ((r.syp / total) * 100).toFixed(1);
+              const pct = total ? ((r.syp / total) * 100).toFixed(1) : "0.0";
               const c = colors[i % colors.length];
               return `
                 <div class="report-legend-item">
@@ -1385,6 +1493,9 @@
             }
           }
         });
+
+        const reportPage = $("reportCanvas");
+        reportPage.classList.toggle("print-mode", !!this.settings.printCompact);
       },
 
       setReportFilter(mode) {
@@ -1412,21 +1523,34 @@
 
         await sleep(500);
 
-        const element = $("reportCanvas");
+        const reportPage = $("reportCanvas");
+        const originalClass = reportPage.className;
+
+        const includeChart = !!this.settings.printIncludeChart;
+        reportPage.classList.toggle("print-hide-chart", !includeChart);
+        reportPage.classList.add("print-mode");
+
+        await sleep(120);
+
+        const element = reportPage;
         const dayValue = $("reportDay").value || "all";
+        const orientation = this.settings.printOrientation || "landscape";
+        const scale = Number(this.settings.printScale || 2);
+
         const options = {
           margin: 0,
           filename: `report_${dayValue}.pdf`,
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
-            scale: 2,
+            scale,
             useCORS: true,
             backgroundColor: "#ffffff",
             scrollX: 0,
-            scrollY: 0
+            scrollY: 0,
+            windowWidth: element.scrollWidth
           },
-          jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
-          pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+          jsPDF: { unit: "pt", format: "a4", orientation },
+          pagebreak: { mode: ["css", "legacy"] }
         };
 
         try {
@@ -1435,6 +1559,7 @@
           alert("تعذر إنشاء PDF الآن.");
           console.error(e);
         } finally {
+          reportPage.className = originalClass;
           this.showSection(previousSection);
         }
       }
