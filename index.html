@@ -1,805 +1,943 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revenue Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>متتبع الإيراد اليومي - سوريا</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
   <style>
-    :root{--bg1:#07111f;--bg2:#102840;--bg3:#0f4c81;--glass:rgba(255,255,255,.12);--border:rgba(255,255,255,.16);--text:#fff;--muted:rgba(255,255,255,.74);--accent:#66ccff;--shadow:0 10px 35px rgba(0,0,0,.24);}
-    *{box-sizing:border-box;}html,body{margin:0;min-height:100%;}
-    body{font-family:"Cairo",system-ui,sans-serif;color:var(--text);background:linear-gradient(120deg,var(--bg1),var(--bg2),var(--bg3));background-size:300% 300%;animation:bgMove 18s ease infinite;overflow-x:hidden;}
-    @keyframes bgMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-    .bg-orb{position:fixed;width:300px;height:300px;border-radius:999px;filter:blur(16px);opacity:.28;pointer-events:none;z-index:0;animation:float 18s ease-in-out infinite;}
-    .orb1{top:8%;right:6%;background:radial-gradient(circle at 30% 30%,rgba(102,204,255,.95),rgba(102,204,255,0) 62%);}
-    .orb2{bottom:8%;left:5%;background:radial-gradient(circle at 30% 30%,rgba(160,110,255,.95),rgba(160,110,255,0) 62%);animation-duration:22s;}
-    .orb3{top:42%;left:42%;background:radial-gradient(circle at 30% 30%,rgba(70,255,195,.95),rgba(70,255,195,0) 62%);animation-duration:26s;}
-    @keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-24px) scale(1.08)}}
-    .glass{background:var(--glass);border:1px solid var(--border);box-shadow:var(--shadow);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:22px;}
-    .panel{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.11);border-radius:20px;}
-    .btn{transition:.15s ease;}.btn:hover{transform:translateY(-1px);}.btn:active{transform:translateY(0);opacity:.96;}
-    .input,.select,.textarea{width:100%;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.10);color:#fff;border-radius:14px;padding:12px 14px;outline:none;}
-    .input::placeholder,.textarea::placeholder{color:rgba(255,255,255,.62);}.select option{color:#111;}.textarea{min-height:110px;resize:vertical;}
-    .nav-btn.active{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.26);}
-    .hidden-important{display:none !important;}
-    .topbar{position:sticky;top:0;z-index:35;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:rgba(8,18,33,.40);border-bottom:1px solid rgba(255,255,255,.09);}
-    .modal-backdrop{background:rgba(0,0,0,.50);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
-    .chip{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);border-radius:999px;}
-    .mini-label{color:var(--muted);font-size:.85rem;}
-    .table-wrap{overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10);}
-    table{width:100%;border-collapse:collapse;min-width:1100px;}
-    th,td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right;white-space:nowrap;}
-    th{background:rgba(255,255,255,.06);color:rgba(255,255,255,.88);font-weight:700;}td{color:rgba(255,255,255,.90);}
-    .fade-in{animation:fadeIn .18s ease;}@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-    .accent-line{height:4px;border-radius:999px;background:var(--accent);}
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; width: 100%; }
+    body { font-family: 'Cairo', sans-serif; overflow: hidden; color: #1a1a1a; }
 
-    /* PDF overlay */
-    #pdfOverlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;font-family:"Cairo",sans-serif;}
-    #pdfOverlay .spinner{width:52px;height:52px;border:4px solid rgba(255,255,255,.2);border-top-color:#66ccff;border-radius:50%;animation:spin .8s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    #pdfOverlay p{font-size:1.1rem;font-weight:700;margin:0;}
-
-    /* ═══════════════════════════════
-       REPORT PAGE — fixed 1050px
-    ═══════════════════════════════ */
-    .report-scroll-wrap{overflow-x:auto;padding-bottom:8px;}
-
-    .report-page{
-      font-family:"Cairo",sans-serif;
-      background:#fff;color:#1a1a2e;
-      width:1050px;min-width:1050px;max-width:1050px;
-      padding:28px 32px 22px;
-      border-radius:16px;
-      box-shadow:0 16px 40px rgba(0,0,0,.10);
-      overflow:hidden;
+    body::before {
+      content: '';
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #0d0221 0%, #1a0545 30%, #2d1065 60%, #0a1a4a 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      z-index: -2;
     }
-    .report-page *{font-family:"Cairo",sans-serif;color:inherit;}
+    @keyframes gradientShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 
-    .rp-company{text-align:center;font-size:13px;font-weight:700;color:#666;margin-bottom:4px;}
-    .rp-title{text-align:center;font-size:30px;font-weight:900;color:#1a1a2e;margin:0 0 14px;}
-    .rp-pills{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
-    .rp-pill{border:1.5px solid #e0e0e0;border-radius:999px;padding:6px 16px;font-size:12px;font-weight:700;color:#444;display:inline-flex;align-items:center;gap:6px;background:#fafafa;}
-    .rp-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
-    .rp-card{border-radius:14px;padding:14px 18px;}
-    .rp-card-label{font-size:11px;font-weight:800;opacity:.85;}
-    .rp-card-value{font-size:26px;font-weight:900;margin-top:6px;line-height:1;}
-    .rp-body{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;}
-    .rp-section-title{font-size:14px;font-weight:900;color:#1a1a2e;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-    .rp-table-wrap{border-radius:12px;overflow:hidden;border:1.5px solid #e9ecef;}
-    .rp-table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
-    .rp-table th{background:#f8f9fa;padding:9px 12px;text-align:right;font-weight:800;font-size:11.5px;color:#555;border-bottom:2px solid #e9ecef;}
-    .rp-table td{padding:9px 12px;border-bottom:1px solid #f0f0f0;text-align:right;vertical-align:middle;}
-    .rp-table tr:last-child td{border-bottom:none;}
-    .rp-table tfoot td{background:#f1f3f5;font-weight:900;border-top:2px solid #dee2e6;border-bottom:none;}
-    .rp-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0;}
-    .rp-region-cell{display:flex;align-items:center;gap:7px;font-weight:700;}
-    .rp-pct-wrap{display:flex;align-items:center;justify-content:flex-end;gap:7px;}
-    .rp-pct-bar-bg{width:40px;height:4px;border-radius:999px;background:#eee;overflow:hidden;flex-shrink:0;}
-    .rp-pct-bar-fill{height:100%;border-radius:999px;}
-    .rp-pct-text{font-size:11px;font-weight:800;min-width:35px;text-align:right;}
-    .rp-chart-wrap{position:relative;width:220px;height:220px;margin:0 auto;}
-    .rp-chart-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
-    .rcc-num{font-size:38px;font-weight:900;color:#1a1a2e;line-height:1;}
-    .rcc-lbl{font-size:12px;font-weight:700;color:#888;margin-top:2px;}
-    #reportChart{width:220px !important;height:220px !important;}
-    .rp-legend{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;}
-    .rp-legend-item{display:flex;align-items:center;justify-content:space-between;background:#f8f9fa;border-radius:8px;padding:6px 10px;gap:6px;}
-    .rp-legend-left{display:flex;align-items:center;gap:6px;}
-    .rp-legend-name{font-size:10.5px;font-weight:700;color:#333;}
-    .rp-legend-pct{font-size:11.5px;font-weight:900;}
-    .rp-footer{margin-top:18px;border-top:1px dashed #dee2e6;padding-top:12px;display:flex;justify-content:space-between;align-items:center;}
-    .rp-footer-brand{font-size:13px;font-weight:800;color:#333;display:flex;align-items:center;gap:6px;}
-    .rp-footer-info{font-size:11px;color:#888;}
-    .pdf-no-chart .rp-chart-col{display:none !important;}
-    .pdf-no-chart .rp-body{grid-template-columns:1fr;}
-    @media print{body{background:#fff !important;}}
+    /* ===== THEMES ===== */
+    body.bg-theme-1::before {
+      background: linear-gradient(135deg, #0d0221 0%, #1a0545 30%, #2d1065 60%, #0a1a4a 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShift 18s ease infinite !important;
+    }
+    body.bg-theme-1::after {
+      content: ''; position: fixed; top:0; left:0; width:100%; height:100%;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, white, transparent),
+        radial-gradient(1.5px 1.5px at 30% 40%, rgba(200,180,255,.9), transparent),
+        radial-gradient(1px 1px at 55% 20%, white, transparent),
+        radial-gradient(2px 2px at 70% 60%, rgba(180,200,255,.8), transparent),
+        radial-gradient(1px 1px at 85% 35%, white, transparent),
+        radial-gradient(1.5px 1.5px at 20% 75%, rgba(255,255,255,.7), transparent),
+        radial-gradient(1px 1px at 90% 80%, white, transparent),
+        radial-gradient(1px 1px at 45% 90%, rgba(200,180,255,.8), transparent);
+      background-repeat: repeat; background-size: 300px 250px;
+      animation: twinkleStar 5s ease-in-out infinite; opacity: 0.7; z-index: -1;
+    }
+
+    body.bg-theme-2::before {
+      background: linear-gradient(135deg, #12002a 0%, #3b0764 30%, #7c3aed 60%, #c026d3 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShift2 14s ease infinite !important;
+    }
+
+    body.bg-theme-3::before {
+      background: linear-gradient(135deg, #1a0500 0%, #7c1d00 30%, #dc4500 60%, #f59e0b 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShift3 14s ease infinite !important;
+    }
+
+    body.bg-theme-4::before {
+      background: linear-gradient(135deg, #001a3a 0%, #003d7a 30%, #0077b6 60%, #00b4d8 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShift4 16s ease infinite !important;
+    }
+    body.bg-theme-4::after {
+      content: ''; position: fixed; top:0; left:0; width:100%; height:100%;
+      background-image:
+        radial-gradient(1px 1px at 15% 25%, rgba(180,230,255,.8), transparent),
+        radial-gradient(1.5px 1.5px at 50% 10%, white, transparent),
+        radial-gradient(1px 1px at 80% 45%, rgba(200,240,255,.7), transparent),
+        radial-gradient(2px 2px at 35% 70%, rgba(180,220,255,.6), transparent),
+        radial-gradient(1px 1px at 65% 85%, white, transparent);
+      background-repeat: repeat; background-size: 280px 220px;
+      animation: twinkleStar 6s ease-in-out infinite; opacity: 0.5; z-index: -1;
+    }
+
+    body.bg-theme-5::before {
+      background: linear-gradient(135deg, #001a0e 0%, #004d29 30%, #00843d 60%, #10b981 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShift5 17s ease infinite !important;
+    }
+
+    body.bg-theme-6::before {
+      background: linear-gradient(135deg, #1a0010 0%, #5b0020 30%, #9b1239 60%, #e11d48 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShift6 15s ease infinite !important;
+    }
+
+    body.bg-theme-7::before {
+      background: linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 40%, #16213e 70%, #0f3460 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShift7 20s ease infinite !important;
+    }
+    body.bg-theme-7::after {
+      content: ''; position: fixed; top:0; left:0; width:100%; height:100%;
+      background-image:
+        radial-gradient(1.5px 1.5px at 25% 20%, white, transparent),
+        radial-gradient(1px 1px at 60% 50%, rgba(180,200,255,.9), transparent),
+        radial-gradient(2px 2px at 40% 80%, white, transparent),
+        radial-gradient(1px 1px at 75% 15%, rgba(200,220,255,.8), transparent),
+        radial-gradient(1.5px 1.5px at 10% 65%, white, transparent),
+        radial-gradient(1px 1px at 90% 40%, rgba(180,200,255,.7), transparent);
+      background-repeat: repeat; background-size: 320px 260px;
+      animation: twinkleStar 7s ease-in-out infinite; opacity: 0.6; z-index: -1;
+    }
+
+    body.bg-theme-dragon::before {
+      background: linear-gradient(135deg, #1a1000 0%, #5c3d00 25%, #b8860b 60%, #ffd700 100%) !important;
+      background-size: 400% 400% !important; animation: dragonFire 4s ease-in-out infinite !important;
+    }
+
+    body.bg-theme-starry-night::before {
+      background: linear-gradient(135deg, #020b1a 0%, #051830 30%, #0a2545 60%, #061020 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShift8 22s ease infinite !important;
+    }
+    body.bg-theme-starry-night::after {
+      content: ''; position: fixed; top:0; left:0; width:100%; height:100%;
+      background-image:
+        radial-gradient(2px 2px at 8% 12%, white, transparent),
+        radial-gradient(1px 1px at 22% 38%, rgba(255,255,255,.9), transparent),
+        radial-gradient(1.5px 1.5px at 45% 8%, white, transparent),
+        radial-gradient(1px 1px at 58% 55%, rgba(200,220,255,.8), transparent),
+        radial-gradient(2px 2px at 72% 28%, white, transparent),
+        radial-gradient(1px 1px at 85% 72%, rgba(255,255,255,.85), transparent),
+        radial-gradient(1.5px 1.5px at 15% 82%, white, transparent),
+        radial-gradient(1px 1px at 38% 65%, rgba(200,210,255,.7), transparent),
+        radial-gradient(2px 2px at 93% 15%, white, transparent),
+        radial-gradient(1px 1px at 67% 90%, rgba(255,255,255,.8), transparent);
+      background-repeat: repeat; background-size: 350px 200px;
+      animation: twinkleStar 4s ease-in-out infinite; opacity: 0.9; z-index: -1;
+    }
+
+    body.bg-theme-emerald::before {
+      background: linear-gradient(135deg, #001a0d 0%, #004d29 25%, #00793f 55%, #00c26b 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShiftEmerald 17s ease infinite !important;
+    }
+
+    body.bg-theme-dual-blue::before {
+      background: linear-gradient(135deg, #000428 0%, #001f6e 30%, #0043b0 65%, #00a8ff 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShiftDual 15s ease infinite !important;
+    }
+
+    body.bg-theme-purple-pink::before {
+      background: linear-gradient(135deg, #1a0030 0%, #4a0080 25%, #9333ea 55%, #e879f9 80%, #fb7185 100%) !important;
+      background-size: 400% 400% !important; animation: gradientShiftPP 14s ease infinite !important;
+    }
+
+    @keyframes twinkleStar { 0%,100%{opacity:.5} 50%{opacity:1} }
+    @keyframes gradientShift2 { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    @keyframes gradientShift3 { 0%{background-position:100% 50%} 50%{background-position:0% 50%} 100%{background-position:100% 50%} }
+    @keyframes gradientShift4 { 0%{background-position:50% 100%} 50%{background-position:50% 0%} 100%{background-position:50% 100%} }
+    @keyframes gradientShift5 { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    @keyframes gradientShift6 { 0%{background-position:100% 100%} 50%{background-position:0% 0%} 100%{background-position:100% 100%} }
+    @keyframes gradientShift7 { 0%{background-position:50% 0%} 50%{background-position:50% 100%} 100%{background-position:50% 0%} }
+    @keyframes gradientShift8 { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    @keyframes gradientShiftEmerald { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    @keyframes gradientShiftDual { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    @keyframes gradientShiftPP { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    @keyframes dragonFire { 0%{background-position:0% 50%} 25%{background-position:25% 25%} 50%{background-position:50% 0%} 75%{background-position:75% 25%} 100%{background-position:0% 50%} }
+
+    body.dark-mode { filter: brightness(0.82) contrast(1.12); }
+    body.dark-mode .sidebar { background: rgba(10,15,30,.35); border-right: 1px solid rgba(255,255,255,.12); }
+    body.dark-mode .top-bar { background: rgba(10,15,30,.28); border-bottom: 1px solid rgba(255,255,255,.12); }
+    body.dark-mode .card { background: rgba(15,25,45,.22); backdrop-filter: blur(15px); border: 1px solid rgba(100,120,234,.18); }
+
+    .container { display:flex; height:100%; width:100%; }
+    .sidebar { width:280px; background:rgba(255,255,255,.1); backdrop-filter:blur(12px); border-right:1px solid rgba(255,255,255,.2); color:white; padding:25px; overflow-y:auto; box-shadow:inset -2px 0 8px rgba(0,0,0,.15); }
+    .sidebar::-webkit-scrollbar{width:6px} .sidebar::-webkit-scrollbar-track{background:rgba(255,255,255,.08)} .sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:3px}
+    .main-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .top-bar{background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.2);color:white;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
+    .content-area{flex:1;overflow-y:auto;padding:30px;background:rgba(255,255,255,.04)}
+    .content-area::-webkit-scrollbar{width:8px} .content-area::-webkit-scrollbar-track{background:rgba(255,255,255,.08)} .content-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:4px}
+    .sidebar h2{font-size:22px;margin-bottom:30px;color:#fff;border-bottom:2px solid rgba(255,255,255,.3);padding-bottom:15px;font-weight:700}
+    .sidebar ul{list-style:none} .sidebar li{margin:10px 0}
+    .sidebar button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:white;cursor:pointer;font-size:14px;width:100%;text-align:right;padding:12px 15px;border-radius:8px;transition:all .3s;font-family:'Cairo',sans-serif;backdrop-filter:blur(5px)}
+    .sidebar button:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.4);transform:translateX(-5px)}
+    .sidebar button.active{background:rgba(102,126,234,.45);border-color:rgba(102,126,234,.85);font-weight:700}
+    .section{display:none} .section.active{display:block;animation:fadeIn .5s}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .card{background:rgba(255,255,255,.14);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.28);border-radius:15px;padding:25px;margin-bottom:20px;box-shadow:0 8px 32px rgba(0,0,0,.12);color:white}
+    .card h3{color:#fff;margin-bottom:20px;font-size:20px;font-weight:700}
+    .form-group{margin-bottom:15px} .form-group label{display:block;margin-bottom:8px;color:white;font-weight:600;font-size:14px}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:12px;border:1px solid rgba(255,255,255,.3);border-radius:8px;font-family:'Cairo',sans-serif;background:rgba(255,255,255,.1);color:white;backdrop-filter:blur(5px);font-size:14px}
+    .form-group input::placeholder,.form-group textarea::placeholder{color:rgba(255,255,255,.6)}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.2);box-shadow:0 0 10px rgba(102,126,234,.5)}
+    .form-group select option{background:#1a1a4a;color:white}
+    .btn{padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:14px;font-weight:600;transition:all .3s;backdrop-filter:blur(5px)}
+    .btn-primary{background:rgba(102,126,234,.6);color:white;border:1px solid rgba(102,126,234,.85)} .btn-primary:hover{background:rgba(102,126,234,.85);transform:translateY(-2px);box-shadow:0 5px 15px rgba(102,126,234,.45)}
+    .btn-success{background:rgba(72,187,120,.6);color:white;border:1px solid rgba(72,187,120,.85)} .btn-success:hover{background:rgba(72,187,120,.85);transform:translateY(-2px)}
+    .btn-danger{background:rgba(245,101,101,.6);color:white;border:1px solid rgba(245,101,101,.85)} .btn-danger:hover{background:rgba(245,101,101,.85);transform:translateY(-2px)}
+    .btn-secondary{background:rgba(113,128,150,.6);color:white;border:1px solid rgba(113,128,150,.85)} .btn-secondary:hover{background:rgba(113,128,150,.85);transform:translateY(-2px)}
+    .chart-container{position:relative;height:350px;margin-bottom:20px}
+    .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.82);display:flex;justify-content:center;align-items:center;z-index:9999;backdrop-filter:blur(6px)}
+    .overlay.hidden-important{display:none !important}
+    .overlay-content{background:rgba(255,255,255,.15);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.3);padding:40px;border-radius:15px;text-align:center;color:white;max-width:500px;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+    .overlay-content h2{margin-bottom:20px;font-size:24px} .overlay-content p{margin-bottom:20px;opacity:.9}
+    .hidden-important{display:none !important}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:15px;margin-bottom:20px}
+    .stat-card{background:rgba(255,255,255,.12);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);padding:20px;border-radius:12px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,.1);color:white}
+    .stat-card .label{color:rgba(255,255,255,.75);font-size:12px;margin-bottom:10px;font-weight:600} .stat-card .value{font-size:20px;font-weight:700;color:#fff}
+    .msg-container{position:fixed;top:20px;right:20px;z-index:10000;animation:slideIn .3s ease-out}
+    @keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
+    .success-msg{background:rgba(72,187,120,.32);border:1px solid rgba(72,187,120,.65);color:#a8e6a1;padding:15px 20px;border-radius:8px;backdrop-filter:blur(6px);font-size:13px}
+    .error-msg{background:rgba(245,101,101,.32);border:1px solid rgba(245,101,101,.65);color:#ff9999;padding:15px 20px;border-radius:8px;backdrop-filter:blur(6px);font-size:13px}
+    .table-responsive{overflow-x:auto}
+    .data-table{width:100%;border-collapse:collapse;margin-top:15px}
+    .data-table th{background:rgba(255,255,255,.12);padding:12px;text-align:right;color:white;font-weight:700;border-bottom:2px solid rgba(255,255,255,.22)}
+    .data-table td{padding:12px;border-bottom:1px solid rgba(255,255,255,.1);color:white}
+    .data-table tr:hover{background:rgba(255,255,255,.08)}
+    .btn-group{display:flex;gap:8px;align-items:center} .btn-small{padding:6px 12px;font-size:12px}
+    .trash-container{background:rgba(245,101,101,.15);backdrop-filter:blur(10px);border:1px solid rgba(245,101,101,.32);border-radius:12px;padding:20px;margin-top:20px}
+    .trash-item{background:rgba(255,255,255,.1);padding:12px;margin-bottom:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;color:white}
+    .summary-box{background:rgba(102,126,234,.3);backdrop-filter:blur(10px);border:1px solid rgba(102,126,234,.6);color:white;padding:25px;border-radius:15px;margin-bottom:20px}
+    .theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
   </style>
 </head>
-<body>
-  <div class="bg-orb orb1"></div><div class="bg-orb orb2"></div><div class="bg-orb orb3"></div>
+<body class="bg-theme-1">
 
-  <div id="pdfOverlay" class="hidden-important">
-    <div class="spinner"></div>
-    <p id="pdfOverlayMsg">جاري إنشاء PDF...</p>
-  </div>
-
-  <div id="authOverlay" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop px-4">
-    <div class="glass w-full max-w-lg p-6 md:p-8">
-      <div class="flex items-center justify-between gap-3 mb-5">
-        <div><h1 class="text-2xl md:text-3xl font-bold">تسجيل الدخول</h1><p class="mini-label mt-1">إيميل + كلمة سر</p></div>
-        <div class="chip px-3 py-2 text-sm">Firebase</div>
-      </div>
-      <div class="accent-line mb-5"></div>
-      <div class="space-y-4">
-        <div><label class="block mb-2 text-sm">الإيميل</label><input id="authEmail" type="email" class="input" placeholder="name@example.com" autocomplete="email"/></div>
-        <div><label class="block mb-2 text-sm">كلمة السر</label><input id="authPassword" type="password" class="input" placeholder="••••••••" autocomplete="current-password"/></div>
-        <div class="grid grid-cols-2 gap-3 pt-2">
-          <button onclick="App.login()" class="btn glass py-3 font-semibold">دخول</button>
-          <button onclick="App.signup()" class="btn glass py-3 font-semibold">إنشاء حساب</button>
-        </div>
-      </div>
+  <div id="pdfOverlay" class="overlay hidden-important">
+    <div class="overlay-content">
+      <h2>⏳ جاري إنشاء PDF...</h2>
+      <p id="pdfOverlayMsg">يرجى الانتظار قليلاً</p>
     </div>
   </div>
+  <div class="msg-container hidden-important" id="msgContainer"></div>
 
-  <div id="appShell" class="hidden-important relative z-10 min-h-screen">
-    <div class="topbar">
-      <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div><h2 class="text-xl md:text-2xl font-bold">لوحة تحكم الإيرادات</h2><p id="userEmailTop" class="mini-label mt-1"></p></div>
-        <div class="flex items-center gap-3 flex-wrap">
-          <div class="chip px-4 py-2"><span class="text-sm">مرحبًا، </span><strong id="userNameTop">...</strong></div>
-          <button onclick="App.logout()" class="btn glass px-4 py-2 font-semibold">خروج</button>
-        </div>
-      </div>
+  <div id="appShell" class="container">
+    <div class="sidebar">
+      <h2>📊 متتبع الإيراد</h2>
+      <ul>
+        <li><button class="active" onclick="App.showSection('dashboardSection', event)">📈 لوحة التحكم</button></li>
+        <li><button onclick="App.showSection('addIncomeSection', event)">➕ إضافة إيراد</button></li>
+        <li><button onclick="App.showSection('historySection', event)">📋 السجل</button></li>
+        <li><button onclick="App.showSection('reportSection', event)">📊 التقارير</button></li>
+        <li><button onclick="App.showSection('trashSection', event)">🗑️ سلة المحذوفات</button></li>
+        <li><button onclick="App.showSection('settingsSection', event)">⚙️ الإعدادات</button></li>
+      </ul>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 md:px-6 py-5">
-      <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
-        <button id="navDashboard"    class="nav-btn active glass btn py-3" onclick="App.showSection('dashboardSection')">الرئيسية</button>
-        <button id="navTransactions" class="nav-btn glass btn py-3"        onclick="App.showSection('transactionsSection')">المعاملات</button>
-        <button id="navRegions"      class="nav-btn glass btn py-3"        onclick="App.showSection('regionsSection')">المناطق</button>
-        <button id="navReports"      class="nav-btn glass btn py-3"        onclick="App.showSection('reportsSection')">PDF</button>
-        <button id="navSettings"     class="nav-btn glass btn py-3"        onclick="App.showSection('settingsSection')">الإعدادات</button>
-        <button id="navProfile"      class="nav-btn glass btn py-3"        onclick="App.showSection('profileSection')">الملف الشخصي</button>
+    <div class="main-content">
+      <div class="top-bar">
+        <div>
+          <span style="font-size:16px;font-weight:bold;">متتبع الإيراد اليومي - سوريا 🇸🇾</span><br>
+          <span style="font-size:12px;opacity:.8;">سعر الصرف: <span id="exchangeRateDisplay">1 USD = 0 SYP</span></span>
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="App.exportPDF()" style="margin-left:10px;">📥 تصدير PDF</button>
+          <button class="btn btn-secondary" onclick="App.exportExcel()">📊 تصدير Excel</button>
+        </div>
       </div>
-    </div>
 
-    <div class="max-w-7xl mx-auto px-4 md:px-6 pb-10">
+      <div class="content-area">
 
-      <!-- Dashboard -->
-      <section id="dashboardSection" class="space-y-6 fade-in">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="panel p-5"><div class="mini-label">إجمالي المعاملات</div><div id="statCount" class="text-3xl font-black mt-2">0</div></div>
-          <div class="panel p-5"><div class="mini-label">الإيراد الكلي SYP</div><div id="statTotalSYP" class="text-3xl font-black mt-2">0</div></div>
-          <div class="panel p-5"><div class="mini-label">الإيراد الكلي USD</div><div id="statTotalUSD" class="text-3xl font-black mt-2">0</div></div>
-          <div class="panel p-5"><div class="mini-label">عدد المناطق</div><div id="statRegions" class="text-3xl font-black mt-2">0</div></div>
-        </div>
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <div class="panel p-5 xl:col-span-2">
-            <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">منحنى الإيراد</h3><div class="chip px-3 py-2 text-sm">Live</div></div>
-            <canvas id="revenueChart" height="110"></canvas>
+        <!-- Dashboard -->
+        <div id="dashboardSection" class="section active">
+          <h2 style="color:white;margin-bottom:20px;font-size:28px;">📈 لوحة التحكم</h2>
+          <div style="margin-bottom:20px;display:flex;gap:15px;flex-wrap:wrap;">
+            <div>
+              <label style="color:white;margin-right:10px;font-weight:600;">فلتر حسب المدينة:</label>
+              <select id="dashboardCityFilter" onchange="App.renderDashboard()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white;font-family:'Cairo',sans-serif;">
+                <option value="">كل المدن</option>
+                <option value="القامشلي">القامشلي</option><option value="الحسكة">الحسكة</option>
+                <option value="الرقة">الرقة</option><option value="الطبقة">الطبقة</option>
+                <option value="كوباني">كوباني</option><option value="منبج">منبج</option>
+              </select>
+            </div>
+            <div>
+              <label style="color:white;margin-right:10px;font-weight:600;">من التاريخ:</label>
+              <input type="date" id="dashboardDateFrom" onchange="App.renderDashboard()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white;font-family:'Cairo',sans-serif;">
+            </div>
+            <div>
+              <label style="color:white;margin-right:10px;font-weight:600;">إلى التاريخ:</label>
+              <input type="date" id="dashboardDateTo" onchange="App.renderDashboard()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white;font-family:'Cairo',sans-serif;">
+            </div>
           </div>
-          <div class="panel p-5">
-            <h3 class="text-lg font-bold mb-4">ملخص سريع</h3>
-            <div class="space-y-3">
-              <div class="glass p-4"><div class="mini-label">أكثر منطقة نشاطًا</div><div id="topRegion" class="font-bold mt-1">—</div></div>
-              <div class="glass p-4"><div class="mini-label">آخر معاملة</div><div id="lastTx" class="font-bold mt-1">—</div></div>
-              <div class="glass p-4"><div class="mini-label">سعر الصرف الافتراضي</div><div id="ratePreview" class="font-bold mt-1">—</div></div>
+          <div class="stats-row" id="statsRow"></div>
+          <div class="grid-2">
+            <div class="card"><h3>📊 إجمالي الإيراد حسب العملة</h3><div id="dashboardStats"></div></div>
+            <div class="card"><h3>📍 توزيع الإيراد حسب المدينة</h3><div class="chart-container"><canvas id="citiesChart"></canvas></div></div>
+          </div>
+          <div class="card"><h3>📈 الإيراد اليومي</h3><div class="chart-container"><canvas id="dailyChart"></canvas></div></div>
+        </div>
+
+        <!-- Add Income -->
+        <div id="addIncomeSection" class="section">
+          <div class="card">
+            <h3>➕ إضافة إيراد جديد</h3>
+            <form id="incomeForm" onsubmit="App.addIncome(event)">
+              <div class="form-group"><label>المدينة</label>
+                <select id="incomeCity" required>
+                  <option value="">اختر المدينة</option>
+                  <option value="القامشلي">القامشلي 🏙️</option><option value="الحسكة">الحسكة 🏙️</option>
+                  <option value="الرقة">الرقة 🏙️</option><option value="الطبقة">الطبقة 🏙️</option>
+                  <option value="كوباني">كوباني 🏙️</option><option value="منبج">منبج 🏙️</option>
+                </select>
+              </div>
+              <div class="form-group"><label>نوع العملة</label>
+                <select id="incomeCurrency" onchange="App.updateCurrencyFields()" required>
+                  <option value="SYP">الليرة السورية (SYP)</option>
+                  <option value="USD">الدولار الأمريكي (USD)</option>
+                </select>
+              </div>
+              <div class="form-group"><label>المبلغ</label>
+                <input type="number" id="incomeAmount" placeholder="0.00" step="0.01" required oninput="App.calculateEquivalent()">
+              </div>
+              <div class="form-group"><label>المبلغ المكافئ بالعملة الأخرى</label>
+                <input type="number" id="incomeEquivalent" placeholder="0.00" step="0.01" readonly>
+              </div>
+              <div class="form-group"><label>سعر الصرف المستخدم</label>
+                <input type="number" id="incomeExchangeRate" placeholder="0.00" step="0.01" readonly>
+              </div>
+              <div class="form-group"><label>الوصف</label>
+                <textarea id="incomeDescription" placeholder="وصف الإيراد" rows="3"></textarea>
+              </div>
+              <div class="form-group"><label>التاريخ</label>
+                <input type="date" id="incomeDate" required>
+              </div>
+              <button type="submit" class="btn btn-success" style="width:100%;">✅ إضافة الإيراد</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div id="historySection" class="section">
+          <div class="card">
+            <h3>📋 سجل الإيرادات</h3>
+            <div style="margin-bottom:20px;">
+              <label style="color:white;margin-right:10px;">فلتر حسب المدينة:</label>
+              <select id="cityFilter" onchange="App.renderHistory()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white;">
+                <option value="">كل المدن</option>
+                <option value="القامشلي">القامشلي</option><option value="الحسكة">الحسكة</option>
+                <option value="الرقة">الرقة</option><option value="الطبقة">الطبقة</option>
+                <option value="كوباني">كوباني</option><option value="منبج">منبج</option>
+              </select>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead><tr><th>المدينة</th><th>المبلغ (SYP)</th><th>المبلغ (USD)</th><th>سعر الصرف</th><th>التاريخ</th><th>الوصف</th><th>الإجراءات</th></tr></thead>
+                <tbody id="historyTable"></tbody>
+              </table>
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- Transactions -->
-      <section id="transactionsSection" class="hidden-important space-y-4 fade-in">
-        <div class="panel p-5 md:p-6">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-            <h3 class="text-lg font-bold">إضافة معاملة</h3><div class="chip px-3 py-2 text-sm">العملة الأساسية SYP</div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-            <div><label class="block mb-2 text-sm">التاريخ</label><input id="txDate" type="date" class="input"/></div>
-            <div><label class="block mb-2 text-sm">المنطقة</label><select id="txRegion" class="select"></select></div>
-            <div><label class="block mb-2 text-sm">النوع</label><select id="txType" class="select"><option value="income">إيراد</option><option value="expense">مصروف</option></select></div>
-            <div><label class="block mb-2 text-sm">المبلغ SYP</label><input id="txAmountSYP" type="number" step="0.01" class="input" placeholder="0"/></div>
-            <div><label class="block mb-2 text-sm">سعر الصرف</label><input id="txRate" type="number" step="0.01" class="input" placeholder="مثلاً 15000"/></div>
-            <div class="md:col-span-2 xl:col-span-4"><label class="block mb-2 text-sm">البيان</label><input id="txNote" type="text" class="input" placeholder="تفاصيل المعاملة..."/></div>
-            <div class="flex items-end"><button onclick="App.addTransaction()" class="btn glass w-full py-3 font-semibold">حفظ المعاملة</button></div>
-          </div>
-        </div>
-        <div class="panel p-5 md:p-6">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-            <h3 class="text-lg font-bold">قائمة المعاملات</h3>
-            <div class="flex gap-2"><button onclick="App.exportTransactionsCSV()" class="btn glass px-4 py-2 font-semibold">CSV</button><button onclick="App.generatePDF()" class="btn glass px-4 py-2 font-semibold">PDF</button></div>
-          </div>
-          <div class="table-wrap">
-            <table><thead><tr><th>التاريخ</th><th>المنطقة</th><th>النوع</th><th>المبلغ SYP</th><th>سعر الصرف</th><th>المبلغ USD</th><th>البيان</th><th>إجراء</th></tr></thead><tbody id="transactionsTable"></tbody></table>
-          </div>
-        </div>
-      </section>
-
-      <!-- Regions -->
-      <section id="regionsSection" class="hidden-important space-y-4 fade-in">
-        <div class="panel p-5 md:p-6">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4"><h3 class="text-lg font-bold">أسماء المناطق</h3><div class="chip px-3 py-2 text-sm">محفوظة لكل مستخدم</div></div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div><label class="block mb-2 text-sm">اسم المنطقة</label><input id="regionName" type="text" class="input" placeholder="مثلاً: Direct Sales Qamishli / 1"/></div>
-            <div><label class="block mb-2 text-sm">ملاحظة</label><input id="regionNote" type="text" class="input" placeholder="اختياري"/></div>
-            <div class="flex items-end"><button onclick="App.addRegion()" class="btn glass w-full py-3 font-semibold">إضافة منطقة</button></div>
-          </div>
-        </div>
-        <div class="panel p-5 md:p-6"><h3 class="text-lg font-bold mb-4">القائمة الحالية</h3><div id="regionsList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div></div>
-      </section>
-
-      <!-- Reports -->
-      <section id="reportsSection" class="hidden-important space-y-5 fade-in">
-        <div class="panel p-5 md:p-6">
-          <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-            <div><h3 class="text-lg font-bold">تقرير PDF</h3><p class="mini-label mt-1">تصفية حسب اليوم — معاينة حية ثم تصدير.</p></div>
-            <div class="flex flex-col sm:flex-row gap-3 flex-wrap">
-              <input id="reportDay" type="date" class="input" style="min-width:190px;">
-              <button onclick="App.setReportFilter('today')"     class="btn glass px-4 py-3 font-semibold">اليوم</button>
-              <button onclick="App.setReportFilter('yesterday')" class="btn glass px-4 py-3 font-semibold">أمس</button>
-              <button onclick="App.setReportFilter('all')"       class="btn glass px-4 py-3 font-semibold">الكل</button>
-              <button onclick="App.generatePDF()"                class="btn glass px-5 py-3 font-semibold" style="background:rgba(102,204,255,.18);">⬇ إنشاء PDF</button>
-            </div>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="panel p-5"><div class="mini-label">المعاملات</div><div id="reportCount" class="text-3xl font-black mt-2">0</div></div>
-          <div class="panel p-5"><div class="mini-label">المناطق</div><div id="reportRegionCount" class="text-3xl font-black mt-2">0</div></div>
-          <div class="panel p-5"><div class="mini-label">إجمالي SYP</div><div id="reportSYP" class="text-3xl font-black mt-2">0</div></div>
-          <div class="panel p-5"><div class="mini-label">إجمالي USD</div><div id="reportUSD" class="text-3xl font-black mt-2">0</div></div>
-        </div>
-
-        <!-- ═══ PDF PREVIEW ═══ -->
-        <div class="report-scroll-wrap">
-          <div id="reportCanvas" class="report-page">
-
-            <div class="rp-company" id="rpCompany">🏢 Rcell</div>
-            <h1 class="rp-title">📊 تقرير الايراد اليومي</h1>
-
-            <div class="rp-pills">
-              <div class="rp-pill" id="reportRateChip">💱 SYP/USD 15,000</div>
-              <div class="rp-pill" id="reportDateRangeChip">📅 —</div>
-              <div class="rp-pill" id="reportDayChip">🗓 —</div>
-            </div>
-
-            <div class="rp-cards">
-              <div class="rp-card" style="background:#FFF8E1;">
-                <div class="rp-card-label" style="color:#D97706;">📋 المعاملات</div>
-                <div id="pdfCount" class="rp-card-value" style="color:#D97706;">0</div>
-              </div>
-              <div class="rp-card" style="background:#ECFDF5;">
-                <div class="rp-card-label" style="color:#059669;">🏢 المناطق</div>
-                <div id="pdfRegions" class="rp-card-value" style="color:#059669;">0</div>
-              </div>
-              <div class="rp-card" style="background:#EFF6FF;">
-                <div class="rp-card-label" style="color:#2563EB;">💵 ما يعادل USD</div>
-                <div id="pdfUSD" class="rp-card-value" style="color:#2563EB;">0</div>
-              </div>
-              <div class="rp-card" style="background:#FFF7ED;">
-                <div class="rp-card-label" style="color:#EA580C;">💰 إجمالي SYP</div>
-                <div id="pdfSYP" class="rp-card-value" style="color:#EA580C;">0</div>
-              </div>
-            </div>
-
-            <div class="rp-body">
+        <!-- Report -->
+        <div id="reportSection" class="section">
+          <div class="card">
+            <h3>📊 التقارير</h3>
+            <div style="margin-bottom:20px;display:flex;gap:15px;flex-wrap:wrap;">
               <div>
-                <div class="rp-section-title">📋 ملخص إيرادات المناطق</div>
-                <div class="rp-table-wrap">
-                  <table class="rp-table">
-                    <thead><tr>
-                      <th style="width:6%">#</th>
-                      <th style="width:36%">المنطقة</th>
-                      <th style="width:14%">المعاملات</th>
-                      <th style="width:28%">المجموع (SYP)</th>
-                      <th style="width:16%">النسبة</th>
-                    </tr></thead>
-                    <tbody id="reportTableBody"></tbody>
-                    <tfoot><tr>
-                      <td>—</td><td>📋 المجموع الكلي</td>
-                      <td id="pdfTotalTx">0</td>
-                      <td id="pdfTotalSYP2" style="font-weight:900;">0</td>
-                      <td>100%</td>
-                    </tr></tfoot>
-                  </table>
-                </div>
+                <label style="color:white;margin-right:10px;font-weight:600;">فلتر حسب المدينة:</label>
+                <select id="reportCityFilter" onchange="App.generateReport()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white;font-family:'Cairo',sans-serif;">
+                  <option value="">كل المدن</option>
+                  <option value="القامشلي">القامشلي</option><option value="الحسكة">الحسكة</option>
+                  <option value="الرقة">الرقة</option><option value="الطبقة">الطبقة</option>
+                  <option value="كوباني">كوباني</option><option value="منبج">منبج</option>
+                </select>
               </div>
-
-              <div class="rp-chart-col">
-                <div class="rp-section-title" style="justify-content:center;">✏️ توزيع الإيرادات</div>
-                <div class="rp-chart-wrap">
-                  <canvas id="reportChart"></canvas>
-                  <div class="rp-chart-center">
-                    <div id="reportChartCenterNum" class="rcc-num">0</div>
-                    <div class="rcc-lbl">مناطق</div>
-                  </div>
-                </div>
-                <div id="reportLegend" class="rp-legend"></div>
+              <div>
+                <label style="color:white;margin-right:10px;font-weight:600;">من التاريخ:</label>
+                <input type="date" id="reportDateFrom" onchange="App.generateReport()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white;font-family:'Cairo',sans-serif;">
+              </div>
+              <div>
+                <label style="color:white;margin-right:10px;font-weight:600;">إلى التاريخ:</label>
+                <input type="date" id="reportDateTo" onchange="App.generateReport()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white;font-family:'Cairo',sans-serif;">
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-end;">
+                <button class="btn btn-primary" onclick="App.exportPDFWithFilters()" style="white-space:nowrap;">💾 حفظ PDF</button>
+                <button class="btn btn-secondary" onclick="App.exportExcelWithFilters()" style="white-space:nowrap;">📥 تصدير Excel</button>
               </div>
             </div>
-
-            <div class="rp-footer">
-              <div class="rp-footer-brand">📊 نظام إدارة الإيرادات</div>
-              <div class="rp-footer-info" id="pdfFooterSummary">—</div>
-            </div>
-
+            <div id="reportContent"></div>
           </div>
         </div>
-      </section>
 
-      <!-- Settings -->
-      <section id="settingsSection" class="hidden-important space-y-4 fade-in">
-        <div class="panel p-5 md:p-6">
-          <h3 class="text-lg font-bold mb-4">الإعدادات العامة</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label class="block mb-2 text-sm">الخلفية</label>
-              <select id="themeSelect" class="select"><option value="blue">أزرق زجاجي</option><option value="purple">بنفسجي فاخر</option><option value="emerald">أخضر زمردي</option><option value="dark">داكن أنيق</option></select>
-            </div>
-            <div><label class="block mb-2 text-sm">اللون الأساسي</label><input id="accentColor" type="color" value="#66ccff" class="input" style="height:48px;padding:6px 8px;"/></div>
-            <div><label class="block mb-2 text-sm">سعر الصرف الافتراضي</label><input id="defaultRate" type="number" step="0.01" class="input" placeholder="مثلاً 15000"/></div>
-            <div class="flex items-center justify-between glass px-4 py-4"><div><div class="font-bold">وضع مختصر</div><div class="mini-label">واجهة أخف</div></div><input id="compactMode" type="checkbox" class="w-5 h-5"/></div>
-          </div>
+        <!-- Trash -->
+        <div id="trashSection" class="section">
+          <div class="card"><h3>🗑️ سلة المحذوفات</h3><div id="trashList"></div></div>
         </div>
-        <div class="panel p-5 md:p-6">
-          <h3 class="text-lg font-bold mb-1">إعدادات PDF</h3>
-          <p class="mini-label mb-4">تتحكم في شكل وجودة ملف PDF المُصدَّر</p>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <div><label class="block mb-2 text-sm">اسم الشركة (يظهر أعلى التقرير)</label><input id="printCompanyName" type="text" class="input" placeholder="مثلاً: Rcell 🏢"/></div>
-            <div><label class="block mb-2 text-sm">اتجاه الصفحة</label>
-              <select id="printOrientation" class="select"><option value="landscape">عرضي — Landscape (موصى به)</option><option value="portrait">عمودي — Portrait</option></select>
+
+        <!-- Settings -->
+        <div id="settingsSection" class="section">
+          <div class="card">
+            <h3>⚙️ الإعدادات</h3>
+            <div class="form-group">
+              <label>سعر الصرف (1 دولار = كم ليرة سورية)</label>
+              <input type="number" id="exchangeRate" placeholder="1500" step="0.01" onchange="App.updateExchangeRate()">
             </div>
-            <div><label class="block mb-2 text-sm">حجم الورق</label>
-              <select id="printFormat" class="select"><option value="a4">A4 (قياسي)</option><option value="a3">A3 (أكبر)</option><option value="letter">Letter</option></select>
-            </div>
-            <div><label class="block mb-2 text-sm">جودة التصيير (Scale)</label>
-              <select id="printScale" class="select"><option value="1">1× — سريع</option><option value="2">2× — جيد (افتراضي)</option><option value="3">3× — عالي</option><option value="4">4× — عالي جداً</option></select>
-            </div>
-            <div><label class="block mb-2 text-sm">جودة الصورة (0.1 – 1.0)</label><input id="printImageQuality" type="number" min="0.1" max="1" step="0.05" class="input" placeholder="0.98"/></div>
-            <div><label class="block mb-2 text-sm">الهوامش mm — أعلى / يمين / أسفل / يسار</label>
-              <div class="grid grid-cols-4 gap-2">
-                <input id="printMarginTop"    type="number" min="0" max="30" class="input" placeholder="أعلى"/>
-                <input id="printMarginRight"  type="number" min="0" max="30" class="input" placeholder="يمين"/>
-                <input id="printMarginBottom" type="number" min="0" max="30" class="input" placeholder="أسفل"/>
-                <input id="printMarginLeft"   type="number" min="0" max="30" class="input" placeholder="يسار"/>
+            <div class="form-group">
+              <label>🎨 اختر مظهر الخلفية</label>
+              <div class="theme-grid">
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-1')" style="background:linear-gradient(135deg,#0d0221,#2d1065,#0a1a4a);color:white;border:none;">🌌 جمر ليلي كوني</button>
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-2')" style="background:linear-gradient(135deg,#12002a,#7c3aed,#c026d3);color:white;border:none;">🔮 مجرة بنفسجية</button>
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-3')" style="background:linear-gradient(135deg,#7c1d00,#dc4500,#f59e0b);color:white;border:none;">🌅 غروب دبي</button>
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-4')" style="background:linear-gradient(135deg,#001a3a,#0077b6,#00b4d8);color:white;border:none;">🧊 جليد أزرق</button>
+              </div>
+              <div class="theme-grid" style="margin-top:10px;">
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-5')" style="background:linear-gradient(135deg,#001a0e,#00843d,#10b981);color:white;border:none;">🌿 غابة زمردية</button>
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-6')" style="background:linear-gradient(135deg,#1a0010,#9b1239,#e11d48);color:white;border:none;">🍷 نبيذ ملكي</button>
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-7')" style="background:linear-gradient(135deg,#0a0a0a,#1a1a2e,#0f3460);color:white;border:none;">🌑 فحم كوني</button>
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-starry-night')" style="background:linear-gradient(135deg,#020b1a,#0a2545);color:#a8d8ff;border:none;">⭐ سماء النجوم</button>
+              </div>
+              <div class="theme-grid" style="margin-top:10px;">
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-dragon')" style="background:linear-gradient(135deg,#5c3d00,#b8860b,#ffd700);color:white;font-weight:bold;border:none;">✨ ذهب فرعوني</button>
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-emerald')" style="background:linear-gradient(135deg,#001a0d,#00793f,#00c26b);color:white;border:none;">💎 زمرد ملكي</button>
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-dual-blue')" style="background:linear-gradient(135deg,#000428,#0043b0,#00a8ff);color:white;border:none;">⚡ أزرق كهربائي</button>
+                <button class="btn" onclick="App.setBackgroundTheme('bg-theme-purple-pink')" style="background:linear-gradient(135deg,#1a0030,#9333ea,#fb7185);color:white;border:none;">💜 بنفسجي وردي</button>
               </div>
             </div>
-            <div class="flex items-center justify-between glass px-4 py-4"><div><div class="font-bold">تضمين المخطط الدائري</div><div class="mini-label">إظهار الدونات في PDF</div></div><input id="printIncludeChart" type="checkbox" class="w-5 h-5"/></div>
-            <div class="flex items-center justify-between glass px-4 py-4"><div><div class="font-bold">تسميات على المخطط</div><div class="mini-label">اسم المنطقة + % داخل القطعة</div></div><input id="printChartLabels" type="checkbox" class="w-5 h-5"/></div>
-            <div class="flex items-center justify-between glass px-4 py-4"><div><div class="font-bold">خلفية بيضاء صريحة</div><div class="mini-label">يمنع الشفافية في PDF</div></div><input id="printWhiteBg" type="checkbox" class="w-5 h-5"/></div>
-          </div>
-          <div class="mt-5 flex flex-wrap gap-3">
-            <button onclick="App.saveSettings()" class="btn glass px-4 py-3 font-semibold">💾 حفظ الإعدادات</button>
-            <button onclick="App.resetSettings()" class="btn glass px-4 py-3 font-semibold">↺ افتراضي</button>
-            <button onclick="App.generatePDF()" class="btn glass px-4 py-3 font-semibold" style="background:rgba(102,204,255,.18);">⬇ اختبار PDF</button>
+            <div class="form-group"><label><input type="checkbox" id="enableNotifications"> تفعيل الإخطارات</label></div>
+            <div class="form-group"><label><input type="checkbox" id="enableAutoBackup"> النسخ الاحتياطي التلقائي</label></div>
+            <div class="form-group"><label><input type="checkbox" id="enableSoundNotifications"> تفعيل تنبيهات صوتية</label></div>
+            <div class="form-group"><label><input type="checkbox" id="darkMode"> الوضع الليلي الداكن</label></div>
+            <button class="btn btn-primary" onclick="App.saveSettings()" style="margin-top:15px;">💾 حفظ الإعدادات</button>
+            <button class="btn btn-danger" onclick="App.clearAllData()" style="margin-top:10px;margin-right:10px;">🗑️ حذف كل البيانات</button>
           </div>
         </div>
-      </section>
 
-      <!-- Profile -->
-      <section id="profileSection" class="hidden-important space-y-4 fade-in">
-        <div class="panel p-5 md:p-6">
-          <h3 class="text-lg font-bold mb-4">الملف الشخصي</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label class="block mb-2 text-sm">الاسم</label><input id="profileName" type="text" class="input" placeholder="اسمك"/></div>
-            <div><label class="block mb-2 text-sm">الوظيفة</label><input id="profileTitle" type="text" class="input" placeholder="مثلاً: مدير عمليات"/></div>
-            <div class="md:col-span-2"><label class="block mb-2 text-sm">ملاحظة</label><textarea id="profileBio" class="textarea" placeholder="ملاحظة قصيرة..."></textarea></div>
-          </div>
-          <div class="mt-5"><button onclick="App.saveProfile()" class="btn glass px-4 py-3 font-semibold">حفظ الملف الشخصي</button></div>
-        </div>
-      </section>
-
+      </div>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  <script>
+    var CITIES = ['القامشلي','الحسكة','الرقة','الطبقة','كوباني','منبج'];
+    var DEFAULT_EXCHANGE_RATE = 1500;
 
-    const fbApp = initializeApp({apiKey:"AIzaSyACPVxprQrys1w-6Re_75UFISJ3Nm8r-D0",authDomain:"income-app-e6b07.firebaseapp.com",projectId:"income-app-e6b07",storageBucket:"income-app-e6b07.firebasestorage.app",messagingSenderId:"420055247334",appId:"1:420055247334:web:86f3a28ba6b2e20bf58e27"});
-    const auth = getAuth(fbApp);
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    function $(id) { return document.getElementById(id); }
+    function show(el) { if(el) el.classList.remove('hidden-important'); }
+    function hide(el) { if(el) el.classList.add('hidden-important'); }
+    function todayStr() {
+      var t = new Date();
+      return t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+    }
 
-    const LS = {regions:"rd_regions",transactions:"rd_transactions",profile:"rd_profile",settings:"rd_settings"};
+    var App = {
+      data: [], trash: [], exchangeRate: DEFAULT_EXCHANGE_RATE, charts: {},
 
-    const REGIONS = [
-      {name:"Direct Sales Qamishli / 1",note:""},{name:"Direct Sales Qamishli / 2",note:""},
-      {name:"Direct Sales Amude / Jiyan",note:""},{name:"Direct Sales Derik / Lelav",note:""},
-      {name:"DSA-1",note:""},{name:"DSM - 1",note:""},{name:"DSH-",note:""},
-      {name:"Civan Ahmad",note:""},{name:"Ali Hashim",note:""},{name:"Kawa Hasan-OC",note:""},
-      {name:"Dilxwaz Esso-OC",note:""},{name:"Bashar Suleiman",note:""},
-      {name:"Sharif Ibrahim",note:""},{name:"Youssef Al-Saleh",note:""}
-    ];
-
-    const DEFAULT_SETTINGS = {
-      theme:"blue",accentColor:"#66ccff",defaultRate:15000,compactMode:false,
-      printCompanyName:"🏢 Rcell",
-      printOrientation:"landscape",printFormat:"a4",printScale:2,
-      printImageQuality:0.98,
-      printMarginTop:5,printMarginRight:5,printMarginBottom:5,printMarginLeft:5,
-      printIncludeChart:true,printChartLabels:true,printWhiteBg:true
-    };
-
-    const COLORS = ["#22c55e","#3b82f6","#8b5cf6","#f59e0b","#ef4444","#ec4899","#14b8a6","#f97316","#06b6d4","#84cc16","#a855f7","#64748b"];
-
-    const $ = id => document.getElementById(id);
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-    const App = {
-      user:null, regions:[], transactions:[], settings:{...DEFAULT_SETTINGS},
-      profile:{name:"",title:"",bio:""}, chart:null, reportChart:null,
-      currentSection:"dashboardSection",
-
-      getKey(k){ return `${k}_${this.user?.uid||"guest"}`; },
-      getJSON(k,fb){ try{ const r=localStorage.getItem(k); return r?JSON.parse(r):fb; }catch{ return fb; } },
-      setJSON(k,v){ localStorage.setItem(k,JSON.stringify(v)); },
-      escape(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); },
-      fmt(n){ return Number(n||0).toLocaleString("en-US",{maximumFractionDigits:2,minimumFractionDigits:2}); },
-
-      load(){
-        this.regions      = this.getJSON(this.getKey(LS.regions), REGIONS);
-        this.transactions = this.getJSON(this.getKey(LS.transactions), []);
-        this.settings     = {...DEFAULT_SETTINGS, ...this.getJSON(this.getKey(LS.settings), {})};
-        this.profile      = {name:"",title:"",bio:"", ...this.getJSON(this.getKey(LS.profile), {})};
-        this.applySettingsToUI();
-        this.initDate();
-        this.renderRegions();
-        this.renderTransactions();
-        this.renderSummary();
-        this.initDashboardChart();
-        this.bindProfileToUI();
-        const sel=$("txRegion");
-        sel.innerHTML=this.regions.map(r=>`<option value="${this.escape(r.name)}">${this.escape(r.name)}</option>`).join("");
-        if(this.regions.length) sel.value=this.regions[0].name;
-      },
-
-      initDate(){
-        const today=new Date().toISOString().slice(0,10);
-        $("txDate").value=$("reportDay").value=today;
-      },
-
-      applySettingsToUI(){
-        const T={blue:["#07111f","#102840","#0f4c81"],purple:["#160f30","#2a1b5e","#5b3fd1"],emerald:["#071a17","#0d3b3a","#0f766e"],dark:["#05070d","#0c1424","#18223a"]};
-        const t=T[this.settings.theme]||T.blue, r=document.documentElement;
-        r.style.setProperty("--bg1",t[0]); r.style.setProperty("--bg2",t[1]); r.style.setProperty("--bg3",t[2]);
-        r.style.setProperty("--accent",this.settings.accentColor);
-        document.body.classList.toggle("compact-mode",!!this.settings.compactMode);
-        $("themeSelect").value=$("accentColor" ).value=$("themeSelect").value||"blue";
-        $("themeSelect").value        = this.settings.theme;
-        $("accentColor").value        = this.settings.accentColor;
-        $("defaultRate").value        = this.settings.defaultRate;
-        $("compactMode").checked      = !!this.settings.compactMode;
-        $("printCompanyName").value   = this.settings.printCompanyName;
-        $("printOrientation").value   = this.settings.printOrientation;
-        $("printFormat").value        = this.settings.printFormat;
-        $("printScale").value         = String(this.settings.printScale);
-        $("printImageQuality").value  = this.settings.printImageQuality;
-        $("printMarginTop").value     = this.settings.printMarginTop;
-        $("printMarginRight").value   = this.settings.printMarginRight;
-        $("printMarginBottom").value  = this.settings.printMarginBottom;
-        $("printMarginLeft").value    = this.settings.printMarginLeft;
-        $("printIncludeChart").checked= !!this.settings.printIncludeChart;
-        $("printChartLabels").checked = !!this.settings.printChartLabels;
-        $("printWhiteBg").checked     = !!this.settings.printWhiteBg;
-        $("ratePreview").textContent  = `1 USD = ${this.fmt(this.settings.defaultRate)} SYP`;
-      },
-
-      saveAll(){
-        this.setJSON(this.getKey(LS.regions),      this.regions);
-        this.setJSON(this.getKey(LS.transactions),  this.transactions);
-        this.setJSON(this.getKey(LS.settings),      this.settings);
-        this.setJSON(this.getKey(LS.profile),       this.profile);
-      },
-
-      showSection(id){
-        this.currentSection=id;
-        ["dashboardSection","transactionsSection","regionsSection","reportsSection","settingsSection","profileSection"].forEach(s=>$(s).classList.add("hidden-important"));
-        $(id).classList.remove("hidden-important");
-        ["navDashboard","navTransactions","navRegions","navReports","navSettings","navProfile"].forEach(n=>$(n).classList.remove("active"));
-        const map={dashboardSection:"navDashboard",transactionsSection:"navTransactions",regionsSection:"navRegions",reportsSection:"navReports",settingsSection:"navSettings",profileSection:"navProfile"};
-        $(map[id]).classList.add("active");
-        if(id==="reportsSection") this.renderReport();
-      },
-
-      login:async function(){ const e=$("authEmail").value.trim(),p=$("authPassword").value; if(!e||!p)return alert("أدخلي الإيميل وكلمة السر."); try{ await signInWithEmailAndPassword(auth,e,p); }catch(err){ alert(err.message); } },
-      signup:async function(){ const e=$("authEmail").value.trim(),p=$("authPassword").value; if(!e||!p)return alert("أدخلي الإيميل وكلمة السر."); try{ await createUserWithEmailAndPassword(auth,e,p); }catch(err){ alert(err.message); } },
-      logout:async function(){ try{ await signOut(auth); }catch(err){ alert(err.message); } },
-
-      renderRegions(){
-        const el=$("regionsList");
-        if(!this.regions.length){ el.innerHTML=`<div class="glass p-4">لا توجد مناطق بعد.</div>`; return; }
-        el.innerHTML=this.regions.map((r,i)=>`
-          <div class="glass p-4 flex items-start justify-between gap-3">
-            <div><div class="font-bold" style="display:flex;align-items:center;gap:8px;">
-              <span style="width:10px;height:10px;border-radius:50%;background:${COLORS[i%COLORS.length]};display:inline-block;flex-shrink:0;"></span>${this.escape(r.name)}
-            </div><div class="mini-label mt-1">${this.escape(r.note||"")}</div></div>
-            <button class="chip px-3 py-2 text-sm" onclick="App.removeRegion(${i})">حذف</button>
-          </div>`).join("");
-        const sel=$("txRegion"),cur=sel.value;
-        sel.innerHTML=this.regions.map(r=>`<option value="${this.escape(r.name)}">${this.escape(r.name)}</option>`).join("");
-        if(this.regions.some(r=>r.name===cur)) sel.value=cur;
-      },
-
-      addRegion(){
-        const name=$("regionName").value.trim(),note=$("regionNote").value.trim();
-        if(!name)return alert("أدخلي اسم المنطقة.");
-        if(this.regions.some(r=>r.name.toLowerCase()===name.toLowerCase()))return alert("موجود مسبقًا.");
-        this.regions.push({name,note}); this.saveAll(); this.renderRegions();
-        $("regionName").value=""; $("regionNote").value="";
-      },
-
-      removeRegion(i){
-        if(!confirm("حذف المنطقة؟"))return;
-        const rem=this.regions[i]; this.regions.splice(i,1);
-        this.transactions=this.transactions.filter(tx=>tx.region!==rem.name);
-        this.saveAll(); this.renderRegions(); this.renderTransactions(); this.renderSummary(); this.updateDashboardChart(); this.renderReport();
-      },
-
-      addTransaction(){
-        const date=$("txDate").value,region=$("txRegion").value,type=$("txType").value;
-        const amountSYP=parseFloat($("txAmountSYP").value);
-        const rate=parseFloat($("txRate").value)||Number(this.settings.defaultRate);
-        const note=$("txNote").value.trim();
-        if(!date||!region||!amountSYP||amountSYP<=0)return alert("أدخلي التاريخ والمنطقة والمبلغ.");
-        if(!rate||rate<=0)return alert("أدخلي سعر الصرف.");
-        this.transactions.unshift({id:crypto.randomUUID(),date,region,type,amountSYP,rate,amountUSD:amountSYP/rate,note,createdAt:Date.now()});
-        this.saveAll(); this.renderTransactions(); this.renderSummary(); this.updateDashboardChart(); this.renderReport();
-        $("txAmountSYP").value=""; $("txRate").value=""; $("txNote").value="";
-      },
-
-      removeTransaction(id){ if(!confirm("حذف المعاملة؟"))return; this.transactions=this.transactions.filter(t=>t.id!==id); this.saveAll(); this.renderTransactions(); this.renderSummary(); this.updateDashboardChart(); this.renderReport(); },
-
-      editTransaction(id){
-        const tx=this.transactions.find(t=>t.id===id); if(!tx)return;
-        const a=prompt("المبلغ SYP:",tx.amountSYP); if(a===null)return;
-        const rt=prompt("سعر الصرف:",tx.rate); if(rt===null)return;
-        const n=prompt("البيان:",tx.note||""); if(n===null)return;
-        tx.amountSYP=parseFloat(a)||tx.amountSYP; tx.rate=parseFloat(rt)||tx.rate||this.settings.defaultRate;
-        tx.amountUSD=tx.amountSYP/tx.rate; tx.note=n;
-        this.saveAll(); this.renderTransactions(); this.renderSummary(); this.updateDashboardChart(); this.renderReport();
-      },
-
-      renderTransactions(){
-        const tb=$("transactionsTable");
-        if(!this.transactions.length){ tb.innerHTML=`<tr><td colspan="8" class="text-center py-8" style="color:var(--muted);">لا توجد معاملات بعد.</td></tr>`; return; }
-        tb.innerHTML=this.transactions.map(tx=>`<tr>
-          <td>${this.escape(tx.date)}</td><td>${this.escape(tx.region)}</td>
-          <td style="${tx.type==="income"?"color:#7CFFB2":"color:#FFB7B7"}">${tx.type==="income"?"إيراد":"مصروف"}</td>
-          <td>${this.fmt(tx.amountSYP)}</td><td>${this.fmt(tx.rate)}</td><td>${this.fmt(tx.amountUSD)}</td>
-          <td>${this.escape(tx.note||"")}</td>
-          <td><div class="flex gap-2">
-            <button class="chip px-3 py-2 text-sm" onclick="App.editTransaction('${tx.id}')">تعديل</button>
-            <button class="chip px-3 py-2 text-sm" onclick="App.removeTransaction('${tx.id}')">حذف</button>
-          </div></td></tr>`).join("");
-      },
-
-      renderSummary(){
-        const sN=this.transactions.reduce((s,t)=>s+(t.type==="income"?+t.amountSYP:-+t.amountSYP),0);
-        const sU=this.transactions.reduce((s,t)=>s+(t.type==="income"?+t.amountUSD:-+t.amountUSD),0);
-        $("statCount").textContent=this.transactions.length;
-        $("statTotalSYP").textContent=this.fmt(sN); $("statTotalUSD").textContent=this.fmt(sU);
-        $("statRegions").textContent=this.regions.length;
-        const c={}; this.transactions.forEach(t=>{c[t.region]=(c[t.region]||0)+1;});
-        $("topRegion").textContent=Object.entries(c).sort((a,b)=>b[1]-a[1])[0]?.[0]||"—";
-        const last=this.transactions[0];
-        $("lastTx").textContent=last?`${last.region} — ${this.fmt(last.amountSYP)} SYP`:"—";
-      },
-
-      _dashData(){ const b={}; this.transactions.forEach(t=>{ b[t.date||"—"]=(b[t.date||"—"]||0)+(t.type==="income"?+t.amountSYP:-+t.amountSYP); }); const l=Object.keys(b).slice(-8); return {labels:l,data:l.map(k=>b[k])}; },
-
-      initDashboardChart(){
-        const ctx=$("revenueChart"); if(!ctx)return;
-        if(this.chart){this.chart.destroy();this.chart=null;}
-        const {labels,data}=this._dashData();
-        this.chart=new Chart(ctx,{type:"line",data:{labels,datasets:[{label:"الإيراد SYP",data,borderWidth:2,tension:.35,fill:true}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:"rgba(255,255,255,.08)"},ticks:{color:"rgba(255,255,255,.82)"}},y:{grid:{color:"rgba(255,255,255,.08)"},ticks:{color:"rgba(255,255,255,.82)"}}}}});
-      },
-
-      updateDashboardChart(){
-        if(!this.chart){this.initDashboardChart();return;}
-        const {labels,data}=this._dashData();
-        this.chart.data.labels=labels; this.chart.data.datasets[0].data=data; this.chart.update();
-      },
-
-      saveSettings(){
-        this.settings.theme             = $("themeSelect").value;
-        this.settings.accentColor       = $("accentColor").value;
-        this.settings.defaultRate       = Number($("defaultRate").value)||15000;
-        this.settings.compactMode       = $("compactMode").checked;
-        this.settings.printCompanyName  = $("printCompanyName").value.trim()||DEFAULT_SETTINGS.printCompanyName;
-        this.settings.printOrientation  = $("printOrientation").value;
-        this.settings.printFormat       = $("printFormat").value;
-        this.settings.printScale        = Number($("printScale").value);
-        this.settings.printImageQuality = parseFloat($("printImageQuality").value)||0.98;
-        this.settings.printMarginTop    = Number($("printMarginTop").value)||5;
-        this.settings.printMarginRight  = Number($("printMarginRight").value)||5;
-        this.settings.printMarginBottom = Number($("printMarginBottom").value)||5;
-        this.settings.printMarginLeft   = Number($("printMarginLeft").value)||5;
-        this.settings.printIncludeChart = $("printIncludeChart").checked;
-        this.settings.printChartLabels  = $("printChartLabels").checked;
-        this.settings.printWhiteBg      = $("printWhiteBg").checked;
-        this.saveAll(); this.applySettingsToUI(); this.renderReport();
-        alert("✅ تم حفظ الإعدادات");
-      },
-
-      resetSettings(){ this.settings={...DEFAULT_SETTINGS}; this.saveAll(); this.applySettingsToUI(); this.renderReport(); },
-
-      bindProfileToUI(){ $("profileName").value=this.profile.name||""; $("profileTitle").value=this.profile.title||""; $("profileBio").value=this.profile.bio||""; },
-
-      saveProfile(){
-        this.profile.name=$("profileName").value.trim(); this.profile.title=$("profileTitle").value.trim(); this.profile.bio=$("profileBio").value.trim();
-        this.saveAll();
-        if(this.user){ updateProfile(this.user,{displayName:this.profile.name||null}).catch(()=>{}); $("userNameTop").textContent=this.profile.name||this.user.email; }
-        alert("تم حفظ الملف الشخصي ✅");
-      },
-
-      exportTransactionsCSV(){
-        const rows=[["date","region","type","amount_syp","rate","amount_usd","note"]];
-        this.transactions.forEach(tx=>rows.push([tx.date,tx.region,tx.type,tx.amountSYP,tx.rate,tx.amountUSD,tx.note||""]));
-        const csv=rows.map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\n");
-        const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
-        const a=document.createElement("a"); a.href=url; a.download="transactions.csv"; a.click(); URL.revokeObjectURL(url);
-      },
-
-      getFilteredTx(){ const day=$("reportDay").value; return day?this.transactions.filter(tx=>tx.date===day):[...this.transactions]; },
-
-      groupByRegion(list){
-        const map={};
-        list.forEach(tx=>{ const k=tx.region||"—"; if(!map[k])map[k]={region:k,count:0,syp:0,usd:0}; map[k].count++; map[k].syp+=Number(tx.amountSYP||0); map[k].usd+=Number(tx.amountUSD||0); });
-        return Object.values(map).sort((a,b)=>b.syp-a.syp);
-      },
-
-      setReportFilter(mode){
-        const inp=$("reportDay"),today=new Date(),fmt=d=>d.toISOString().slice(0,10);
-        if(mode==="today") inp.value=fmt(today);
-        else if(mode==="yesterday"){ const y=new Date(today); y.setDate(y.getDate()-1); inp.value=fmt(y); }
-        else inp.value="";
-        this.renderReport();
-      },
-
-      renderReport(){
-        const list=this.getFilteredTx(), grouped=this.groupByRegion(list);
-        const grandSYP=grouped.reduce((s,r)=>s+r.syp,0)||1;
-        const totalSYP=list.reduce((s,t)=>s+(+t.amountSYP*(t.type==="income"?1:-1)),0);
-        const totalUSD=list.reduce((s,t)=>s+(+t.amountUSD*(t.type==="income"?1:-1)),0);
-        const day=$("reportDay").value||"كل الأيام";
-        const rate=this.settings.defaultRate||15000;
-        const showLabels=!!this.settings.printChartLabels;
-
-        /* header */
-        $("rpCompany").textContent=this.settings.printCompanyName||DEFAULT_SETTINGS.printCompanyName;
-        $("reportRateChip").textContent=`💱 SYP/USD ${this.fmt(rate)}`;
-        $("reportDateRangeChip").textContent=`📅 ${day}`;
-        $("reportDayChip").textContent=`🗓 ${day}`;
-        $("reportChartCenterNum").textContent=grouped.length;
-
-        /* quick stats */
-        $("reportCount").textContent=$("pdfCount").textContent=list.length;
-        $("reportRegionCount").textContent=$("pdfRegions").textContent=grouped.length;
-        $("reportSYP").textContent=$("pdfSYP").textContent=this.fmt(totalSYP);
-        $("reportUSD").textContent=$("pdfUSD").textContent=this.fmt(totalUSD);
-        $("pdfTotalTx").textContent=list.length;
-        $("pdfTotalSYP2").textContent=this.fmt(totalSYP);
-        $("pdfFooterSummary").textContent=`سعر الصرف: ${this.fmt(rate)} SYP/USD | ${new Date().toLocaleString("ar-SY")}`;
-
-        /* table */
-        $("reportTableBody").innerHTML=grouped.length
-          ? grouped.map((r,i)=>{
-              const pct=((r.syp/grandSYP)*100).toFixed(1);
-              const c=COLORS[i%COLORS.length];
-              return `<tr>
-                <td style="color:#aaa;font-size:11px;">${i+1}</td>
-                <td><div class="rp-region-cell"><span class="rp-dot" style="background:${c};"></span>${this.escape(r.region)}</div></td>
-                <td style="text-align:center;">${r.count}</td>
-                <td style="font-weight:800;">${this.fmt(r.syp)}</td>
-                <td><div class="rp-pct-wrap">
-                  <div class="rp-pct-bar-bg"><div class="rp-pct-bar-fill" style="width:${pct}%;background:${c};"></div></div>
-                  <span class="rp-pct-text" style="color:${c};">${pct}%</span>
-                </div></td>
-              </tr>`;
-            }).join("")
-          : `<tr><td colspan="5" style="padding:16px;text-align:center;color:#aaa;">لا توجد بيانات</td></tr>`;
-
-        /* legend */
-        $("reportLegend").innerHTML=grouped.length
-          ? grouped.slice(0,10).map((r,i)=>{
-              const pct=((r.syp/grandSYP)*100).toFixed(1), c=COLORS[i%COLORS.length];
-              return `<div class="rp-legend-item">
-                <div class="rp-legend-left"><span class="rp-dot" style="background:${c};"></span><span class="rp-legend-name">${this.escape(r.region)}</span></div>
-                <span class="rp-legend-pct" style="color:${c};">${pct}%</span>
-              </div>`;
-            }).join("")
-          : "";
-
-        /* donut chart */
-        const ctx=$("reportChart");
-        if(this.reportChart){ this.reportChart.destroy(); this.reportChart=null; }
-        const chartData  =grouped.length?grouped.map(r=>r.syp):[1];
-        const chartLabels=grouped.length?grouped.map(r=>r.region):["لا توجد بيانات"];
-        const chartColors=grouped.length?COLORS.slice(0,grouped.length):["#e5e7eb"];
-        const gSYP=grandSYP;
-
-        /* inline center-text plugin */
-        const centerPlugin={
-          id:"centerText",
-          beforeDraw(chart){
-            const {ctx:c,chartArea:{top,right,bottom,left}}=chart;
-            const cx=(left+right)/2, cy=(top+bottom)/2;
-            c.save();
-            c.textAlign="center"; c.textBaseline="middle";
-            c.fillStyle="#1a1a2e"; c.font="bold 38px Cairo,sans-serif";
-            c.fillText(grouped.length, cx, cy-9);
-            c.fillStyle="#888"; c.font="700 12px Cairo,sans-serif";
-            c.fillText("مناطق", cx, cy+17);
-            c.restore();
-          }
-        };
-
-        this.reportChart=new Chart(ctx,{
-          type:"doughnut",
-          plugins:[ChartDataLabels, centerPlugin],
-          data:{labels:chartLabels,datasets:[{data:chartData,borderWidth:2,backgroundColor:chartColors,borderColor:"#fff"}]},
-          options:{
-            responsive:false, animation:false, cutout:"58%",
-            plugins:{
-              legend:{display:false},
-              datalabels: showLabels&&grouped.length ? {
-                color:"#fff",
-                font:{weight:"bold",size:10,family:"Cairo,sans-serif"},
-                textShadowColor:"rgba(0,0,0,.4)", textShadowBlur:3,
-                formatter:(val,ctx2)=>{
-                  const pct=((val/gSYP)*100).toFixed(1);
-                  return pct>5?`${ctx2.chart.data.labels[ctx2.dataIndex]}\n${pct}%`:null;
-                },
-                display:(ctx2)=>((ctx2.dataset.data[ctx2.dataIndex]/gSYP)*100)>5
-              } : {display:false}
-            }
-          }
+      init: function() {
+        var self = this;
+        this.loadFromSDK().then(function() {
+          self.updateExchangeRateDisplay();
+          self.renderDashboard();
+          $('incomeDate').value = todayStr();
+          $('exchangeRate').value = self.exchangeRate;
+          $('incomeExchangeRate').value = self.exchangeRate;
+          self.loadTheme();
         });
-
-        $("reportCanvas").classList.toggle("pdf-no-chart",!this.settings.printIncludeChart);
       },
 
-      async generatePDF(){
-        const prev=this.currentSection;
-        this.showSection("reportsSection");
-        this.renderReport();
-        const overlay=$("pdfOverlay"); overlay.classList.remove("hidden-important");
-        $("pdfOverlayMsg").textContent="جاري تحضير التقرير...";
-        await sleep(600); /* wait for chart animation=false to still paint */
-        $("pdfOverlayMsg").textContent="جاري تصيير الصفحة...";
-        const s=this.settings, el=$("reportCanvas"), day=$("reportDay").value||"all";
-        const options={
-          margin:[s.printMarginTop||5,s.printMarginRight||5,s.printMarginBottom||5,s.printMarginLeft||5],
-          filename:`report_${day}.pdf`,
-          image:{type:"jpeg",quality:s.printImageQuality||0.98},
-          html2canvas:{
-            scale:Number(s.printScale||2),useCORS:true,allowTaint:true,
-            backgroundColor:s.printWhiteBg?"#ffffff":null,
-            scrollX:0,scrollY:0,width:1050,windowWidth:1050,logging:false,
-            onclone(doc){
-              const lk=doc.createElement("link"); lk.rel="stylesheet";
-              lk.href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap";
-              doc.head.appendChild(lk);
+      loadFromSDK: async function() {
+        try {
+          var self = this;
+          await window.dataSdk.init({
+            onDataChanged: function(data) {
+              self.data = data;
+              self.renderDashboard();
+              self.autoSaveToStorage();
             }
-          },
-          jsPDF:{unit:"mm",format:s.printFormat||"a4",orientation:s.printOrientation||"landscape",compress:true},
-          pagebreak:{mode:"avoid-all"}
+          });
+        } catch(e) {
+          this.loadFromStorage();
+        }
+      },
+
+      autoSaveToStorage: function() {
+        localStorage.setItem('incomeData', JSON.stringify(this.data));
+        localStorage.setItem('incomeTrash', JSON.stringify(this.trash));
+        localStorage.setItem('exchangeRate', this.exchangeRate.toString());
+      },
+
+      loadFromStorage: function() {
+        var s = localStorage.getItem('incomeData'); this.data = s ? JSON.parse(s) : [];
+        var t = localStorage.getItem('incomeTrash'); this.trash = t ? JSON.parse(t) : [];
+        var r = localStorage.getItem('exchangeRate'); this.exchangeRate = r ? parseFloat(r) : DEFAULT_EXCHANGE_RATE;
+      },
+
+      saveToStorage: function() {
+        localStorage.setItem('incomeData', JSON.stringify(this.data));
+        localStorage.setItem('incomeTrash', JSON.stringify(this.trash));
+        localStorage.setItem('exchangeRate', this.exchangeRate.toString());
+      },
+
+      saveTheme: function(t) { localStorage.setItem('selectedTheme', t); },
+
+      loadTheme: function() {
+        var theme = localStorage.getItem('selectedTheme') || 'bg-theme-1';
+        document.body.className = theme;
+        if (localStorage.getItem('darkMode') === 'true') {
+          document.body.classList.add('dark-mode');
+          $('darkMode').checked = true;
+        }
+      },
+
+      setBackgroundTheme: function(theme) {
+        var isDark = document.body.classList.contains('dark-mode');
+        document.body.className = theme;
+        if (isDark) document.body.classList.add('dark-mode');
+        this.saveTheme(theme);
+        this.showMessage('✅ تم تغيير مظهر الخلفية');
+      },
+
+      showMessage: function(text, type) {
+        type = type || 'success';
+        var c = $('msgContainer'), m = document.createElement('div');
+        m.className = type === 'success' ? 'success-msg' : 'error-msg';
+        m.textContent = text; c.appendChild(m); show(c);
+        setTimeout(function() { m.remove(); if(!c.children.length) hide(c); }, 3000);
+      },
+
+      calculateEquivalent: function() {
+        var a = parseFloat($('incomeAmount').value) || 0;
+        var cur = $('incomeCurrency').value;
+        $('incomeEquivalent').value = (cur === 'SYP' ? a / this.exchangeRate : a * this.exchangeRate).toFixed(2);
+        $('incomeExchangeRate').value = this.exchangeRate.toFixed(2);
+      },
+
+      updateCurrencyFields: function() { this.calculateEquivalent(); },
+
+      updateExchangeRateDisplay: function() {
+        $('exchangeRateDisplay').textContent = '1 USD = ' + formatNumber(this.exchangeRate.toFixed(0)) + ' SYP';
+      },
+
+      updateExchangeRate: function() {
+        var rate = parseFloat($('exchangeRate').value) || DEFAULT_EXCHANGE_RATE;
+        this.exchangeRate = rate;
+        this.saveToStorage();
+        this.updateExchangeRateDisplay();
+        $('incomeExchangeRate').value = this.exchangeRate.toFixed(2);
+        this.showMessage('✅ تم تحديث سعر الصرف');
+      },
+
+      addIncome: async function(e) {
+        e.preventDefault();
+        var city = $('incomeCity').value, cur = $('incomeCurrency').value;
+        var amount = parseFloat($('incomeAmount').value);
+        if (!city || !amount) { this.showMessage('⚠️ يرجى ملء جميع الحقول الإجبارية','error'); return; }
+        var aSYP = cur === 'SYP' ? amount : amount * this.exchangeRate;
+        var aUSD = cur === 'USD' ? amount : amount / this.exchangeRate;
+        var income = {
+          id: Date.now().toString(), city: city,
+          amountSYP: parseFloat(aSYP.toFixed(2)), amountUSD: parseFloat(aUSD.toFixed(2)),
+          description: $('incomeDescription').value, date: $('incomeDate').value,
+          exchangeRate: this.exchangeRate, createdAt: new Date().toISOString()
         };
-        $("pdfOverlayMsg").textContent="جاري إنشاء الملف...";
-        try{ await html2pdf().set(options).from(el).save(); }
-        catch(err){ console.error(err); alert("⚠️ تعذر إنشاء PDF: "+err.message); }
-        finally{ overlay.classList.add("hidden-important"); this.showSection(prev); }
+        try {
+          if (window.dataSdk) { var r = await window.dataSdk.create(income); if(!r.isOk) throw 0; }
+          else { this.data.push(income); this.saveToStorage(); }
+          this.showMessage('✅ تم إضافة الإيراد بنجاح');
+          $('incomeForm').reset(); $('incomeDate').value = todayStr();
+          this.renderDashboard(); this.playAddSound();
+        } catch(e) { this.showMessage('❌ خطأ في إضافة الإيراد','error'); }
+      },
+
+      deleteIncome: function(id) {
+        var item = this.data.find(function(d) { return d.id===id || d.__backendId===id; });
+        if (!item) return;
+        this.trash.push(Object.assign({}, item, {deletedAt: new Date().toISOString()}));
+        this.saveToStorage();
+        if (window.dataSdk && item.__backendId) try{ window.dataSdk.delete(item); }catch(e){}
+        this.data = this.data.filter(function(d) { return d.id!==id && d.__backendId!==id; });
+        this.renderDashboard();
+        this.showMessage('✅ تم نقل الإيراد إلى سلة المحذوفات');
+        this.playAddSound();
+      },
+
+      editIncome: function(id) {
+        var item = this.data.find(function(d) { return d.id===id || d.__backendId===id; });
+        if (!item) return;
+        App.showSection('addIncomeSection', null);
+        $('incomeCity').value = item.city;
+        $('incomeAmount').value = item.amountSYP;
+        $('incomeCurrency').value = 'SYP';
+        $('incomeDescription').value = item.description || '';
+        $('incomeDate').value = item.date;
+        $('incomeExchangeRate').value = item.exchangeRate;
+        this.calculateEquivalent();
+        var form = $('incomeForm'), btn = form.querySelector('button[type="submit"]');
+        btn.textContent = '✏️ تحديث الإيراد';
+        var self = this, bid = item.__backendId;
+        form.onsubmit = function(e) {
+          e.preventDefault();
+          self.updateIncome(id, bid);
+          btn.textContent = '✅ إضافة الإيراد';
+          form.onsubmit = function(ev){ ev.preventDefault(); self.addIncome(ev); };
+        };
+      },
+
+      updateIncome: async function(id, backendId) {
+        var city = $('incomeCity').value, cur = $('incomeCurrency').value;
+        var amount = parseFloat($('incomeAmount').value);
+        if (!city || !amount) { this.showMessage('⚠️ يرجى ملء جميع الحقول الإجبارية','error'); return; }
+        var aSYP = cur==='SYP' ? amount : amount * this.exchangeRate;
+        var aUSD = cur==='USD' ? amount : amount / this.exchangeRate;
+        var updated = {
+          id: id||backendId, __backendId: backendId, city: city,
+          amountSYP: parseFloat(aSYP.toFixed(2)), amountUSD: parseFloat(aUSD.toFixed(2)),
+          description: $('incomeDescription').value, date: $('incomeDate').value,
+          exchangeRate: this.exchangeRate, createdAt: new Date().toISOString()
+        };
+        try {
+          if (window.dataSdk && backendId) { var r = await window.dataSdk.update(updated); if(!r.isOk) throw 0; }
+          else { var idx = this.data.findIndex(function(d){return d.id===id;}); if(idx>=0) this.data[idx]=updated; this.saveToStorage(); }
+          this.showMessage('✅ تم تحديث الإيراد بنجاح');
+          $('incomeForm').reset(); $('incomeDate').value = todayStr();
+          this.renderDashboard(); this.playAddSound();
+        } catch(e) { this.showMessage('❌ خطأ في تحديث الإيراد','error'); }
+      },
+
+      restoreIncome: function(id) {
+        var item = this.trash.find(function(t){ return t.id===id; });
+        if(!item) return;
+        delete item.deletedAt;
+        this.data.push(item);
+        this.trash = this.trash.filter(function(t){ return t.id!==id; });
+        this.saveToStorage(); this.renderDashboard();
+        this.showMessage('✅ تم استرجاع الإيراد'); this.playAddSound();
+      },
+
+      renderDashboard: function() {
+        this.renderStats(); this.renderCharts(); this.renderHistory(); this.renderTrash();
+      },
+
+      getFilteredData: function() {
+        var city = $('dashboardCityFilter').value;
+        var df = $('dashboardDateFrom').value, dt = $('dashboardDateTo').value;
+        var f = this.data.slice();
+        if(city) f = f.filter(function(d){ return d.city===city; });
+        if(df) f = f.filter(function(d){ return d.date>=df; });
+        if(dt) f = f.filter(function(d){ return d.date<=dt; });
+        return f;
+      },
+
+      renderStats: function() {
+        var data = this.getFilteredData();
+        var tSYP = data.reduce(function(s,d){ return s+(d.amountSYP||0); }, 0);
+        var tUSD = data.reduce(function(s,d){ return s+(d.amountUSD||0); }, 0);
+        var cs = {};
+        CITIES.forEach(function(c){
+          var cd = data.filter(function(d){ return d.city===c; });
+          cs[c] = {
+            syp: cd.reduce(function(s,d){ return s+(d.amountSYP||0); }, 0),
+            usd: cd.reduce(function(s,d){ return s+(d.amountUSD||0); }, 0)
+          };
+        });
+        $('statsRow').innerHTML =
+          '<div class="stat-card"><div class="label">🏦 الإجمالي (SYP)</div><div class="value">'+formatNumber(tSYP.toFixed(0))+'</div></div>'+
+          '<div class="stat-card"><div class="label">💵 الإجمالي (USD)</div><div class="value">'+formatNumber(tUSD.toFixed(2))+'</div></div>'+
+          CITIES.map(function(c){
+            return '<div class="stat-card"><div class="label">'+c+'</div><div class="value">'+formatNumber(cs[c].syp.toFixed(0))+'</div><div style="font-size:11px;opacity:.7;">$'+formatNumber(cs[c].usd.toFixed(1))+'</div></div>';
+          }).join('');
+        $('dashboardStats').innerHTML =
+          '<div style="margin:15px 0;"><p style="opacity:.9;margin-bottom:10px;">💷 الليرة السورية</p><h3 style="font-size:28px;margin-bottom:15px;">'+formatNumber(tSYP.toFixed(2))+' SYP</h3></div>'+
+          '<div style="margin:15px 0;"><p style="opacity:.9;margin-bottom:10px;">💵 الدولار الأمريكي</p><h3 style="font-size:28px;">'+formatNumber(tUSD.toFixed(2))+' USD</h3></div>';
+      },
+
+      renderCharts: function() {
+        var data = this.getFilteredData(), cd = {};
+        CITIES.forEach(function(c){
+          cd[c] = data.filter(function(d){ return d.city===c; }).reduce(function(s,d){ return s+(d.amountSYP||0); }, 0);
+        });
+        var cc = $('citiesChart');
+        if(this.charts.cities) this.charts.cities.destroy();
+        this.charts.cities = new Chart(cc, {
+          type:'doughnut',
+          data:{labels:CITIES,datasets:[{data:Object.values(cd),backgroundColor:['rgba(102,126,234,.85)','rgba(240,147,251,.85)','rgba(79,172,254,.85)','rgba(0,242,254,.85)','rgba(240,128,128,.85)','rgba(144,202,249,.85)']}]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'white',font:{family:'Cairo'}}}}}
+        });
+        var dd = {};
+        data.forEach(function(d){
+          if(!dd[d.date]) dd[d.date]={syp:0,usd:0};
+          dd[d.date].syp += d.amountSYP||0;
+          dd[d.date].usd += d.amountUSD||0;
+        });
+        var sd = Object.keys(dd).sort(), dc = $('dailyChart');
+        if(this.charts.daily) this.charts.daily.destroy();
+        this.charts.daily = new Chart(dc, {
+          type:'line',
+          data:{labels:sd,datasets:[
+            {label:'الإيراد (SYP)',data:sd.map(function(d){return dd[d].syp;}),borderColor:'rgba(102,126,234,.85)',backgroundColor:'rgba(102,126,234,.12)',tension:.4,fill:true},
+            {label:'الإيراد (USD)',data:sd.map(function(d){return dd[d].usd;}),borderColor:'rgba(72,187,120,.85)',backgroundColor:'rgba(72,187,120,.12)',tension:.4,fill:true}
+          ]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'white',font:{family:'Cairo'}}}},scales:{y:{ticks:{color:'rgba(255,255,255,.75)'}},x:{ticks:{color:'rgba(255,255,255,.75)'}}}}
+        });
+      },
+
+      renderHistory: function() {
+        var f = $('cityFilter').value;
+        var filtered = this.data.slice();
+        if(f) filtered = filtered.filter(function(d){ return d.city===f; });
+        filtered.sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+        $('historyTable').innerHTML = filtered.map(function(item){
+          var id = item.id || item.__backendId || '';
+          return '<tr>'+
+            '<td>'+item.city+'</td>'+
+            '<td>'+formatNumber(item.amountSYP.toFixed(2))+'</td>'+
+            '<td>'+formatNumber(item.amountUSD.toFixed(2))+'</td>'+
+            '<td>'+formatNumber(item.exchangeRate.toFixed(0))+'</td>'+
+            '<td>'+item.date+'</td>'+
+            '<td>'+(item.description||'-')+'</td>'+
+            '<td><div class="btn-group">'+
+              '<button class="btn btn-secondary btn-small" onclick="App.editIncome(\''+id+'\')">✏️ تعديل</button>'+
+              '<button class="btn btn-danger btn-small" onclick="App.deleteIncome(\''+id+'\')">🗑️ حذف</button>'+
+            '</div></td>'+
+          '</tr>';
+        }).join('');
+      },
+
+      generateReport: function() {
+        var df = $('reportDateFrom').value, dt = $('reportDateTo').value;
+        var city = $('reportCityFilter').value;
+        if(!df || !dt){ this.showMessage('⚠️ يرجى اختيار نطاق التاريخ أولاً','error'); return; }
+        var dayData = this.data.filter(function(d){ return d.date>=df && d.date<=dt; });
+        if(city) dayData = dayData.filter(function(d){ return d.city===city; });
+        var tSYP = dayData.reduce(function(s,d){ return s+(d.amountSYP||0); }, 0);
+        var tUSD = dayData.reduce(function(s,d){ return s+(d.amountUSD||0); }, 0);
+        var cb = {};
+        CITIES.forEach(function(c){
+          var cd = dayData.filter(function(d){ return d.city===c; });
+          cb[c] = {
+            syp: cd.reduce(function(s,d){ return s+(d.amountSYP||0); }, 0),
+            usd: cd.reduce(function(s,d){ return s+(d.amountUSD||0); }, 0),
+            count: cd.length
+          };
+        });
+        $('reportContent').innerHTML =
+          '<div class="summary-box" style="margin-bottom:20px;">'+
+          '<h4 style="font-size:16px;margin-bottom:10px;">📈 ملخص التقرير من '+df+' إلى '+dt+'</h4>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-top:15px;">'+
+          '<div style="background:rgba(102,126,234,.2);padding:15px;border-radius:8px;"><p style="opacity:.8;margin-bottom:5px;font-size:12px;">الإجمالي (SYP)</p><h2 style="font-size:28px;margin:0;">'+formatNumber(tSYP.toFixed(2))+'</h2></div>'+
+          '<div style="background:rgba(72,187,120,.2);padding:15px;border-radius:8px;"><p style="opacity:.8;margin-bottom:5px;font-size:12px;">الإجمالي (USD)</p><h2 style="font-size:28px;margin:0;">$'+formatNumber(tUSD.toFixed(2))+'</h2></div>'+
+          '<div style="background:rgba(240,147,251,.2);padding:15px;border-radius:8px;"><p style="opacity:.8;margin-bottom:5px;font-size:12px;">عدد العمليات</p><h2 style="font-size:28px;margin:0;">'+dayData.length+'</h2></div>'+
+          '</div></div>'+
+          '<div class="card" style="margin-top:20px;"><h3>🏙️ توزيع الإيراد حسب المدينة</h3>'+
+          '<table class="data-table"><thead><tr><th>المدينة</th><th>العدد</th><th>المبلغ (SYP)</th><th>المبلغ (USD)</th><th>النسبة %</th></tr></thead><tbody>'+
+          CITIES.map(function(c){
+            var p = tSYP>0 ? ((cb[c].syp/tSYP)*100).toFixed(1) : 0;
+            return '<tr><td>'+c+'</td><td>'+cb[c].count+'</td><td>'+formatNumber(cb[c].syp.toFixed(2))+'</td><td>'+formatNumber(cb[c].usd.toFixed(2))+'</td><td style="color:#a8e6a1;font-weight:600;">'+p+'%</td></tr>';
+          }).join('')+
+          '</tbody></table></div>'+
+          '<div class="card" style="margin-top:20px;"><h3>📋 تفاصيل جميع المعاملات</h3>'+
+          '<table class="data-table"><thead><tr><th>التاريخ</th><th>المدينة</th><th>SYP</th><th>USD</th><th>الوصف</th></tr></thead><tbody>'+
+          (dayData.length===0 ? '<tr><td colspan="5" style="text-align:center;">لا توجد بيانات</td></tr>' :
+          dayData.map(function(d){
+            return '<tr><td>'+d.date+'</td><td>'+d.city+'</td><td>'+formatNumber(d.amountSYP.toFixed(2))+'</td><td>'+formatNumber(d.amountUSD.toFixed(2))+'</td><td>'+(d.description||'-')+'</td></tr>';
+          }).join(''))+
+          '</tbody></table></div>';
+      },
+
+      renderTrash: function() {
+        var tl = $('trashList');
+        if(!this.trash.length){ tl.innerHTML='<p style="text-align:center;opacity:.7;">لا توجد عناصر محذوفة</p>'; return; }
+        tl.innerHTML = '<div class="trash-container">'+
+          this.trash.map(function(item){
+            return '<div class="trash-item"><div><strong>'+item.city+'</strong> - '+formatNumber(item.amountSYP.toFixed(2))+' SYP<br>'+
+              '<small style="opacity:.7;">حذف في: '+new Date(item.deletedAt).toLocaleString('ar-SA')+'</small></div>'+
+              '<button class="btn btn-success btn-small" onclick="App.restoreIncome(\''+item.id+'\')">استرجاع</button></div>';
+          }).join('')+
+          '</div>';
+      },
+
+      saveSettings: function() {
+        var dm = $('darkMode').checked;
+        localStorage.setItem('darkMode', dm.toString());
+        if(dm) document.body.classList.add('dark-mode');
+        else document.body.classList.remove('dark-mode');
+        this.showMessage('✅ تم حفظ الإعدادات');
+      },
+
+      clearAllData: function() {
+        if(!confirm('⚠️ هل أنت متأكد من حذف كل البيانات؟')) return;
+        this.data=[]; this.trash=[]; this.saveToStorage(); this.renderDashboard();
+        this.showMessage('✅ تم حذف كل البيانات');
+      },
+
+      // ========== PDF EXPORT - FIXED ==========
+      buildPDFHTML: function(dayData, dateFrom, dateTo, city) {
+        var tSYP = dayData.reduce(function(s,d){ return s+(d.amountSYP||0); }, 0);
+        var tUSD = dayData.reduce(function(s,d){ return s+(d.amountUSD||0); }, 0);
+        var cb = {};
+        CITIES.forEach(function(c){
+          var cd = dayData.filter(function(d){ return d.city===c; });
+          cb[c] = {
+            syp: cd.reduce(function(s,d){ return s+(d.amountSYP||0); }, 0),
+            usd: cd.reduce(function(s,d){ return s+(d.amountUSD||0); }, 0),
+            count: cd.length
+          };
+        });
+        var rangeLabel = (dateFrom&&dateTo) ? ('من '+dateFrom+' إلى '+dateTo) : 'جميع البيانات';
+        var cityRows = CITIES.map(function(c){
+          var p = tSYP>0 ? ((cb[c].syp/tSYP)*100).toFixed(1) : '0';
+          return '<tr><td>'+c+'</td><td>'+cb[c].count+'</td><td>'+formatNumber(cb[c].syp.toFixed(2))+'</td><td>'+formatNumber(cb[c].usd.toFixed(2))+'</td><td style="color:#2e7d32;font-weight:bold;">'+p+'%</td></tr>';
+        }).join('');
+        var detailRows = dayData.map(function(d){
+          return '<tr><td>'+d.date+'</td><td>'+d.city+'</td><td>'+formatNumber(d.amountSYP.toFixed(2))+'</td><td>'+formatNumber(d.amountUSD.toFixed(2))+'</td><td>'+formatNumber(d.exchangeRate.toFixed(0))+'</td><td>'+(d.description||'-')+'</td></tr>';
+        }).join('');
+        return '<div style="padding:20px;font-family:Arial,sans-serif;direction:rtl;background:#fff;color:#111;">'+
+          '<h1 style="text-align:center;color:#333;margin-bottom:5px;">📊 تقرير الإيراد الشامل</h1>'+
+          '<h2 style="text-align:center;color:#555;font-size:15px;margin-bottom:5px;">'+rangeLabel+'</h2>'+
+          (city ? '<h3 style="text-align:center;color:#777;font-size:13px;margin-bottom:15px;">المدينة: '+city+'</h3>' : '')+
+          '<div style="background:#4a5568;padding:18px;border-radius:8px;color:white;margin:15px 0;">'+
+          '<h3 style="text-align:center;margin:0 0 12px;font-size:16px;">📈 الملخص العام</h3>'+
+          '<div style="display:flex;gap:12px;">'+
+          '<div style="background:rgba(255,255,255,.2);padding:12px;border-radius:6px;flex:1;text-align:center;"><div style="font-size:11px;opacity:.85;margin-bottom:4px;">إجمالي (SYP)</div><div style="font-size:20px;font-weight:bold;">'+formatNumber(tSYP.toFixed(0))+'</div></div>'+
+          '<div style="background:rgba(255,255,255,.2);padding:12px;border-radius:6px;flex:1;text-align:center;"><div style="font-size:11px;opacity:.85;margin-bottom:4px;">إجمالي (USD)</div><div style="font-size:20px;font-weight:bold;">$'+formatNumber(tUSD.toFixed(2))+'</div></div>'+
+          '<div style="background:rgba(255,255,255,.2);padding:12px;border-radius:6px;flex:1;text-align:center;"><div style="font-size:11px;opacity:.85;margin-bottom:4px;">عدد العمليات</div><div style="font-size:20px;font-weight:bold;">'+dayData.length+'</div></div>'+
+          '</div></div>'+
+          '<h3 style="color:#4a5568;border-bottom:2px solid #667eea;padding-bottom:6px;margin:20px 0 10px;">📍 توزيع الإيراد حسب المدينة</h3>'+
+          '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;"><thead><tr>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">المدينة</th>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">العدد</th>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">SYP</th>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">USD</th>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">النسبة</th>'+
+          '</tr></thead><tbody>'+cityRows+'</tbody></table>'+
+          '<h3 style="color:#4a5568;border-bottom:2px solid #667eea;padding-bottom:6px;margin:20px 0 10px;">📋 تفاصيل المعاملات</h3>'+
+          '<table style="width:100%;border-collapse:collapse;"><thead><tr>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">التاريخ</th>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">المدينة</th>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">SYP</th>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">USD</th>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">سعر الصرف</th>'+
+          '<th style="background:#667eea;color:white;padding:9px;text-align:right;border:1px solid #667eea;">الوصف</th>'+
+          '</tr></thead><tbody>'+detailRows+'</tbody></table>'+
+          '<p style="text-align:center;color:#999;font-size:11px;margin-top:25px;">تم التوليد من متتبع الإيراد اليومي 🇸🇾 | '+new Date().toLocaleString('ar-SA')+'</p>'+
+          '</div>';
+      },
+
+      doExportPDF: function(dateFrom, dateTo, city) {
+        var self = this;
+        var dayData = this.data.slice();
+        if(dateFrom && dateTo) dayData = dayData.filter(function(d){ return d.date>=dateFrom && d.date<=dateTo; });
+        if(city) dayData = dayData.filter(function(d){ return d.city===city; });
+        if(!dayData.length){ this.showMessage('⚠️ لا توجد بيانات للتصدير','error'); return; }
+
+        show($('pdfOverlay'));
+
+        // ✅ FIX: إنشاء العنصر وإضافته للـ DOM أولاً حتى يتمكن html2canvas من رسمه
+        var element = document.createElement('div');
+        element.innerHTML = this.buildPDFHTML(dayData, dateFrom, dateTo, city);
+        element.style.position = 'absolute';
+        element.style.top = '0';
+        element.style.left = '0';
+        element.style.width = '794px';
+        element.style.opacity = '0';
+        element.style.pointerEvents = 'none';
+        element.style.zIndex = '-9999';
+        document.body.appendChild(element);
+
+        var fn = 'تقرير_إيراد';
+        if(dateFrom && dateTo) fn += '_'+dateFrom+'_إلى_'+dateTo;
+        if(city) fn += '_'+city;
+        fn += '.pdf';
+
+        var opt = {
+          margin: [8,8,8,8],
+          filename: fn,
+          image: { type:'jpeg', quality:0.98 },
+          html2canvas: { scale:2, useCORS:true, logging:false, backgroundColor:'#ffffff', scrollX:0, scrollY:0 },
+          jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save()
+          .then(function() {
+            document.body.removeChild(element);
+            hide($('pdfOverlay'));
+            self.showMessage('✅ تم تحميل PDF بنجاح ✨');
+            self.playSuccessSound();
+          })
+          .catch(function(err) {
+            document.body.removeChild(element);
+            hide($('pdfOverlay'));
+            self.showMessage('❌ خطأ في التصدير','error');
+          });
+      },
+
+      exportPDF: function() {
+        var df = $('reportDateFrom').value, dt = $('reportDateTo').value;
+        var city = $('reportCityFilter').value;
+        this.doExportPDF(df, dt, city);
+      },
+
+      exportPDFWithFilters: function() {
+        var df = $('reportDateFrom').value, dt = $('reportDateTo').value;
+        if(!df || !dt){ this.showMessage('⚠️ يرجى اختيار نطاق التاريخ أولاً','error'); return; }
+        var city = $('reportCityFilter').value;
+        this.doExportPDF(df, dt, city);
+      },
+
+      exportExcel: function() {
+        var df = $('reportDateFrom').value, dt = $('reportDateTo').value;
+        var city = $('reportCityFilter').value;
+        var dayData = this.data.slice();
+        if(df && dt) dayData = dayData.filter(function(d){ return d.date>=df && d.date<=dt; });
+        if(city) dayData = dayData.filter(function(d){ return d.city===city; });
+        if(!dayData.length){ this.showMessage('⚠️ لا توجد بيانات للتصدير','error'); return; }
+        var csv = 'التاريخ,المدينة,المبلغ SYP,المبلغ USD,سعر الصرف,الوصف\n';
+        dayData.forEach(function(d){
+          csv += d.date+','+d.city+','+d.amountSYP.toFixed(2)+','+d.amountUSD.toFixed(2)+','+d.exchangeRate.toFixed(0)+',"'+(d.description||'')+'"\n';
+        });
+        var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        var fn = 'تقرير'; if(df&&dt) fn+='_'+df+'_إلى_'+dt; if(city) fn+='_'+city; fn+='.csv';
+        link.download = fn; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        this.showMessage('✅ تم تصدير Excel بنجاح');
+      },
+
+      exportExcelWithFilters: function() { this.exportExcel(); },
+
+      playSuccessSound: function() {
+        try {
+          var ac = new(window.AudioContext||window.webkitAudioContext)(), osc = ac.createOscillator(), g = ac.createGain();
+          osc.connect(g); g.connect(ac.destination);
+          var now = ac.currentTime;
+          osc.frequency.setValueAtTime(523.25,now); g.gain.setValueAtTime(.3,now); g.gain.exponentialRampToValueAtTime(.01,now+.1);
+          osc.frequency.setValueAtTime(659.25,now+.15); g.gain.setValueAtTime(.3,now+.15); g.gain.exponentialRampToValueAtTime(.01,now+.25);
+          osc.frequency.setValueAtTime(783.99,now+.3); g.gain.setValueAtTime(.3,now+.3); g.gain.exponentialRampToValueAtTime(.01,now+.4);
+          osc.start(now); osc.stop(now+.4);
+        } catch(e){}
+      },
+
+      playAddSound: function() {
+        try {
+          var ac = new(window.AudioContext||window.webkitAudioContext)(), osc = ac.createOscillator(), g = ac.createGain();
+          osc.connect(g); g.connect(ac.destination);
+          var now = ac.currentTime;
+          osc.frequency.setValueAtTime(880,now); g.gain.setValueAtTime(.2,now); g.gain.exponentialRampToValueAtTime(.01,now+.2);
+          osc.start(now); osc.stop(now+.2);
+        } catch(e){}
+      },
+
+      showSection: function(sectionId, evt) {
+        document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+        $(sectionId).classList.add('active');
+        document.querySelectorAll('.sidebar button').forEach(function(b){ b.classList.remove('active'); });
+        if(evt && evt.target) evt.target.classList.add('active');
+        if(sectionId==='historySection') this.renderHistory();
+        if(sectionId==='trashSection') this.renderTrash();
       }
     };
 
-    window.App=App;
-
-    onAuthStateChanged(auth,user=>{
-      App.user=user||null;
-      if(!user){ $("authOverlay").classList.remove("hidden-important"); $("appShell").classList.add("hidden-important"); return; }
-      $("authOverlay").classList.add("hidden-important"); $("appShell").classList.remove("hidden-important");
-      App.load();
-      const sp=App.getJSON(App.getKey(LS.profile),{}), ss=App.getJSON(App.getKey(LS.settings),{});
-      App.profile={name:"",title:"",bio:"",...sp};
-      if(!App.profile.name&&user.displayName) App.profile.name=user.displayName;
-      App.settings={...DEFAULT_SETTINGS,...ss};
-      App.bindProfileToUI(); App.applySettingsToUI();
-      App.renderRegions(); App.renderTransactions(); App.renderSummary();
-      App.initDashboardChart(); App.renderReport();
-      $("userNameTop").textContent=App.profile.name||user.email||"مستخدم";
-      $("userEmailTop").textContent=user.email||"";
-      App.showSection("dashboardSection");
-    });
-
-    window.addEventListener("DOMContentLoaded",()=>{
-      App.load(); App.initDate();
-      $("reportDay").addEventListener("change",()=>App.renderReport());
-      App.setReportFilter("today");
-    });
+    window.addEventListener('DOMContentLoaded', function(){ App.init(); });
+    setInterval(function(){ App.autoSaveToStorage(); }, 30000);
+    window.addEventListener('beforeunload', function(){ App.autoSaveToStorage(); });
   </script>
 </body>
 </html>
