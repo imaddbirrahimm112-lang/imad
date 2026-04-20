@@ -677,8 +677,8 @@ padding:14px
 </nav>
 
 <script>
-var REGION_PRESETS = ['ccbs1','ccbs2','ccbs3','ccbs4','masary1','masary2','masary3','masary4'];
 var LEGACY_REGIONS = ['Region 1','Region 2','Region 3','Region 4'];
+var REGION_PRESETS = LEGACY_REGIONS.concat(['ccbs1','ccbs2','ccbs3','ccbs4','masary1','masary2','masary3','masary4']);
 var CHART_COLORS = ['#6366f1','#ec4899','#06b6d4','#10b981','#f59e0b','#8b5cf6','#14b8a6','#ef4444','#60a5fa','#f472b6','#34d399','#fbbf24'];
 var DEFAULT_RATE = 1500;
 var HEADER_ALIASES = {
@@ -800,6 +800,10 @@ function detectHeaderType(value){
   });
   return found;
 }
+function isNumericLike(value){
+  var n=parseNumberSmart(value);
+  return n!==null && !isNaN(n);
+}
 function splitDelimitedLine(line,delimiter){
   if(delimiter==='\t')return line.split('\t').map(function(cell){return String(cell||'').trim();});
   var out=[],current='',inQuotes=false;
@@ -834,6 +838,10 @@ function normalizeRegionName(name){
   if(!raw)return '';
   var exact=normalizeAliasKey(raw);
   var aliasMap={
+    'r1':'Region 1','r01':'Region 1','region1':'Region 1','region01':'Region 1',
+    'r2':'Region 2','r02':'Region 2','region2':'Region 2','region02':'Region 2',
+    'r3':'Region 3','r03':'Region 3','region3':'Region 3','region03':'Region 3',
+    'r4':'Region 4','r04':'Region 4','region4':'Region 4','region04':'Region 4',
     'ccbs1':'ccbs1','ccbs01':'ccbs1','ccbs 1':'ccbs1',
     'ccbs2':'ccbs2','ccbs02':'ccbs2',
     'ccbs3':'ccbs3','ccbs03':'ccbs3',
@@ -859,6 +867,10 @@ function guessRegionFromText(text){
     if(normalizeAliasKey(knownExact[x])===source)return knownExact[x];
   }
   var aliases={
+    'Region 1':['r1','r01','region1','region01','region 1'],
+    'Region 2':['r2','r02','region2','region02','region 2'],
+    'Region 3':['r3','r03','region3','region03','region 3'],
+    'Region 4':['r4','r04','region4','region04','region 4'],
     ccbs1:['ccbs1','ccbs01'],
     ccbs2:['ccbs2','ccbs02'],
     ccbs3:['ccbs3','ccbs03'],
@@ -1703,7 +1715,9 @@ var App = {
   detectHeaderRow:function(rows){
     if(!rows.length)return false;
     var first=rows[0];
-    var hits=first.reduce(function(sum,cell){return sum + (detectHeaderType(cell)?1:0);},0);
+    var hits=first.reduce(function(sum,cell){
+      return sum + ((detectHeaderType(cell) || guessRegionFromText(cell)) ? 1 : 0);
+    },0);
     return hits>=2;
   },
 
@@ -1711,12 +1725,29 @@ var App = {
     var hasHeader=this.detectHeaderRow(rows);
     var bodyRows=hasHeader?rows.slice(1):rows.slice();
     var map={date:-1,region:-1,amount:-1,amountSYP:-1,amountUSD:-1,currency:-1,exchangeRate:-1,description:-1};
+    var regionAmountColumns=[];
     var sample=bodyRows.slice(0,25);
+
+    function looksNumericColumn(index){
+      var score=0;
+      sample.forEach(function(row){
+        if(isNumericLike(row[index]))score++;
+      });
+      return score>0;
+    }
 
     if(hasHeader){
       rows[0].forEach(function(cell,index){
         var type=detectHeaderType(cell);
         if(type && map[type]===-1)map[type]=index;
+      });
+      rows[0].forEach(function(cell,index){
+        var headerRegion=guessRegionFromText(cell);
+        if(!headerRegion)return;
+        if(index===map.date || index===map.region || index===map.currency || index===map.exchangeRate || index===map.description)return;
+        if(looksNumericColumn(index)){
+          regionAmountColumns.push({index:index,region:headerRegion});
+        }
       });
     }
 
@@ -1759,12 +1790,15 @@ var App = {
       },used);
     }
 
-    return {hasHeader:hasHeader,map:map,bodyRows:bodyRows};
+    return {hasHeader:hasHeader,map:map,bodyRows:bodyRows,regionAmountColumns:regionAmountColumns};
   },
 
-  buildDescriptionFromRow:function(cells,map){
+  buildDescriptionFromRow:function(cells,map,extraUsed){
     if(map.description!==-1 && cells[map.description])return String(cells[map.description]).trim();
     var used=Object.keys(map).map(function(key){return map[key];});
+    (extraUsed||[]).forEach(function(index){
+      if(used.indexOf(index)===-1)used.push(index);
+    });
     return cells.filter(function(cell,index){
       return used.indexOf(index)===-1 && String(cell||'').trim();
     }).join(' | ');
@@ -1777,6 +1811,7 @@ var App = {
     var rows=text.split(/\r?\n/).filter(function(line){return line.trim();}).map(function(line){return splitDelimitedLine(line,delimiter);});
     var detected=this.detectColumnMap(rows);
     var map=detected.map;
+    var regionAmountColumns=detected.regionAmountColumns||[];
     var defaults={
       region:$('bulkDefaultRegion').value,
       currency:$('bulkDefaultCurrency').value,
@@ -1795,62 +1830,85 @@ var App = {
           if(date)break;
         }
       }
-      var regionRaw=map.region!==-1?cells[map.region]:'';
-      var region=normalizeRegionName(regionRaw) || guessRegionFromText(joined) || defaults.region;
 
       var currencyCell='';
       if(map.currency!==-1)currencyCell=cells[map.currency];
       else if(map.amountUSD!==-1)currencyCell='USD';
       else if(map.amountSYP!==-1)currencyCell='SYP';
       var currency=normalizeCurrencyName(currencyCell) || normalizeCurrencyName(joined) || defaults.currency || 'SYP';
-
       var rate=parseNumberSmart(map.exchangeRate!==-1?cells[map.exchangeRate]:'') || defaults.rate || DEFAULT_RATE;
-      var amountSYP=null,amountUSD=null;
-      if(map.amountSYP!==-1)amountSYP=parseNumberSmart(cells[map.amountSYP]);
-      if(map.amountUSD!==-1)amountUSD=parseNumberSmart(cells[map.amountUSD]);
-      if(map.amount!==-1){
-        var genericAmount=parseNumberSmart(cells[map.amount]);
-        if(genericAmount!==null){
-          if(currency==='USD')amountUSD=genericAmount;
-          else amountSYP=genericAmount;
+
+      function pushParsedEntry(region, amountSYP, amountUSD, description, reasonOverride){
+        var status='ok',reason=reasonOverride||'';
+        if(!date){status='error';reason='التاريخ غير واضح';}
+        else if(!region){status='error';reason='الفئة غير واضحة';}
+        else if(amountSYP===null && amountUSD===null){status='error';reason='المبلغ غير واضح';}
+
+        var item=null;
+        if(status==='ok'){
+          item=normalizeItem({
+            id:Date.now().toString()+'_'+rowIndex+'_'+Math.floor(Math.random()*1000),
+            region:region,
+            amountSYP:amountSYP,
+            amountUSD:amountUSD,
+            description:description,
+            date:date,
+            exchangeRate:rate,
+            createdAt:new Date().toISOString()
+          });
+          var key=App.makeDuplicateKey(item);
+          if($('bulkSkipDuplicates').checked && (existingKeys[key] || pendingKeys[key])){
+            status='duplicate';
+            reason='مكرر وموجود مسبقًا';
+          }else{
+            pendingKeys[key]=true;
+          }
         }
-      }
-      if(amountSYP===null && amountUSD!==null)amountSYP=amountUSD*rate;
-      if(amountUSD===null && amountSYP!==null)amountUSD=rate?amountSYP/rate:0;
-
-      var description=App.buildDescriptionFromRow(cells,map);
-      var status='ok',reason='';
-      if(!date){status='error';reason='التاريخ غير واضح';}
-      else if(!region){status='error';reason='الفئة غير واضحة';}
-      else if(amountSYP===null && amountUSD===null){status='error';reason='المبلغ غير واضح';}
-
-      var item=null;
-      if(status==='ok'){
-        item=normalizeItem({
-          id:Date.now().toString()+'_'+rowIndex+'_'+Math.floor(Math.random()*1000),
-          region:region,
-          amountSYP:amountSYP,
-          amountUSD:amountUSD,
-          description:description,
-          date:date,
-          exchangeRate:rate,
-          createdAt:new Date().toISOString()
+        parsedRows.push({
+          rowNumber:rowIndex+1+(detected.hasHeader?1:0),
+          status:status,
+          reason:reason,
+          item:item
         });
-        var key=App.makeDuplicateKey(item);
-        if($('bulkSkipDuplicates').checked && (existingKeys[key] || pendingKeys[key])){
-          status='duplicate';
-          reason='مكرر وموجود مسبقًا';
-        }else{
-          pendingKeys[key]=true;
-        }
       }
 
-      parsedRows.push({
-        rowNumber:rowIndex+1+(detected.hasHeader?1:0),
-        status:status,
-        reason:reason,
-        item:item
-      });
+      if(regionAmountColumns.length){
+        var addedAny=false;
+        regionAmountColumns.forEach(function(colMeta){
+          var rawAmount=parseNumberSmart(cells[colMeta.index]);
+          if(rawAmount===null)return;
+          addedAny=true;
+          var amountSYP=(currency==='USD')?rawAmount*rate:rawAmount;
+          var amountUSD=(currency==='USD')?rawAmount:(rate?rawAmount/rate:0);
+          var description=App.buildDescriptionFromRow(cells,map,[colMeta.index]);
+          pushParsedEntry(colMeta.region, amountSYP, amountUSD, description, '');
+        });
+        if(!addedAny){
+          parsedRows.push({
+            rowNumber:rowIndex+1+(detected.hasHeader?1:0),
+            status:'error',
+            reason:date ? 'المبلغ غير واضح' : 'التاريخ غير واضح',
+            item:null
+          });
+        }
+      }else{
+        var regionRaw=map.region!==-1?cells[map.region]:'';
+        var region=normalizeRegionName(regionRaw) || guessRegionFromText(joined) || defaults.region;
+        var amountSYP=null,amountUSD=null;
+        if(map.amountSYP!==-1)amountSYP=parseNumberSmart(cells[map.amountSYP]);
+        if(map.amountUSD!==-1)amountUSD=parseNumberSmart(cells[map.amountUSD]);
+        if(map.amount!==-1){
+          var genericAmount=parseNumberSmart(cells[map.amount]);
+          if(genericAmount!==null){
+            if(currency==='USD')amountUSD=genericAmount;
+            else amountSYP=genericAmount;
+          }
+        }
+        if(amountSYP===null && amountUSD!==null)amountSYP=amountUSD*rate;
+        if(amountUSD===null && amountSYP!==null)amountUSD=rate?amountSYP/rate:0;
+        var description=App.buildDescriptionFromRow(cells,map);
+        pushParsedEntry(region, amountSYP, amountUSD, description, (!region && !defaults.region && map.region===-1 && regionAmountColumns.length===0) ? 'الفئة غير واضحة - اختاري فئة افتراضية أو الصقي عمود اسم الفئة' : '');
+      }
     });
 
     var summary={
