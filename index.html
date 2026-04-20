@@ -419,7 +419,7 @@ padding:14px
     <div class="top-bar-title">متتبع الإيراد الذكي 🇸🇾</div>
     <div class="top-bar-sub">
      <span id="exchangeRateDisplay">1 USD = 0 SYP</span>
-     <span id="quickStatus">جاهز للإضافة الفردية أو اللصق الجماعي</span>
+     <span id="quickStatus">جاهز للإضافة الفردية أو لصق الأسعار والإيرادات</span>
      <span id="syncStatus" title="حالة المزامنة" style="display:flex;align-items:center;gap:4px;font-size:11px;">
       <span class="sync-dot ok" id="syncDot"></span>
       <span id="syncText">محلي</span>
@@ -483,14 +483,49 @@ padding:14px
     </div>
 
     <div class="card">
-     <h3>🧠 لصق جماعي ذكي من Excel</h3>
+     <h3>💱 لصق أسعار الصرف اليومية من Excel</h3>
      <div class="hint-box">
-      انسخ الشهر كامل من Excel ثم الصقه هنا كما هو. البرنامج سيحاول فهم الأعمدة تلقائيًا مثل: التاريخ، الفئة، المبلغ، العملة، سعر الصرف، والوصف.
-      إذا كان التاريخ موجودًا داخل كل معاملة فسيتم توزيع الإيرادات تلقائيًا على الأيام الصحيحة داخل اللوحة والتقارير.
+      الصق هنا جدول سعر الصرف اليومي للشهر كامل. أهم عمودين: <b>التاريخ</b> و <b>سعر الصرف</b>.
+      أي سطر إيراد لا يحتوي على سعر صرفه الخاص، سيأخذ سعره تلقائيًا من هذا الجدول حسب نفس التاريخ.
      </div>
      <div class="form-group">
-      <label>الصق الجدول هنا</label>
-      <textarea id="bulkPasteInput" rows="8" placeholder="الصق هنا الصفوف المنسوخة من Excel..." onpaste="setTimeout(function(){App.previewBulkPaste();},80)"></textarea>
+      <label>الصق جدول أسعار الصرف هنا</label>
+      <textarea id="ratesPasteInput" rows="7" placeholder="مثال:
+التاريخ	سعر الصرف
+2026-04-01	11250
+2026-04-02	11300" onpaste="setTimeout(function(){App.previewRatesPaste();},80)"></textarea>
+     </div>
+     <div class="btn-group" style="margin-top:8px;margin-bottom:10px">
+      <button class="btn btn-primary" type="button" onclick="App.previewRatesPaste()">🔍 تحليل الأسعار</button>
+      <button class="btn btn-success" type="button" onclick="App.importRatesPaste()">✅ حفظ الأسعار اليومية</button>
+      <button class="btn btn-secondary" type="button" onclick="App.clearRatesPaste()">🧹 مسح أسعار الصرف</button>
+     </div>
+     <div id="ratesParseSummary"></div>
+     <div class="bulk-preview hidden-important" id="ratesPreviewWrap">
+      <table class="data-table" style="margin-top:0">
+       <thead>
+        <tr>
+         <th>#</th>
+         <th>الحالة</th>
+         <th>التاريخ</th>
+         <th>سعر الصرف</th>
+         <th>ملاحظة</th>
+        </tr>
+       </thead>
+       <tbody id="ratesPreviewTable"></tbody>
+      </table>
+     </div>
+    </div>
+
+    <div class="card">
+     <h3>🧠 لصق الإيرادات الشهرية من Excel</h3>
+     <div class="hint-box">
+      الصق هنا الإيرادات الشهرية. الترتيب المعتمد في الحساب هو: <b>سعر الصرف الموجود في نفس السطر</b> ← <b>سعر صرف اليوم من الجدول اليومي</b> ← <b>سعر الصرف الافتراضي</b>.
+      هكذا كل يوم ينحسب بسعره الصحيح بدون تخبيص.
+     </div>
+     <div class="form-group">
+      <label>الصق جدول الإيرادات هنا</label>
+      <textarea id="bulkPasteInput" rows="8" placeholder="الصق هنا صفوف الإيرادات المنسوخة من Excel..." onpaste="setTimeout(function(){App.previewBulkPaste();},80)"></textarea>
      </div>
      <div class="filter-row">
       <div>
@@ -505,7 +540,7 @@ padding:14px
        </select>
       </div>
       <div>
-       <label>سعر الصرف الافتراضي</label>
+       <label>سعر الصرف الافتراضي الاحتياطي</label>
        <input type="number" id="bulkExchangeRate" class="filter-select" step="0.01" placeholder="1500">
       </div>
      </div>
@@ -518,9 +553,9 @@ padding:14px
       </div>
      </div>
      <div class="btn-group" style="margin-top:8px;margin-bottom:10px">
-      <button class="btn btn-primary" type="button" onclick="App.previewBulkPaste()">🔍 تحليل اللصق</button>
+      <button class="btn btn-primary" type="button" onclick="App.previewBulkPaste()">🔍 تحليل الإيرادات</button>
       <button class="btn btn-success" type="button" onclick="App.importBulkPaste()">✅ استيراد السطور الصالحة</button>
-      <button class="btn btn-secondary" type="button" onclick="App.clearBulkPaste()">🧹 مسح</button>
+      <button class="btn btn-secondary" type="button" onclick="App.clearBulkPaste()">🧹 مسح الإيرادات</button>
      </div>
      <div id="bulkParseSummary"></div>
      <div class="bulk-preview hidden-important" id="bulkPreviewWrap">
@@ -531,6 +566,7 @@ padding:14px
          <th>الحالة</th>
          <th>التاريخ</th>
          <th>الفئة</th>
+         <th>الصرف المستخدم</th>
          <th>SYP</th>
          <th>USD</th>
          <th>الوصف / الملاحظة</th>
@@ -924,6 +960,8 @@ var App = {
   deletePin:'',
   syncTimer:null,
   bulkPreview:[],
+  dailyRatesPreview:[],
+  dailyRates:{},
 
   init: function(){
     this.loadStorage();
@@ -936,6 +974,12 @@ var App = {
     $('incomeExchangeRate').value=this.exchangeRate;
     $('bulkExchangeRate').value=this.exchangeRate;
     $('bulkDefaultCurrency').value='SYP';
+
+    if($('incomeDate')){
+      $('incomeDate').addEventListener('change', function(){
+        App.calculateEquivalent();
+      });
+    }
 
     var lastSection=localStorage.getItem('iLastSection');
     if(lastSection && $(lastSection))this.showSection(lastSection,null,this.getBottomNavIndex(lastSection));
@@ -994,12 +1038,15 @@ var App = {
     this.trash=t?normalizeItems(JSON.parse(t)):[];
     var r=localStorage.getItem('iRate');
     this.exchangeRate=r?parseFloat(r):DEFAULT_RATE;
+    var dr=localStorage.getItem('iDailyRates');
+    this.dailyRates=dr?JSON.parse(dr):{};
   },
 
   saveStorage:function(){
     localStorage.setItem('iData',JSON.stringify(this.data));
     localStorage.setItem('iTrash',JSON.stringify(this.trash));
     localStorage.setItem('iRate',String(this.exchangeRate));
+    localStorage.setItem('iDailyRates',JSON.stringify(this.dailyRates||{}));
   },
 
   loadSettings:function(){
@@ -1219,10 +1266,21 @@ var App = {
     if($('bulkExchangeRate') && !$('bulkExchangeRate').value)$('bulkExchangeRate').value=this.exchangeRate.toFixed(0);
   },
 
+  getRateForDate:function(date,fallbackRate){
+    var safeDate=parseDateSmart(date)||'';
+    var direct=parseNumberSmart(fallbackRate);
+    if(direct!==null && direct>0)return direct;
+    if(safeDate && this.dailyRates && parseNumberSmart(this.dailyRates[safeDate])!==null)return parseNumberSmart(this.dailyRates[safeDate]);
+    var bulkRate=parseNumberSmart($('bulkExchangeRate') ? $('bulkExchangeRate').value : '');
+    if(bulkRate!==null && bulkRate>0)return bulkRate;
+    return this.exchangeRate || DEFAULT_RATE;
+  },
+
   calculateEquivalent:function(){
     var a=parseFloat($('incomeAmount').value)||0,cur=$('incomeCurrency').value;
-    $('incomeEquivalent').value=(cur==='SYP'?a/this.exchangeRate:a*this.exchangeRate).toFixed(2);
-    $('incomeExchangeRate').value=this.exchangeRate.toFixed(0);
+    var rate=this.getRateForDate($('incomeDate').value);
+    $('incomeEquivalent').value=(cur==='SYP'?(rate?a/rate:0):a*rate).toFixed(2);
+    $('incomeExchangeRate').value=(rate||0).toFixed(0);
   },
 
   updateCurrencyFields:function(){this.calculateEquivalent();},
@@ -1235,8 +1293,9 @@ var App = {
       this.showMsg('⚠️ يرجى ملء جميع الحقول','error');
       return;
     }
-    var aSYP=cur==='SYP'?amount:amount*this.exchangeRate;
-    var aUSD=cur==='USD'?amount:amount/this.exchangeRate;
+    var rate=this.getRateForDate($('incomeDate').value);
+    var aSYP=cur==='SYP'?amount:amount*rate;
+    var aUSD=cur==='USD'?amount:(rate?amount/rate:0);
     var item=normalizeItem({
       id:Date.now().toString(),
       region:region,
@@ -1244,7 +1303,7 @@ var App = {
       amountUSD:aUSD,
       description:$('incomeDescription').value,
       date:$('incomeDate').value,
-      exchangeRate:this.exchangeRate,
+      exchangeRate:rate,
       createdAt:new Date().toISOString()
     });
     this.data.push(item);
@@ -1305,7 +1364,7 @@ var App = {
       item.amountUSD=cur==='USD'?a:a/self.exchangeRate;
       item.description=$('incomeDescription').value;
       item.date=parseDateSmart($('incomeDate').value)||todayStr();
-      item.exchangeRate=self.exchangeRate;
+      item.exchangeRate=self.getRateForDate($('incomeDate').value);
       self.saveStorage();
       self.fbCreate(item);
       self.showMsg('✅ تم تحديث الإيراد');
@@ -1836,7 +1895,7 @@ var App = {
       else if(map.amountUSD!==-1)currencyCell='USD';
       else if(map.amountSYP!==-1)currencyCell='SYP';
       var currency=normalizeCurrencyName(currencyCell) || normalizeCurrencyName(joined) || defaults.currency || 'SYP';
-      var rate=parseNumberSmart(map.exchangeRate!==-1?cells[map.exchangeRate]:'') || defaults.rate || DEFAULT_RATE;
+      var rate=App.getRateForDate(date, parseNumberSmart(map.exchangeRate!==-1?cells[map.exchangeRate]:'') || defaults.rate || DEFAULT_RATE);
 
       function pushParsedEntry(region, amountSYP, amountUSD, description, reasonOverride){
         var status='ok',reason=reasonOverride||'';
@@ -1956,6 +2015,7 @@ var App = {
         '<td><span class="status-pill '+cls+'">'+label+'</span>'+(row.reason?'<div style="font-size:11px;opacity:.75;margin-top:4px">'+escapeHtml(row.reason)+'</div>':'')+'</td>'+
         '<td>'+escapeHtml(item.date||'-')+'</td>'+
         '<td>'+escapeHtml(item.region||'-')+'</td>'+
+        '<td>'+(item.exchangeRate!==undefined?fmtN(item.exchangeRate):'-')+'</td>'+
         '<td>'+(item.amountSYP!==undefined?fmtN(item.amountSYP):'-')+'</td>'+
         '<td>'+(item.amountUSD!==undefined?fmtN(item.amountUSD):'-')+'</td>'+
         '<td>'+escapeHtml(item.description||'-')+'</td>'+
@@ -1971,12 +2031,12 @@ var App = {
     }
     var payload=this.parseBulkRows(text);
     this.renderBulkPreview(payload);
-    $('quickStatus').textContent='تم تحليل '+payload.summary.total+' سطر، الصالح منها '+payload.summary.ok;
+    $('quickStatus').textContent='تم تحليل '+payload.summary.total+' سطر إيراد، الصالح منها '+payload.summary.ok;
   },
 
   clearBulkPaste:function(){
     $('bulkPasteInput').value='';
-    $('quickStatus').textContent='جاهز للإضافة الفردية أو اللصق الجماعي';
+    $('quickStatus').textContent='جاهز للإضافة الفردية أو لصق الأسعار والإيرادات';
     this.renderBulkPreview(null);
   },
 
@@ -2006,6 +2066,173 @@ var App = {
     this.showMsg('✅ تم استيراد '+valid.length+' عملية على '+dayCount+' يوم');
     this.playSound(980);
     this.clearBulkPaste();
+  },
+
+  detectRatesColumnMap:function(rows){
+    var hasHeader=this.detectHeaderRow(rows);
+    var bodyRows=hasHeader?rows.slice(1):rows.slice();
+    var map={date:-1,exchangeRate:-1,description:-1};
+    var sample=bodyRows.slice(0,25);
+
+    if(hasHeader){
+      rows[0].forEach(function(cell,index){
+        var type=detectHeaderType(cell);
+        if(type && map[type]===-1)map[type]=index;
+      });
+    }
+
+    function guessIndex(tester,used){
+      var maxLen=sample.reduce(function(max,row){return Math.max(max,row.length);},0);
+      var best={index:-1,score:0};
+      for(var i=0;i<maxLen;i++){
+        if(used.indexOf(i)!==-1)continue;
+        var score=0;
+        sample.forEach(function(row){
+          if(tester(row[i]||'',row,i))score++;
+        });
+        if(score>best.score)best={index:i,score:score};
+      }
+      return best.score>0?best.index:-1;
+    }
+
+    var used=[];
+    if(map.date===-1)map.date=guessIndex(function(cell){return !!parseDateSmart(cell);},used);
+    used=[map.date].filter(function(v){return v!==-1;});
+    if(map.exchangeRate===-1)map.exchangeRate=guessIndex(function(cell){
+      var n=parseNumberSmart(cell);
+      return n!==null && n>=100 && n<=100000;
+    },used);
+    used=[map.date,map.exchangeRate].filter(function(v){return v!==-1;});
+    if(map.description===-1)map.description=guessIndex(function(cell){
+      return !!cell && !parseDateSmart(cell) && parseNumberSmart(cell)===null;
+    },used);
+
+    return {hasHeader:hasHeader,map:map,bodyRows:bodyRows};
+  },
+
+  parseRatesRows:function(rawText){
+    var text=(rawText||'').trim();
+    if(!text)return {rows:[],summary:null};
+    var delimiter=detectDelimiter(text);
+    var rows=text.split(/\r?\n/).filter(function(line){return line.trim();}).map(function(line){return splitDelimitedLine(line,delimiter);});
+    var detected=this.detectRatesColumnMap(rows);
+    var map=detected.map;
+    var parsedRows=[];
+    var pendingDates={};
+
+    detected.bodyRows.forEach(function(cells,rowIndex){
+      var date=parseDateSmart(map.date!==-1?cells[map.date]:'');
+      if(!date){
+        for(var di=0;di<cells.length;di++){
+          date=parseDateSmart(cells[di]);
+          if(date)break;
+        }
+      }
+      var rate=parseNumberSmart(map.exchangeRate!==-1?cells[map.exchangeRate]:'');
+      if(rate===null){
+        for(var ri=0;ri<cells.length;ri++){
+          var maybe=parseNumberSmart(cells[ri]);
+          if(maybe!==null && maybe>=100 && maybe<=100000){ rate=maybe; break; }
+        }
+      }
+      var note=(map.description!==-1 && cells[map.description])?String(cells[map.description]).trim():'';
+      var status='ok', reason='';
+      if(!date){status='error'; reason='التاريخ غير واضح';}
+      else if(rate===null || rate<=0){status='error'; reason='سعر الصرف غير واضح';}
+      else if(pendingDates[date]){status='duplicate'; reason='تاريخ مكرر داخل اللصق نفسه';}
+      else pendingDates[date]=true;
+      parsedRows.push({
+        rowNumber:rowIndex+1+(detected.hasHeader?1:0),
+        status:status,
+        reason:reason,
+        item: status==='ok' ? {date:date, exchangeRate:rate, description:note} : null
+      });
+    });
+
+    var summary={
+      total:parsedRows.length,
+      ok:parsedRows.filter(function(r){return r.status==='ok';}).length,
+      duplicate:parsedRows.filter(function(r){return r.status==='duplicate';}).length,
+      error:parsedRows.filter(function(r){return r.status==='error';}).length,
+      hasHeader:detected.hasHeader
+    };
+    return {rows:parsedRows, summary:summary};
+  },
+
+  renderRatesPreview:function(payload){
+    var summaryBox=$('ratesParseSummary');
+    var tbody=$('ratesPreviewTable');
+    if(!payload || !payload.rows.length){
+      this.dailyRatesPreview=[];
+      summaryBox.innerHTML='';
+      tbody.innerHTML='';
+      hide($('ratesPreviewWrap'));
+      return;
+    }
+    this.dailyRatesPreview=payload.rows;
+    var summary=payload.summary;
+    show($('ratesPreviewWrap'));
+    summaryBox.innerHTML=
+      '<div class="summary-badges">'+
+        '<div class="summary-badge">إجمالي السطور: '+summary.total+'</div>'+
+        '<div class="summary-badge">صالحة: '+summary.ok+'</div>'+
+        '<div class="summary-badge">مكررة: '+summary.duplicate+'</div>'+
+        '<div class="summary-badge">أخطاء: '+summary.error+'</div>'+
+      '</div>'+
+      '<div style="font-size:12px;opacity:.82;margin-bottom:10px">هذه الأسعار ستُحفظ حسب التاريخ، وبعدها أي إيراد بنفس التاريخ سيأخذ سعره تلقائيًا إذا لم يكن موجودًا داخل السطر نفسه.</div>';
+
+    tbody.innerHTML=payload.rows.map(function(row){
+      var item=row.item||{};
+      var cls=row.status==='ok'?'ok':row.status==='duplicate'?'duplicate':'error';
+      var label=row.status==='ok'?'جاهز':row.status==='duplicate'?'مكرر':'خطأ';
+      return '<tr>'+
+        '<td>'+row.rowNumber+'</td>'+
+        '<td><span class="status-pill '+cls+'">'+label+'</span>'+(row.reason?'<div style="font-size:11px;opacity:.75;margin-top:4px">'+escapeHtml(row.reason)+'</div>':'')+'</td>'+
+        '<td>'+escapeHtml(item.date||'-')+'</td>'+
+        '<td>'+(item.exchangeRate!==undefined?fmtN(item.exchangeRate):'-')+'</td>'+
+        '<td>'+escapeHtml(item.description||'-')+'</td>'+
+      '</tr>';
+    }).join('');
+  },
+
+  previewRatesPaste:function(){
+    var text=$('ratesPasteInput').value;
+    if(!text.trim()){
+      this.renderRatesPreview(null);
+      return;
+    }
+    var payload=this.parseRatesRows(text);
+    this.renderRatesPreview(payload);
+    $('quickStatus').textContent='تم تحليل '+payload.summary.total+' سطر سعر صرف، الصالح منها '+payload.summary.ok;
+  },
+
+  clearRatesPaste:function(){
+    $('ratesPasteInput').value='';
+    this.renderRatesPreview(null);
+    $('quickStatus').textContent='جاهز للإضافة الفردية أو لصق الأسعار والإيرادات';
+  },
+
+  importRatesPaste:function(){
+    if(!$('ratesPasteInput').value.trim()){
+      this.showMsg('⚠️ الصق أسعار الصرف أولاً','error');
+      return;
+    }
+    if(!this.dailyRatesPreview.length)this.previewRatesPaste();
+    var valid=this.dailyRatesPreview.filter(function(row){return row.status==='ok' && row.item;}).map(function(row){return row.item;});
+    if(!valid.length){
+      this.showMsg('⚠️ لا يوجد أسعار صالحة للحفظ','error');
+      return;
+    }
+    var saved=0;
+    valid.forEach(function(item){
+      App.dailyRates[item.date]=item.exchangeRate;
+      saved++;
+    });
+    this.saveStorage();
+    this.calculateEquivalent();
+    this.showMsg('✅ تم حفظ '+saved+' سعر صرف يومي');
+    this.playSound(720);
+    this.clearRatesPaste();
   },
 
   playSound:function(freq){
