@@ -509,44 +509,112 @@
   // Helpers for income parsing
   function normText(s){ return String(s||'').trim().replace(/\u200f|\u200e/g,'').replace(/\s+/g,' '); }
   function maybeHeader(str){ const x = normText(str).toLowerCase(); return /تاريخ|date|اسم|name|city|region|ccbs|masary|amount|مبلغ|syp|usd|rate|سعر/.test(x); }
+  function normalizeHeaderToken(token){
+    let t = normText(token).toUpperCase();
+    t = t.replace(/[_\-]/g,'');
+    t = t.replace(/^R\s*([1-4])$/,'R$1');
+    t = t.replace(/^CCBS\s*([1-4])$/,'CCBS$1');
+    t = t.replace(/^MASARY\s*([1-4])$/,'MASARY$1');
+    t = t.replace(/^MASARI\s*([1-4])$/,'MASARY$1');
+    return t;
+  }
+  function mapHeaderToName(token){
+    const t = normalizeHeaderToken(token);
+    const map = {
+      'R1':'Region 1','R2':'Region 2','R3':'Region 3','R4':'Region 4',
+      'CCBS1':'ccbs1','CCBS2':'ccbs2','CCBS3':'ccbs3','CCBS4':'ccbs4',
+      'MASARY1':'masary1','MASARY2':'masary2','MASARY3':'masary3','MASARY4':'masary4'
+    };
+    return map[t] || null;
+  }
+  function parseIncomeMatrixTokens(rawText){
+    let raw = normalizeArabicDigits(String(rawText||''));
+    raw = raw.replace(/CCBS\s*([1-4])/ig,'CCBS$1');
+    raw = raw.replace(/MASAR[YiI]\s*([1-4])/ig,'MASARY$1');
+    raw = raw.replace(/R\s*([1-4])/ig,'R$1');
+    const tokens = raw.split(/[\s	
+
+]+/).map(normText).filter(Boolean);
+    if(!tokens.length) return [];
+    let firstDateIdx = -1;
+    for(let i=0;i<tokens.length;i++){
+      if(parseArabicDateLoose(tokens[i])){ firstDateIdx = i; break; }
+    }
+    if(firstDateIdx === -1) return [];
+    const headerNames = [];
+    for(let i=0;i<firstDateIdx;i++){
+      const mapped = mapHeaderToName(tokens[i]);
+      if(mapped) headerNames.push(mapped);
+    }
+    if(!headerNames.length) return [];
+    const rows = [];
+    let i = firstDateIdx;
+    while(i < tokens.length){
+      const date = parseArabicDateLoose(tokens[i]);
+      if(!date){ i++; continue; }
+      i++;
+      const values = [];
+      while(i < tokens.length && values.length < headerNames.length){
+        if(parseArabicDateLoose(tokens[i])) break;
+        const num = parseNumberLoose(tokens[i]);
+        if(num !== null){ values.push(num); }
+        i++;
+      }
+      if(values.length === headerNames.length){
+        for(let x=0;x<headerNames.length;x++){
+          const amountSYP = parseFloat(Number(values[x] || 0).toFixed(2));
+          const rateUsed = App ? App.getRateForDate(date) : 1500;
+          const amountUSD = parseFloat((amountSYP / rateUsed).toFixed(2));
+          rows.push({
+            id: (Date.now()+rows.length).toString()+Math.floor(Math.random()*1000),
+            name: headerNames[x],
+            amount_syp: amountSYP,
+            amount_usd: amountUSD,
+            description: 'استيراد Excel',
+            date: date,
+            exchange_rate: parseFloat(rateUsed.toFixed(2)),
+            created_at: new Date().toISOString()
+          });
+        }
+      }
+    }
+    return rows;
+  }
   function parseIncomeLine(parts){
     let date = null, name = null, amount = null, description = '', currencyHint='SYP';
-    // Find date
     for(let i=0;i<parts.length;i++){
       if(!date){ let d = parseArabicDateLoose(parts[i]); if(d){ date = d; continue; } }
     }
-    // Find name from list or free text
     for(let j=0;j<parts.length;j++){
       let t = normText(parts[j]);
       if(App && App.NAMES && App.NAMES.indexOf(t) > -1){ name = t; break; }
+      const mapped = mapHeaderToName(t);
+      if(mapped){ name = mapped; break; }
     }
     if(!name){
       for(let k=0;k<parts.length;k++){
         let txt = normText(parts[k]);
-        if(txt && !parseArabicDateLoose(txt) && isNaN(parseNumberLoose(txt)) && !maybeHeader(txt)){
+        if(txt && !parseArabicDateLoose(txt) && parseNumberLoose(txt)===null && !maybeHeader(txt)){
           name = txt; break;
         }
       }
     }
-    // Currency hint
     for(let x=0;x<parts.length;x++){
       const low = normText(parts[x]).toLowerCase();
       if(low.includes('usd') || low.includes('دولار')){ currencyHint = 'USD'; }
     }
-    // Numbers
     let nums = [];
     for(let n=0;n<parts.length;n++){
       let num = parseNumberLoose(parts[n]);
-      if(!isNaN(num) && num!=null){ nums.push(num); }
+      if(num !== null){ nums.push(num); }
     }
     if(nums.length){ nums.sort((a,b)=>Math.abs(b)-Math.abs(a)); amount = nums[0]; }
-    // Description
     for(let z=0;z<parts.length;z++){
       let t = normText(parts[z]);
       if(!t) continue;
       if(parseArabicDateLoose(t)) continue;
-      if(name && t===name) continue;
-      if(!isNaN(parseNumberLoose(t))) continue;
+      if(name && (t===name || mapHeaderToName(t)===name)) continue;
+      if(parseNumberLoose(t)!==null) continue;
       if(maybeHeader(t)) continue;
       description = t;
       break;
