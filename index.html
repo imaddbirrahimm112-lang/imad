@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>متتبع الإيراد اليومي - Firestore</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;width:100%}
+    body{font-family:'Cairo',sans-serif;overflow:hidden;color:#1a1a1a}
+    body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1a1a6e,#4a2c8a,#7b2d8b,#3a7bd5,#00d2ff);background-size:400% 400%;animation:gradientShift 15s ease infinite;z-index:-2}
+    @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    body.bg-theme-1::before{background:linear-gradient(135deg,#0d0221,#190a4a,#2d1b6b,#1a0a5c,#0a1a4a,#050d2e)!important;background-size:400% 400%!important;animation:gradientShift 18s ease infinite!important}
+    body.bg-theme-1::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(1.5px 1.5px at 15px 25px,rgba(200,180,255,.9),transparent),radial-gradient(1px 1px at 55px 65px,rgba(255,255,255,.8),transparent),radial-gradient(2px 2px at 120px 45px,rgba(180,200,255,.9),transparent),radial-gradient(1px 1px at 200px 85px,rgba(200,180,255,.8),transparent),radial-gradient(2px 2px at 350px 60px,rgba(180,220,255,.8),transparent);background-repeat:repeat;background-size:380px 280px;animation:twinkleStar 6s ease-in-out infinite;opacity:.7;z-index:-1}
+    body.bg-theme-2::before{background:linear-gradient(135deg,#4a0030,#8b0057,#c2185b,#e91e8c,#ff5722,#ff9800)!important;background-size:400% 400%!important;animation:gradientShift 14s ease infinite!important}
+    body.bg-theme-3::before{background:linear-gradient(135deg,#003320,#00695c,#00897b,#00acc1,#0288d1,#1565c0)!important;background-size:400% 400%!important;animation:gradientShift 14s ease infinite!important}
+    body.bg-theme-4::before{background:linear-gradient(135deg,#4a1500,#bf360c,#e64a19,#ff6f00,#f9a825,#ffd740)!important;background-size:400% 400%!important;animation:gradientShift 14s ease infinite!important}
+    body.bg-theme-5::before{background:linear-gradient(135deg,#0a0015,#1a0035,#2d0055,#1a0040,#080010)!important;background-size:400% 400%!important;animation:gradientShift 16s ease infinite!important}
+    body.bg-theme-5::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(1px 1px at 30px 40px,rgba(180,100,255,.9),transparent),radial-gradient(1.5px 1.5px at 90px 20px,rgba(255,255,255,.8),transparent),radial-gradient(2px 2px at 240px 50px,rgba(255,255,255,.6),transparent);background-repeat:repeat;background-size:350px 200px;animation:twinkleStar 7s ease-in-out infinite alternate;opacity:.8;z-index:-1}
+    body.bg-theme-6::before{background:radial-gradient(ellipse at center,#1a0040,#0d0020,#050010)!important;animation:gradientShift 20s ease infinite!important}
+    body.bg-theme-7::before{background:linear-gradient(160deg,#001529,#003366,#005580,#007b8a,#004466)!important;background-size:400% 400%!important;animation:gradientShift 16s ease infinite!important}
+    body.bg-theme-dragon::before{background:linear-gradient(-45deg,#1a0000,#8b0000,#cc2200,#ff4500,#ff6b00,#cc2200,#8b0000,#1a0000)!important;background-size:600% 600%!important;animation:dragonFire 3s ease-in-out infinite!important}
+    body.bg-theme-dragon::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at 50% 100%,rgba(255,100,0,.3),transparent 60%);z-index:-1;animation:fireGlow 2s ease-in-out infinite alternate}
+    @keyframes dragonFire{0%{background-position:0% 50%}50%{background-position:50% 0%}100%{background-position:0% 50%}}
+    body.bg-theme-starry-night::before{background:linear-gradient(160deg,#010b19,#051a35,#0a2550,#061530,#020a18)!important;background-size:400% 400%!important;animation:gradientShift 22s ease infinite!important}
+    body.bg-theme-starry-night::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(2px 2px at 25px 15px,white,transparent),radial-gradient(1px 1px at 70px 55px,rgba(255,255,255,.9),transparent),radial-gradient(2px 2px at 140px 30px,rgba(200,230,255,.9),transparent),radial-gradient(1.5px 1.5px at 200px 20px,rgba(255,255,255,.8),transparent),radial-gradient(1px 1px at 310px 45px,rgba(255,255,255,.9),transparent);background-repeat:repeat;background-size:360px 160px;animation:twinkleStar 4s ease-in-out infinite;opacity:.9;z-index:-1}
+    body.bg-theme-emerald::before{background:linear-gradient(135deg,#001a0d,#004d29,#00793f,#009e55,#00c26b)!important;background-size:400% 400%!important;animation:gradientShift 17s ease infinite!important}
+    body.bg-theme-dual-blue::before{background:linear-gradient(135deg,#000428,#001f6e,#0043b0,#0066cc,#00a8ff)!important;background-size:400% 400%!important;animation:gradientShift 15s ease infinite!important}
+    body.bg-theme-purple-pink::before{background:linear-gradient(135deg,#1a0030,#4a0080,#7b00cc,#aa00ff,#cc0077,#ff0055)!important;background-size:400% 400%!important;animation:gradientShift 14s ease infinite!important}
+    body.bg-theme-crystal-glass::before{background:linear-gradient(135deg,#031b34,#0a4b78,#17a2b8,#8de3ff,#d6f6ff)!important;background-size:400% 400%!important;animation:gradientShift 18s ease infinite!important}
+    body.bg-theme-crystal-glass::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.24),transparent 18%),radial-gradient(circle at 80% 30%,rgba(255,255,255,.16),transparent 22%),radial-gradient(circle at 50% 80%,rgba(255,255,255,.10),transparent 24%);backdrop-filter:blur(2px);z-index:-1}
+    body.bg-theme-royal-glass::before{background:linear-gradient(135deg,#140026,#2f0b6b,#5b21b6,#7c3aed,#c084fc)!important;background-size:400% 400%!important;animation:gradientShift 17s ease infinite!important}
+    body.bg-theme-royal-glass::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(120deg,rgba(255,255,255,.08),rgba(255,255,255,0) 35%,rgba(255,255,255,.14) 50%,rgba(255,255,255,0) 65%);background-size:250% 250%;animation:glassSweep 12s linear infinite;z-index:-1}
+    @keyframes glassSweep{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+    @keyframes twinkleStar{0%,100%{opacity:.55}50%{opacity:1}}
+    @keyframes fireGlow{from{opacity:.7}to{opacity:1}}
+    body.dark-mode{filter:brightness(.82) contrast(1.12)}
+    .container{display:flex;height:100%;width:100%}
+    .sidebar{width:280px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border-right:1px solid rgba(255,255,255,.2);color:white;padding:25px;overflow-y:auto;box-shadow:inset -2px 0 8px rgba(0,0,0,.15)}
+    .sidebar::-webkit-scrollbar{width:6px}
+    .sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:3px}
+    .main-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .top-bar{background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.2);color:white;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
+    .content-area{flex:1;overflow-y:auto;padding:30px;background:rgba(255,255,255,.04)}
+    .content-area::-webkit-scrollbar{width:8px}
+    .content-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:4px}
+    .sidebar h2{font-size:22px;margin-bottom:30px;color:#fff;border-bottom:2px solid rgba(255,255,255,.3);padding-bottom:15px;font-weight:700}
+    .sidebar ul{list-style:none}
+    .sidebar li{margin:10px 0}
+    .sidebar button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:white;cursor:pointer;font-size:14px;width:100%;text-align:right;padding:12px 15px;border-radius:8px;transition:all .3s;font-family:'Cairo',sans-serif}
+    .sidebar button:hover{background:rgba(255,255,255,.22);transform:translateX(-5px)}
+    .sidebar button.active{background:rgba(102,126,234,.45);border-color:rgba(102,126,234,.85);font-weight:700}
+    .section{display:none}
+    .section.active{display:block;animation:fadeIn .5s}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .card{background:rgba(255,255,255,.14);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.28);border-radius:15px;padding:25px;margin-bottom:20px;box-shadow:0 8px 32px rgba(0,0,0,.12);color:white}
+    .card h3{color:#fff;margin-bottom:20px;font-size:20px;font-weight:700}
+    .form-group{margin-bottom:15px}
+    .form-group label{display:block;margin-bottom:8px;color:white;font-weight:600;font-size:14px}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:12px;border:1px solid rgba(255,255,255,.3);border-radius:8px;font-family:'Cairo',sans-serif;background:rgba(255,255,255,.1);color:white;font-size:14px}
+    .form-group input::placeholder,.form-group textarea::placeholder{color:rgba(255,255,255,.6)}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.2)}
+    .form-group select option{background:#1a1a4a;color:white}
+    .btn{padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:14px;font-weight:600;transition:all .3s}
+    .btn-primary{background:rgba(102,126,234,.6);color:white;border:1px solid rgba(102,126,234,.85)}.btn-primary:hover{background:rgba(102,126,234,.85);transform:translateY(-2px)}
+    .btn-success{background:rgba(72,187,120,.6);color:white;border:1px solid rgba(72,187,120,.85)}.btn-success:hover{background:rgba(72,187,120,.85);transform:translateY(-2px)}
+    .btn-danger{background:rgba(245,101,101,.6);color:white;border:1px solid rgba(245,101,101,.85)}.btn-danger:hover{background:rgba(245,101,101,.85);transform:translateY(-2px)}
+    .btn-secondary{background:rgba(113,128,150,.6);color:white;border:1px solid rgba(113,128,150,.85)}.btn-secondary:hover{background:rgba(113,128,150,.85);transform:translateY(-2px)}
+    .summary-box{background:rgba(102,126,234,.3);border:1px solid rgba(102,126,234,.6);color:white;padding:25px;border-radius:15px;margin-bottom:20px}
+    .chart-container{position:relative;height:350px;margin-bottom:20px}
+    .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.82);display:flex;justify-content:center;align-items:center;z-index:9999;backdrop-filter:blur(6px)}
+    .overlay.hidden-important{display:none!important}
+    .overlay-content{background:rgba(255,255,255,.15);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.3);padding:40px;border-radius:15px;text-align:center;color:white;max-width:500px}
+    .overlay-content h2{margin-bottom:20px;font-size:24px}
+    .overlay-content p{margin-bottom:20px;opacity:.9}
+    .hidden-important{display:none!important}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:15px;margin-bottom:20px}
+    .stat-card{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:20px;border-radius:12px;text-align:center;color:white}
+    .stat-card .label{color:rgba(255,255,255,.75);font-size:12px;margin-bottom:10px;font-weight:600}
+    .stat-card .value{font-size:20px;font-weight:700}
+    .msg-container{position:fixed;top:20px;right:20px;z-index:10000}
+    .success-msg{background:rgba(72,187,120,.32);border:1px solid rgba(72,187,120,.65);color:#a8e6a1;padding:15px 20px;border-radius:8px;font-size:13px;margin-bottom:8px}
+    .error-msg{background:rgba(245,101,101,.32);border:1px solid rgba(245,101,101,.65);color:#ff9999;padding:15px 20px;border-radius:8px;font-size:13px;margin-bottom:8px}
+    .table-responsive{overflow-x:auto}
+    .data-table{width:100%;border-collapse:collapse;margin-top:15px}
+    .data-table th{background:rgba(255,255,255,.12);padding:12px;text-align:right;color:white;font-weight:700;border-bottom:2px solid rgba(255,255,255,.22)}
+    .data-table td{padding:12px;border-bottom:1px solid rgba(255,255,255,.1);color:white}
+    .data-table tr:hover{background:rgba(255,255,255,.08)}
+    .btn-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .btn-small{padding:6px 12px;font-size:12px}
+    .trash-container{background:rgba(245,101,101,.15);border:1px solid rgba(245,101,101,.32);border-radius:12px;padding:20px;margin-top:20px}
+    .trash-item{background:rgba(255,255,255,.1);padding:12px;margin-bottom:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;color:white}
+    .theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+    .import-box{background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.28);border-radius:12px;padding:15px}
+    .import-help{font-size:12px;opacity:.8;line-height:1.9;margin-bottom:10px}
+    .muted-note{font-size:11px;opacity:.65}
+    .section-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+    .paste-area{min-height:150px;direction:ltr;white-space:pre-wrap}
+    .small-pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);font-size:12px;margin-top:10px}
+    .history-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between}
+    .history-tools-left{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    #fsStatus{font-size:11px;padding:4px 12px;border-radius:20px;font-weight:700;display:inline-block;margin-top:20px}
+    #fsStatus.connected{background:rgba(72,187,120,.25);border:1px solid rgba(72,187,120,.6);color:#a8e6a1}
+    #fsStatus.disconnected{background:rgba(245,101,101,.25);border:1px solid rgba(245,101,101,.6);color:#ff9999}
+    #fsStatus.connecting{background:rgba(240,180,50,.25);border:1px solid rgba(240,180,50,.6);color:#ffd580}
+    .sql-box{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:14px;margin:10px 0;font-family:monospace;font-size:11px;color:#a8e6a1;direction:ltr;white-space:pre-wrap;line-height:1.7}
+    #pdfRenderArea{position:fixed;top:0;left:0;width:297mm;min-height:210mm;background:#fff;color:#111;direction:rtl;z-index:9998;overflow:hidden;padding:0;pointer-events:none;opacity:1}
+  </style>
+</head>
+<body class="bg-theme-1">
+  <div id="pdfRenderArea" class="hidden-important"></div>
+  <div id="pdfOverlay" class="overlay hidden-important">
+    <div class="overlay-content">
+      <h2>⏳ جاري إنشاء PDF...</h2>
+      <p id="pdfOverlayMsg">يرجى الانتظار قليلاً</p>
+    </div>
+  </div>
+  <div class="hidden-important" id="msgContainer"></div>
+  <div class="container">
+    <div class="sidebar">
+      <h2>📊 متتبع الإيراد</h2>
+      <ul>
+        <li><button class="active" onclick="App.showSection('dashboardSection',event)">📈 لوحة التحكم</button></li>
+        <li><button onclick="App.showSection('addIncomeSection',event)">➕ إضافة إيراد</button></li>
+        <li><button onclick="App.showSection('historySection',event)">📋 السجل</button></li>
+        <li><button onclick="App.showSection('reportSection',event)">📊 التقارير</button></li>
+        <li><button onclick="App.showSection('trashSection',event)">🗑️ سلة المحذوفات</button></li>
+        <li><button onclick="App.showSection('settingsSection',event)">⚙️ الإعدادات</button></li>
+      </ul>
+      <div style="text-align:center">
+        <span id="fsStatus" class="disconnected">🔴 Firestore غير متصل</span>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="top-bar">
+        <div>
+          <span style="font-size:16px;font-weight:bold">متتبع الإيراد اليومي - سوريا 🇸🇾</span><br>
+          <span style="font-size:12px;opacity:.8">سعر الصرف: <span id="exchangeRateDisplay">1 USD = 0 SYP</span></span>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="App.exportPDF()">📥 PDF عادي</button>
+          <button class="btn btn-success" onclick="App.exportGroupedPDF()">🧾 PDF مجمّع</button>
+          <button class="btn btn-secondary" onclick="App.exportExcel()">📊 تصدير Excel</button>
+        </div>
+      </div>
+      <div class="content-area">
+        <div id="dashboardSection" class="section active">
+          <h2 style="color:white;margin-bottom:20px;font-size:28px">📈 لوحة التحكم</h2>
+          <div style="margin-bottom:20px;display:flex;gap:15px;flex-wrap:wrap">
+            <div><label style="color:white;font-weight:600;margin-left:8px">فلتر الاسم:</label>
+              <select id="dashboardNameFilter" onchange="App.renderDashboard()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white;font-family:'Cairo',sans-serif"></select></div>
+            <div><label style="color:white;font-weight:600;margin-left:8px">من:</label>
+              <input type="date" id="dashboardDateFrom" onchange="App.renderDashboard()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white"></div>
+            <div><label style="color:white;font-weight:600;margin-left:8px">إلى:</label>
+              <input type="date" id="dashboardDateTo" onchange="App.renderDashboard()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white"></div>
+          </div>
+          <div class="stats-row" id="statsRow"></div>
+          <div class="grid-2">
+            <div class="card"><h3>📊 الإجمالي حسب العملة</h3><div id="dashboardStats"></div></div>
+            <div class="card"><h3>📍 توزيع حسب الاسم</h3><div class="chart-container"><canvas id="namesChart"></canvas></div></div>
+          </div>
+          <div class="card"><h3>📈 الإيراد اليومي</h3><div class="chart-container"><canvas id="dailyChart"></canvas></div></div>
+        </div>
+        <div id="addIncomeSection" class="section">
+          <div class="grid-2">
+            <div class="card"><h3>➕ إضافة إيراد جديد</h3>
+              <form id="incomeForm" onsubmit="App.addIncome(event)">
+                <div class="form-group"><label>الاسم</label>
+                  <select id="incomeName" required></select></div>
+                <div class="form-group"><label>نوع العملة</label>
+                  <select id="incomeCurrency" onchange="App.calcEquiv()" required>
+                    <option value="SYP">الليرة السورية (SYP)</option><option value="USD">الدولار الأمريكي (USD)</option>
+                  </select></div>
+                <div class="form-group"><label>المبلغ</label><input type="number" id="incomeAmount" placeholder="0.00" step="0.01" required oninput="App.calcEquiv()"></div>
+                <div class="form-group"><label>المكافئ بالعملة الأخرى</label><input type="number" id="incomeEquivalent" readonly></div>
+                <div class="form-group"><label>سعر الصرف المستخدم</label><input type="number" id="incomeExchangeRate" readonly></div>
+                <div class="form-group"><label>الوصف</label><textarea id="incomeDescription" rows="3" placeholder="وصف الإيراد"></textarea></div>
+                <div class="form-group"><label>التاريخ</label><input type="date" id="incomeDate" required onchange="App.refreshRateFromDate()"></div>
+                <button type="submit" class="btn btn-success" style="width:100%">✅ إضافة الإيراد</button>
+              </form>
+            </div>
+            <div class="card"><h3>📥 استيراد جماعي من Excel</h3>
+              <div class="import-box">
+                <div class="import-help">
+                  الصق الجدول المنسوخ من Excel هنا مباشرة. البرنامج يحاول يفهم <strong>التاريخ</strong> و<strong>الاسم</strong> و<strong>المبلغ</strong> حتى لو كان ترتيب الأعمدة مختلف.
+                </div>
+                <div class="form-group">
+                  <label>جدول الإيرادات المنسوخ</label>
+                  <textarea id="bulkIncomeText" class="paste-area" placeholder="الصق هنا جدول الإيرادات من Excel"></textarea>
+                </div>
+                <div class="section-actions">
+                  <button class="btn btn-primary" onclick="App.importBulkIncome()">📥 استيراد الإيرادات</button>
+                  <button class="btn btn-secondary" onclick="document.getElementById('bulkIncomeText').value=''">🧹 مسح</button>
+                </div>
+                <div class="small-pill">يعتمد على سعر صرف اليوم إذا كان موجوداً في جدول أسعار الصرف</div>
+              </div>
+              <div class="import-box" style="margin-top:15px">
+                <div class="import-help">
+                  الصق جدول سعر الصرف بصيغة <strong>سعر الصرف + التاريخ</strong> أو <strong>التاريخ + سعر الصرف</strong> أو حتى كسطرين متتابعين. يفهم الجدول ولو كان التاريخ منقسم.
+                </div>
+                <div class="form-group">
+                  <label>جدول أسعار الصرف</label>
+                  <textarea id="bulkRateText" class="paste-area" placeholder="مثال:\n12,300\t1 مارس 2026\n12,250\t2 مارس 2026"></textarea>
+                </div>
+                <div class="section-actions">
+                  <button class="btn btn-success" onclick="App.importExchangeRates()">💱 استيراد أسعار الصرف</button>
+                  <button class="btn btn-secondary" onclick="document.getElementById('bulkRateText').value=''">🧹 مسح</button>
+                </div>
+                <div class="small-pill" id="ratesCountBadge">عدد أسعار الصرف المحفوظة: 0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="historySection" class="section">
+          <div class="card"><h3>📋 سجل الإيرادات</h3>
+            <div class="history-tools">
+              <div class="history-tools-left">
+                <label style="color:white;margin-left:8px">فلتر الاسم:</label>
+                <select id="historyNameFilter" onchange="App.renderHistory()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white"></select>
+              </div>
+              <div class="history-tools-left">
+                <button class="btn btn-danger btn-small" onclick="App.clearHistoryOnly()">🗑️ حذف الكل من السجل</button>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table"><thead><tr><th>الاسم</th><th>SYP</th><th>USD</th><th>سعر الصرف</th><th>التاريخ</th><th>الوصف</th><th>الإجراءات</th></tr></thead>
+                <tbody id="historyTable"></tbody></table>
+            </div>
+          </div>
+        </div>
+        <div id="reportSection" class="section">
+          <div class="card"><h3>📊 التقارير</h3>
+            <div style="margin-bottom:20px;display:flex;gap:15px;flex-wrap:wrap">
+              <div><label style="color:white;font-weight:600;margin-left:8px">فلتر الاسم:</label>
+                <select id="reportNameFilter" onchange="App.generateReport()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white;font-family:'Cairo',sans-serif"></select></div>
+              <div><label style="color:white;font-weight:600;margin-left:8px">من:</label>
+                <input type="date" id="reportDateFrom" onchange="App.generateReport()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white"></div>
+              <div><label style="color:white;font-weight:600;margin-left:8px">إلى:</label>
+                <input type="date" id="reportDateTo" onchange="App.generateReport()" style="padding:10px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.1);color:white"></div>
+              <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="App.exportPDFWithFilters()">💾 PDF عادي</button>
+                <button class="btn btn-success" onclick="App.exportGroupedPDFWithFilters()">🧾 PDF مجمّع</button>
+                <button class="btn btn-secondary" onclick="App.exportExcelWithFilters()">📥 Excel</button>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:15px">
+              <h3>🧾 إعدادات تصدير PDF</h3>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
+                <button class="btn btn-secondary btn-small" onclick="App.toggleAllPdfNames(true)">✅ تحديد الكل</button>
+                <button class="btn btn-secondary btn-small" onclick="App.toggleAllPdfNames(false)">❌ إلغاء الكل</button>
+              </div>
+              <div id="pdfNameSettings" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px"></div>
+              <p style="font-size:12px;opacity:.75;margin-top:12px">* PDF العادي سيُصدِّر فقط العناصر المحددة هنا مع نطاق التاريخ المختار فوق</p>
+            </div>
+
+            <div id="reportContent"></div>
+          </div>
+        </div>
+        <div id="trashSection" class="section">
+          <div class="card">
+            <div class="history-tools">
+              <h3 style="margin-bottom:0">🗑️ سلة المحذوفات</h3>
+              <div class="history-tools-left">
+                <button class="btn btn-danger btn-small" onclick="App.clearTrashOnly()">🗑️ حذف الكل من السلة</button>
+              </div>
+            </div>
+            <div id="trashList"></div>
+          </div>
+        </div>
+        <div id="settingsSection" class="section">
+          <div class="card">
+            <h3>⚡ إعدادات Firestore (المزامنة)</h3>
+            <div class="import-help">أدخل إعدادات المزامنة. سيتم حفظها في متصفحك. يجب أن تكون جميع التطبيقات الأخرى على نفس المشروع ونفس اسم المجموعة (collection) ليتزامنوا.</div>
+            <div class="form-group"><label>Project ID</label>
+              <input type="text" id="fsProjectId" placeholder="imad222"></div>
+            <div class="form-group"><label>Collection Name</label>
+              <input type="text" id="fsCollectionName" placeholder="imad"></div>
+            <div style="display:flex;gap:10px;margin-top:12px">
+              <button class="btn btn-success" onclick="App.saveFirestoreConfig()">⚡ حفظ وتفعيل Firestore</button>
+              <button class="btn btn-danger" onclick="App.clearFirestoreConfig()">🗑️ إلغاء الاتصال</button>
+            </div>
+            <p style="font-size:11px;opacity:.55;margin-top:10px">* تُحفظ الإعدادات في المتصفح فقط — لا تشاركها مع أحد.</p>
+          </div>
+          <div class="card">
+            <h3>⚙️ الإعدادات العامة</h3>
+            <div class="form-group"><label>سعر الصرف الافتراضي (1 دولار = كم ليرة)</label>
+              <input type="number" id="exchangeRate" placeholder="1500" step="0.01" onchange="App.updateDefaultRate()"></div>
+            <div class="form-group"><label>🎨 مظهر الخلفية</label>
+              <div class="theme-grid">
+                <button class="btn" onclick="App.setTheme('bg-theme-1')" style="background:linear-gradient(135deg,#1a1a6e,#4a2c8a,#3a7bd5);color:white;border:none">🌌 كوني داكن</button>
+                <button class="btn" onclick="App.setTheme('bg-theme-2')" style="background:linear-gradient(135deg,#8b0057,#e91e8c,#ff5722);color:white;border:none">🌹 ورود ملتهبة</button>
+                <button class="btn" onclick="App.setTheme('bg-theme-3')" style="background:linear-gradient(135deg,#004d29,#00897b,#0288d1);color:white;border:none">🌊 محيط استوائي</button>
+                <button class="btn" onclick="App.setTheme('bg-theme-4')" style="background:linear-gradient(135deg,#bf360c,#ff6f00,#ffd740);color:white;border:none">🌅 غروب ذهبي</button>
+              </div>
+              <div class="theme-grid" style="margin-top:8px">
+                <button class="btn" onclick="App.setTheme('bg-theme-5')" style="background:linear-gradient(135deg,#0a0015,#2d0055);color:white;border:none">🌙 ليل بنفسجي</button>
+                <button class="btn" onclick="App.setTheme('bg-theme-7')" style="background:linear-gradient(135deg,#001529,#005580);color:white;border:none">🔷 عمق المحيط</button>
+                <button class="btn" onclick="App.setTheme('bg-theme-starry-night')" style="background:linear-gradient(135deg,#010b19,#0a2550);color:#a8d8ff;border:none">⭐ سماء النجوم</button>
+                <button class="btn" onclick="App.setTheme('bg-theme-dragon')" style="background:linear-gradient(135deg,#8b0000,#ff6b00);color:white;border:none">🐉 نار التنين</button>
+              </div>
+              <div class="theme-grid" style="margin-top:8px">
+                <button class="btn" onclick="App.setTheme('bg-theme-emerald')" style="background:linear-gradient(135deg,#001a0d,#00793f);color:white;border:none">💎 زمرد ملكي</button>
+                <button class="btn" onclick="App.setTheme('bg-theme-dual-blue')" style="background:linear-gradient(135deg,#000428,#00a8ff);color:white;border:none">⚡ أزرق كهربائي</button>
+                <button class="btn" onclick="App.setTheme('bg-theme-purple-pink')" style="background:linear-gradient(135deg,#1a0030,#ff0055);color:white;border:none">💜 نيون بنفسجي</button>
+                <button class="btn" onclick="App.setTheme('bg-theme-6')" style="background:radial-gradient(ellipse,#1a0040,#050010);color:white;border:none">🕳️ الفراغ الكوني</button>
+              </div>
+              <div class="theme-grid" style="margin-top:8px">
+                <button class="btn" onclick="App.setTheme('bg-theme-crystal-glass')" style="background:linear-gradient(135deg,#031b34,#17a2b8,#d6f6ff);color:white;border:none">🧊 زجاج كريستالي</button>
+                <button class="btn" onclick="App.setTheme('bg-theme-royal-glass')" style="background:linear-gradient(135deg,#140026,#7c3aed,#c084fc);color:white;border:none">👑 زجاج ملكي</button>
+              </div>
+            </div>
+            <div class="form-group"><label><input type="checkbox" id="darkMode"> الوضع الليلي الداكن</label></div>
+            <button class="btn btn-primary" onclick="App.saveGeneralSettings()" style="margin-top:12px">💾 حفظ الإعدادات</button>
+            <button class="btn btn-danger" onclick="App.clearAllData()" style="margin-top:8px;margin-right:8px">🗑️ حذف كل البيانات</button>
+            <div class="muted-note" style="margin-top:10px">إذا وُجد سعر صرف لتاريخ العملية، البرنامج يستخدمه تلقائياً عند الإضافة اليدوية والاستيراد الجماعي.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA1SUY7jsBxvk73So-NIFncxMs5xyTf5gM",
+    authDomain: "imad222.firebaseapp.com",
+    databaseURL: "https://imad222-default-rtdb.firebaseio.com",
+    projectId: "imad222",
+    storageBucket: "imad222.firebasestorage.app",
+    messagingSenderId: "916772184467",
+    appId: "1:916772184467:web:5679a426e5bdbc82638866",
+    measurementId: "G-4P65YVN10S"
+  };
+  const MONTH_MAP = {
+    'يناير':'01','كانون الثاني':'01','january':'01','jan':'01',
+    'فبراير':'02','شباط':'02','february':'02','feb':'02',
+    'مارس':'03','آذار':'03','march':'03','mar':'03',
+    'أبريل':'04','ابريل':'04','نيسان':'04','april':'04','apr':'04',
+    'مايو':'05','أيار':'05','may':'05',
+    'يونيو':'06','حزيران':'06','june':'06','jun':'06',
+    'يوليو':'07','تموز':'07','july':'07','jul':'07',
+    'أغسطس':'08','اغسطس':'08','آب':'08','august':'08','aug':'08',
+    'سبتمبر':'09','أيلول':'09','september':'09','sep':'09',
+    'أكتوبر':'10','اكتوبر':'10','تشرين الأول':'10','october':'10','oct':'10',
+    'نوفمبر':'11','تشرين الثاني':'11','november':'11','nov':'11',
+    'ديسمبر':'12','كانون الأول':'12','december':'12','dec':'12'
+  };
+  function normalizeArabicDigits(str){
+    return String(str||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+  }
+  function cleanPastedText(text){
+    let t = normalizeArabicDigits(text||'');
+    t = t.replace(/\u00A0/g,' ');
+    t = t.replace(/\r/g,'\n');
+    t = t.replace(/[،]/g,',');
+    t = t.replace(/\t/g,' | ');
+    t = t.replace(/[ ]{2,}/g,' ');
+    t = t.replace(/\n{2,}/g,'\n');
+    return t.trim();
+  }
+  function parseNumberLoose(value){
+    if(value==null) return null;
+    let s = normalizeArabicDigits(String(value)).trim();
+    s = s.replace(/[^\d.,-]/g,'');
+    if(!s) return null;
+    s = s.replace(/,/g,'');
+    let n = parseFloat(s);
+    return Number.isFinite(n)?n:null;
+  }
+  function parseArabicDateLoose(value){
+    if(!value) return null;
+    let s = normalizeArabicDigits(String(value)).trim();
+    s = s.replace(/,/g,' ');
+    s = s.replace(/\s+/g,' ').trim();
+    let iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if(iso) return `${iso[1]}-${String(iso[2]).padStart(2,'0')}-${String(iso[3]).padStart(2,'0')}`;
+    let slash = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if(slash) return `${slash[3]}-${String(slash[2]).padStart(2,'0')}-${String(slash[1]).padStart(2,'0')}`;
+    const monthNames = Object.keys(MONTH_MAP).sort((a,b)=>b.length-a.length).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+    let rx = new RegExp(`^(\\d{1,2})\\s+(${monthNames})\\s+(\\d{4})$`,'i');
+    let m = s.match(rx);
+    if(m) return `${m[3]}-${MONTH_MAP[m[2]]}-${String(m[1]).padStart(2,'0')}`;
+    let rxRev = new RegExp(`^(\\d{4})\\s+(${monthNames})\\s+(\\d{1,2})$`,'i');
+    let mr = s.match(rxRev);
+    if(mr) return `${mr[1]}-${MONTH_MAP[mr[2]]}-${String(mr[3]).padStart(2,'0')}`;
+    let rxMixed = new RegExp(`^(\\d{1,2})\\s+(\\d{4})\\s+(${monthNames})$`,'i');
+    let mmx = s.match(rxMixed);
+    if(mmx) return `${mmx[2]}-${MONTH_MAP[mmx[3]]}-${String(mmx[1]).padStart(2,'0')}`;
+    let d = new Date(s);
+    if(!isNaN(d.getTime())) return d.getFullYear()+ '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    return null;
+  }
+  function extractDateFromText(line){
+    const monthNames = Object.keys(MONTH_MAP).sort((a,b)=>b.length-a.length).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+    const patterns = [
+      new RegExp(`\\d{1,2}\\s+(?:${monthNames})\\s*,?\\s*\\d{4}`, 'i'),
+      new RegExp(`\\d{4}\\s+(?:${monthNames})\\s+\\d{1,2}`, 'i'),
+      new RegExp(`\\d{1,2}\\s+\\d{4}\\s+(?:${monthNames})`, 'i'),
+      /\d{4}-\d{1,2}-\d{1,2}/,
+      /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}/
+    ];
+    for(const p of patterns){ let m = line.match(p); if(m) return m[0]; }
+    return null;
+  }
+  function isHeaderLine(line){ let s = String(line||'').trim().toLowerCase(); return s.includes('التاريخ') || s.includes('سعر') || s.includes('date') || s.includes('exchange'); }
+  function mergeBrokenLines(lines){
+    let out = [];
+    for(let i=0;i<lines.length;i++){
+      let line = lines[i].trim();
+      if(!line) continue;
+      if(isHeaderLine(line)) continue;
+      if(/^\d{4}$/.test(line) && out.length){ out[out.length-1] += ' ' + line; continue; }
+      if(i+1<lines.length){
+        let next = lines[i+1].trim();
+        if(/^\d{1,2}\s+\S+$/.test(line) && /^\d{4}$/.test(next)){ out.push(line + ' ' + next); i++; continue; }
+      }
+      out.push(line);
+    }
+    return out;
+  }
+  function parseExchangeRatesFlexible(rawText){
+    const cleaned = cleanPastedText(rawText);
+    let lines = cleaned.split('\n').map(x=>x.trim()).filter(Boolean);
+    lines = mergeBrokenLines(lines);
+    let results = [];
+    for(let i=0;i<lines.length;i++){
+      let line = lines[i];
+      if(!line || isHeaderLine(line)) continue;
+      if(line.includes('|')){
+        let parts = line.split('|').map(x=>x.trim()).filter(Boolean);
+        if(parts.length>=2){
+          let p1Date = parseArabicDateLoose(parts[0]);
+          let p2Date = parseArabicDateLoose(parts[1]);
+          let p1Num = parseNumberLoose(parts[0]);
+          let p2Num = parseNumberLoose(parts[1]);
+          if(p1Date && p2Num!=null){ results.push({date:p1Date, rate:p2Num}); continue; }
+          if(p2Date && p1Num!=null){ results.push({date:p2Date, rate:p1Num}); continue; }
+        }
+      }
+      let found = extractDateFromText(line);
+      if(found){
+        let parsedDate = parseArabicDateLoose(found);
+        let rest = line.replace(found,' ').trim();
+        let rate = parseNumberLoose(rest);
+        if(parsedDate && rate!=null){ results.push({date:parsedDate, rate:rate}); continue; }
+      }
+      let lineNum = parseNumberLoose(line);
+      if(lineNum!=null && i+1<lines.length){ let nextDate = parseArabicDateLoose(lines[i+1]); if(nextDate){ results.push({date:nextDate, rate:lineNum}); i++; continue; } }
+      let lineDate = parseArabicDateLoose(line);
+      if(lineDate && i+1<lines.length){ let nextNum = parseNumberLoose(lines[i+1]); if(nextNum!=null){ results.push({date:lineDate, rate:nextNum}); i++; continue; } }
+    }
+    let map = {};
+    results.forEach(row=>{ if(row.date && row.rate!=null){ map[row.date] = row.rate; } });
+    return Object.keys(map).sort().map(d=>({date:d, rate:map[d]}));
+  }
+  function normText(s){ return String(s||'').trim().replace(/\u200f|\u200e/g,'').replace(/\s+/g,' '); }
+  function maybeHeader(str){ const x = normText(str).toLowerCase(); return /تاريخ|date|اسم|name|city|region|ccbs|amount|مبلغ|syp|usd|rate|سعر/.test(x); }
+  function parseIncomeLine(parts){
+    let date = null, name = null, amount = null, description = '', currencyHint='SYP';
+    for(let i=0;i<parts.length;i++){ if(!date){ let d = parseArabicDateLoose(parts[i]); if(d){ date = d; continue; } } }
+    for(let j=0;j<parts.length;j++){ let t = normText(parts[j]); if(App && App.NAMES && App.NAMES.indexOf(t) > -1){ name = t; break; } }
+    if(!name){ for(let k=0;k<parts.length;k++){ let txt = normText(parts[k]); if(txt && !parseArabicDateLoose(txt) && isNaN(parseNumberLoose(txt)) && !maybeHeader(txt)){ name = txt; break; } } }
+    for(let x=0;x<parts.length;x++){ const low = normText(parts[x]).toLowerCase(); if(low.includes('usd') || low.includes('دولار')){ currencyHint = 'USD'; } }
+    let nums = [];
+    for(let n=0;n<parts.length;n++){ let num = parseNumberLoose(parts[n]); if(!isNaN(num) && num!=null){ nums.push(num); } }
+    if(nums.length){ nums.sort((a,b)=>Math.abs(b)-Math.abs(a)); amount = nums[0]; }
+    for(let z=0;z<parts.length;z++){
+      let t = normText(parts[z]);
+      if(!t) continue;
+      if(parseArabicDateLoose(t)) continue;
+      if(name && t===name) continue;
+      if(!isNaN(parseNumberLoose(t))) continue;
+      if(maybeHeader(t)) continue;
+      description = t;
+      break;
+    }
+    return {date,dateValid:!!date, name,nameValid:!!name, amount, amountValid:amount!=null, description, currencyHint};
+  }
+  function parseIncomeWideTable(rawText, mapHeaderNameFn){
+    const text = cleanPastedText(rawText);
+    const headerMatches = text.match(/Date|R\s*1|R\s*2|R\s*3|R\s*4|CCBS\s*1|CCBS\s*2|CCBS\s*3|CCBS\s*4|Region\s*1|Region\s*2|Region\s*3|Region\s*4/gi) || [];
+    const mappedNames = headerMatches.filter(h => !/^date$/i.test(normText(h))).map(h => mapHeaderNameFn(h)).filter(Boolean);
+    if(!mappedNames.length) return [];
+    const firstNewline = text.indexOf('\n');
+    const body = firstNewline >= 0 ? text.slice(firstNewline + 1) : text;
+    const dateRegex = /\d{1,2}[\/-]\d{1,2}[\/-]\d{4}/g;
+    const dateMatches = [...body.matchAll(dateRegex)];
+    if(!dateMatches.length) return [];
+    const rows = [];
+    for(let i = 0; i < dateMatches.length; i++){
+      const current = dateMatches[i];
+      const next = dateMatches[i + 1];
+      const rawDate = current[0];
+      const date = parseArabicDateLoose(rawDate);
+      if(!date) continue;
+      const start = current.index + rawDate.length;
+      const end = next ? next.index : body.length;
+      const segment = body.slice(start, end);
+      const numberTokens = segment.match(/\d[\d,]*/g) || [];
+      const values = numberTokens.map(v => parseNumberLoose(v)).filter(v => v != null);
+      if(values.length < mappedNames.length) continue;
+      rows.push({ date, items: mappedNames.map((name, idx) => ({ name, amount: values[idx] || 0 })) });
+    }
+    return rows;
+  }
+  function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+  function $(id){ return document.getElementById(id); }
+  function today(){ let t = new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
+  function show(el){ if(el) el.classList.remove('hidden-important'); }
+  function hide(el){ if(el) el.classList.add('hidden-important'); }
+
+  var App = {
+    NAMES: ['Region 1','Region 2','Region 3','Region 4','ccbs1','ccbs2','ccbs3','ccbs4'],
+    GROUPS: [
+      { label:'Region 1', names:['Region 1','ccbs1'] },
+      { label:'Region 2', names:['Region 2','ccbs2'] },
+      { label:'Region 3', names:['Region 3','ccbs3'] },
+      { label:'Region 4', names:['Region 4','ccbs4'] }
+    ],
+    CHART_COLORS: ['#6366f1','#ec4899','#06b6d4','#10b981','#f59e0b','#ef4444','#22c55e','#f97316'],
+    mapHeaderName: function(h){
+      if(!h) return null;
+      let t = normText(h).toLowerCase().replace(/\s+/g,'');
+      if(/^r[1-4]$/.test(t)) return 'Region ' + t.replace('r','');
+      if(/^region[1-4]$/.test(t)) return 'Region ' + t.replace('region','');
+      if(/^ccbs[1-4]$/.test(t)) return 'ccbs' + t.replace('ccbs','');
+      return null;
+    },
+    data: [], trash: [], rate: 1500, exchangeRates: {}, charts: {}, editId: null, firestoreReady: false, db: null,
+    unsubscribeIncome: null, unsubscribeTrash: null, unsubscribeRates: null, syncSettings: null,
+    init: function(){
+      if(!firebase.apps.length){ firebase.initializeApp(firebaseConfig); }
+      this.loadLocal();
+      this.fillAllNameSelects();
+      this.renderPdfSettings();
+      $('incomeDate').value = today();
+      $('exchangeRate').value = this.rate;
+      $('incomeExchangeRate').value = this.getRateForDate(today()).toFixed(2);
+      this.updateRateDisplayByDate(today());
+      this.updateRatesBadge();
+      this.loadTheme();
+      this.loadGeneralSettings();
+      this.loadFirestoreConfig();
+      this.renderDashboard();
+    },
+    saveLocal: function(){
+      localStorage.setItem('fsData', JSON.stringify(this.data));
+      localStorage.setItem('fsTrash', JSON.stringify(this.trash));
+      localStorage.setItem('fsRate', String(this.rate));
+      localStorage.setItem('fsExchangeRates', JSON.stringify(this.exchangeRates));
+    },
+    loadLocal: function(){
+      try{
+        let d = localStorage.getItem('fsData'); this.data = d ? JSON.parse(d) : [];
+        let t = localStorage.getItem('fsTrash'); this.trash = t ? JSON.parse(t) : [];
+        let r = localStorage.getItem('fsRate'); this.rate = r ? parseFloat(r) : 1500;
+        let rm = localStorage.getItem('fsExchangeRates'); this.exchangeRates = rm ? JSON.parse(rm) : {};
+      }catch(e){ this.data = []; this.trash = []; this.rate = 1500; this.exchangeRates = {}; }
+    },
+    loadFirestoreConfig: function(){
+      try{
+        let cfg = localStorage.getItem('fsSync');
+        if(cfg){ this.syncSettings = JSON.parse(cfg); }
+        if(this.syncSettings && this.syncSettings.collectionName){
+          $('fsProjectId').value = this.syncSettings.projectId || firebaseConfig.projectId;
+          $('fsCollectionName').value = this.syncSettings.collectionName;
+          this.initFirestore();
+        }
+      }catch(e){ this.syncSettings = null; }
+    },
+    saveFirestoreConfig: function(){
+      let pid = $('fsProjectId').value.trim();
+      let col = $('fsCollectionName').value.trim();
+      if(!pid || !col){ this.showMsg('⚠️ أدخل Project ID و Collection Name','error'); return; }
+      this.syncSettings = { projectId: pid, collectionName: col };
+      localStorage.setItem('fsSync', JSON.stringify(this.syncSettings));
+      this.showMsg('✅ تم حفظ إعدادات Firestore');
+      this.initFirestore();
+    },
+    clearFirestoreConfig: function(){
+      if(!confirm('إلغاء الاتصال بـ Firestore؟ البيانات ستعمل محلياً فقط.')) return;
+      localStorage.removeItem('fsSync');
+      this.syncSettings = null;
+      if(this.unsubscribeIncome) this.unsubscribeIncome();
+      if(this.unsubscribeTrash) this.unsubscribeTrash();
+      if(this.unsubscribeRates) this.unsubscribeRates();
+      this.firestoreReady = false; this.db = null;
+      $('fsProjectId').value = ''; $('fsCollectionName').value = '';
+      this.setFSStatus('disconnected','🔴 Firestore غير متصل');
+      this.showMsg('✅ تم إلغاء الاتصال بـ Firestore');
+    },
+    initFirestore: function(){
+      if(!this.syncSettings || !this.syncSettings.collectionName) return;
+      try{
+        this.db = firebase.firestore();
+        this.firestoreReady = true;
+        this.setFSStatus('connecting','🟡 جاري الاتصال...');
+        const col = this.syncSettings.collectionName;
+        if(this.unsubscribeIncome) this.unsubscribeIncome();
+        if(this.unsubscribeTrash) this.unsubscribeTrash();
+        if(this.unsubscribeRates) this.unsubscribeRates();
+        this.unsubscribeIncome = this.db.collection(col + '_data').orderBy('date','desc').onSnapshot(snapshot=>{
+          let arr = []; snapshot.forEach(doc=>{ arr.push(this.mapDoc(doc)); }); this.data = arr; this.saveLocal(); this.renderDashboard();
+        }, err=>{ console.error(err); this.setFSStatus('disconnected','🔴 خطأ في الاستماع لـ البيانات'); });
+        this.unsubscribeTrash = this.db.collection(col + '_trash').orderBy('deleted_at','desc').onSnapshot(snapshot=>{
+          let arr = []; snapshot.forEach(doc=>{ arr.push(this.mapTrashDoc(doc)); }); this.trash = arr; this.saveLocal(); this.renderTrash();
+        }, err=>{ console.error(err); });
+        this.unsubscribeRates = this.db.collection(col + '_exchange_rates').onSnapshot(snapshot=>{
+          let map = {}; snapshot.forEach(doc=>{ let d = doc.data(); map[d.date] = d.rate; }); this.exchangeRates = map; this.saveLocal(); this.updateRatesBadge(); this.updateRateDisplayByDate(today());
+        }, err=>{ console.error(err); });
+        this.setFSStatus('connected','🟢 Firestore متصل ✓');
+        this.showMsg('⚡ Firestore متصل — مزامنة مفعّلة');
+      }catch(e){ console.error(e); this.setFSStatus('disconnected','🔴 خطأ: '+e.message); this.showMsg('❌ خطأ في Firestore: '+e.message,'error'); }
+    },
+    setFSStatus: function(cls, txt){ const el = $('fsStatus'); if(!el) return; el.className = cls; el.textContent = txt; },
+    setTheme: function(t){ let dark = document.body.classList.contains('dark-mode'); document.body.className = t; if(dark) document.body.classList.add('dark-mode'); localStorage.setItem('fsTheme', t); this.showMsg('✅ تم تغيير المظهر'); },
+    loadTheme: function(){ let t = localStorage.getItem('fsTheme') || 'bg-theme-1'; document.body.className = t; if(localStorage.getItem('fsDarkMode') === 'true'){ document.body.classList.add('dark-mode'); $('darkMode').checked = true; } },
+    saveGeneralSettings: function(){ let dm = $('darkMode').checked; localStorage.setItem('fsDarkMode', dm.toString()); if(dm) document.body.classList.add('dark-mode'); else document.body.classList.remove('dark-mode'); this.showMsg('✅ تم حفظ الإعدادات'); },
+    updateDefaultRate: function(){ this.rate = parseFloat($('exchangeRate').value) || 1500; this.saveLocal(); this.updateRateDisplayByDate(today()); $('incomeExchangeRate').value = this.getRateForDate(today()).toFixed(2); this.showMsg('✅ تم تحديث سعر الصرف الافتراضي'); },
+    loadGeneralSettings: function(){ let r = localStorage.getItem('fsRate'); if(r){ this.rate = parseFloat(r); $('exchangeRate').value = this.rate; } if(localStorage.getItem('fsDarkMode') === 'true'){ document.body.classList.add('dark-mode'); $('darkMode').checked = true; } },
+    fillAllNameSelects: function(){ this.fillSelect('dashboardNameFilter', true); this.fillSelect('incomeName', false, 'اختر الاسم'); this.fillSelect('historyNameFilter', true); this.fillSelect('reportNameFilter', true); },
+    renderPdfSettings: function(){
+      let box = $('pdfNameSettings'); if(!box) return;
+      let saved = [];
+      try{ saved = JSON.parse(localStorage.getItem('pdfSelectedNames') || '[]'); }catch(e){ saved = []; }
+      if(!saved.length){ saved = this.NAMES.slice(); localStorage.setItem('pdfSelectedNames', JSON.stringify(saved)); }
+      box.innerHTML = this.NAMES.map(name=>{
+        let checked = saved.includes(name) ? 'checked' : '';
+        return '<label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.16);cursor:pointer"><input type="checkbox" class="pdf-name-checkbox" value="'+name+'" '+checked+' onchange="App.savePdfSettings()"><span>'+this.escapeHtml(name)+'</span></label>';
+      }).join('');
+    },
+    savePdfSettings: function(){ let selected = Array.from(document.querySelectorAll('.pdf-name-checkbox:checked')).map(el=>el.value); localStorage.setItem('pdfSelectedNames', JSON.stringify(selected)); },
+    getSelectedPdfNames: function(){ let selected = []; try{ selected = JSON.parse(localStorage.getItem('pdfSelectedNames') || '[]'); }catch(e){ selected = []; } return selected.filter(name=>this.NAMES.includes(name)); },
+    toggleAllPdfNames: function(state){ document.querySelectorAll('.pdf-name-checkbox').forEach(cb=>{ cb.checked = !!state; }); this.savePdfSettings(); this.showMsg(state ? '✅ تم تحديد كل العناصر للتصدير' : '✅ تم إلغاء تحديد كل العناصر'); },
+    fillSelect: function(id, includeAll, placeholder){ let el = $(id); if(!el) return; let current = el.value; let html = ''; if(includeAll) html += '<option value="">كل الأسماء</option>'; else html += '<option value="">'+(placeholder||'اختر الاسم')+'</option>'; this.NAMES.forEach(function(n){ html += '<option>'+n+'</option>'; }); el.innerHTML = html; if(current && Array.from(el.options).some(o=>o.value===current)) el.value = current; },
+    mapDoc: function(doc){ let d = doc.data(); return { id: doc.id, name: d.name, amountSYP: d.amount_syp, amountUSD: d.amount_usd, description: d.description||'', date: d.date, exchangeRate: d.exchange_rate, createdAt: d.created_at }; },
+    mapTrashDoc: function(doc){ let d = doc.data(); return { id: doc.id, name: d.name, amountSYP: d.amount_syp, amountUSD: d.amount_usd, description: d.description||'', date: d.date, exchangeRate: d.exchange_rate, createdAt: d.created_at, deletedAt: d.deleted_at }; },
+    getRateForDate: function(dateStr){ if(this.exchangeRates && this.exchangeRates[dateStr]){ let v = parseFloat(this.exchangeRates[dateStr]); if(!isNaN(v)) return v; } return this.rate; },
+    updateRateDisplayByDate: function(dateStr){ const rate = this.getRateForDate(dateStr); $('exchangeRateDisplay').textContent = '1 USD = '+fmt(Number(rate).toFixed(0))+' SYP'; },
+    refreshRateFromDate: function(){ let d = $('incomeDate').value || today(); let r = this.getRateForDate(d); $('incomeExchangeRate').value = r.toFixed(2); let a = parseFloat($('incomeAmount').value) || 0; let cur = $('incomeCurrency').value; $('incomeEquivalent').value = (cur==='SYP'?a/r:a*r).toFixed(2); },
+    calcEquiv: function(){ let d = $('incomeDate').value || today(); let r = this.getRateForDate(d); let a = parseFloat($('incomeAmount').value) || 0; let cur = $('incomeCurrency').value; $('incomeEquivalent').value = (cur==='SYP'?a/r:a*r).toFixed(2); $('incomeExchangeRate').value = r.toFixed(2); },
+    updateRatesBadge: function(){ $('ratesCountBadge').textContent = 'عدد أسعار الصرف المحفوظة: '+Object.keys(this.exchangeRates||{}).length; },
+    showMsg: function(text,type){ type = type || 'success'; let c = $('msgContainer'), m = document.createElement('div'); m.className = type==='success'?'success-msg':'error-msg'; m.textContent = text; c.appendChild(m); show(c); setTimeout(function(){ m.remove(); if(!c.children.length) hide(c); }, 3500); },
+    deleteIncome: async function(id){ let item = this.data.find(d=>d.id===id); if(!item) return; let trashRec = { id:item.id, name:item.name, amount_syp:item.amountSYP, amount_usd:item.amountUSD, description:item.description, date:item.date, exchange_rate:item.exchangeRate, created_at:item.createdAt, deleted_at:new Date().toISOString() };
+      try{
+        if(this.firestoreReady && this.db && this.syncSettings){ let col = this.syncSettings.collectionName; await this.db.collection(col + '_trash').doc(trashRec.id).set(trashRec); await this.db.collection(col + '_data').doc(item.id).delete(); }
+        else { this.trash.unshift(Object.assign({}, trashRec)); this.data = this.data.filter(d=>d.id!==id); this.saveLocal(); this.renderDashboard(); this.renderTrash(); }
+        this.showMsg('✅ تم النقل إلى سلة المحذوفات'); this.playSound(440,.15);
+      }catch(err){ console.error(err); this.showMsg('❌ خطأ في الحذف: '+err.message,'error'); }
+    },
+    restoreIncome: async function(id){ let item = this.trash.find(t=>t.id===id); if(!item) return; let rec = { id:item.id, name:item.name, amount_syp:item.amountSYP, amount_usd:item.amountUSD, description:item.description, date:item.date, exchange_rate:item.exchangeRate, created_at:item.createdAt };
+      try{
+        if(this.firestoreReady && this.db && this.syncSettings){ let col = this.syncSettings.collectionName; await this.db.collection(col + '_data').doc(rec.id).set(rec); await this.db.collection(col + '_trash').doc(rec.id).delete(); }
+        else { this.data.unshift(Object.assign({}, rec)); this.trash = this.trash.filter(t=>t.id!==id); this.saveLocal(); this.renderDashboard(); this.renderTrash(); }
+        this.showMsg('✅ تم استرجاع الإيراد');
+      }catch(err){ console.error(err); this.showMsg('❌ خطأ في الاسترجاع: '+err.message,'error'); }
+    },
+    clearHistoryOnly: async function(){ if(!this.data.length){ this.showMsg('⚠️ السجل فارغ','error'); return; } if(!confirm('حذف كل السجل ونقله إلى سلة المحذوفات؟')) return; try{ if(this.firestoreReady && this.db && this.syncSettings){ let col = this.syncSettings.collectionName; let batch = this.db.batch(); this.data.forEach(item=>{ let trashRef = this.db.collection(col + '_trash').doc(item.id); batch.set(trashRef,{ id:item.id, name:item.name, amount_syp:item.amountSYP, amount_usd:item.amountUSD, description:item.description, date:item.date, exchange_rate:item.exchangeRate, created_at:item.createdAt, deleted_at:new Date().toISOString() }); let dataRef = this.db.collection(col + '_data').doc(item.id); batch.delete(dataRef); }); await batch.commit(); } else { let deletedAt = new Date().toISOString(); this.trash = this.data.map(item=>({ id:item.id, name:item.name, amountSYP:item.amountSYP, amountUSD:item.amountUSD, description:item.description, date:item.date, exchangeRate:item.exchangeRate, createdAt:item.createdAt, deletedAt:deletedAt })).concat(this.trash); this.data=[]; this.saveLocal(); this.renderDashboard(); this.renderTrash(); } this.showMsg('✅ تم حذف كل السجل'); }catch(err){ console.error(err); this.showMsg('❌ خطأ في حذف السجل: '+err.message,'error'); } },
+    clearTrashOnly: async function(){ if(!this.trash.length){ this.showMsg('⚠️ السلة فارغة','error'); return; } if(!confirm('حذف كل العناصر من سلة المحذوفات نهائياً؟')) return; try{ if(this.firestoreReady && this.db && this.syncSettings){ let col = this.syncSettings.collectionName; let batch = this.db.batch(); this.trash.forEach(item=>{ let ref = this.db.collection(col + '_trash').doc(item.id); batch.delete(ref); }); await batch.commit(); } else { this.trash = []; this.saveLocal(); this.renderTrash(); } this.showMsg('✅ تم حذف كل السلة'); }catch(err){ console.error(err); this.showMsg('❌ خطأ في حذف السلة: '+err.message,'error'); } },
+    clearAllData: async function(){ if(!confirm('⚠️ حذف كل البيانات نهائياً؟')) return; try{ if(this.firestoreReady && this.db && this.syncSettings){ let col = this.syncSettings.collectionName; const delCollection = async (collectionName) => { let snapshot = await this.db.collection(collectionName).get(); let batch = this.db.batch(); snapshot.forEach(doc=>{ batch.delete(doc.ref); }); await batch.commit(); }; await delCollection(col + '_data'); await delCollection(col + '_trash'); await delCollection(col + '_exchange_rates'); } }catch(e){ console.error(e); } this.data=[]; this.trash=[]; this.exchangeRates={}; this.saveLocal(); this.renderDashboard(); this.renderTrash(); this.updateRatesBadge(); this.updateRateDisplayByDate(today()); this.showMsg('✅ تم حذف كل البيانات'); },
+    addIncome: async function(e){ e.preventDefault(); let name = $('incomeName').value; let cur = $('incomeCurrency').value; let amount = parseFloat($('incomeAmount').value); let selectedDate = $('incomeDate').value || today(); let rateUsed = this.getRateForDate(selectedDate); if(!name || !amount){ this.showMsg('⚠️ ملء الحقول الإجبارية','error'); return; } let aSYP = cur==='SYP'? amount : amount*rateUsed; let aUSD = cur==='USD'? amount : amount/rateUsed; let rec = { id: Date.now().toString(), name: name, amount_syp: parseFloat(aSYP.toFixed(2)), amount_usd: parseFloat(aUSD.toFixed(2)), description: $('incomeDescription').value || '', date: selectedDate, exchange_rate: parseFloat(rateUsed.toFixed(2)), created_at: new Date().toISOString() };
+      try{
+        if(this.firestoreReady && this.db && this.syncSettings){ let col = this.syncSettings.collectionName; await this.db.collection(col + '_data').doc(rec.id).set(rec); }
+        else { this.data.unshift({ id: rec.id, name: rec.name, amountSYP: rec.amount_syp, amountUSD: rec.amount_usd, description: rec.description, date: rec.date, exchangeRate: rec.exchange_rate, createdAt: rec.created_at }); this.saveLocal(); this.renderDashboard(); }
+        this.showMsg('✅ تم إضافة الإيراد بنجاح'); $('incomeForm').reset(); $('incomeDate').value = today(); this.refreshRateFromDate(); this.playSound(880,.2);
+      }catch(err){ console.error(err); this.showMsg('❌ خطأ في الإضافة: '+err.message,'error'); }
+    },
+    editIncome: function(id){ let item = this.data.find(d=>d.id===id); if(!item) return; this.editId = id; this.showSection('addIncomeSection',null); $('incomeName').value = item.name; $('incomeAmount').value = item.amountSYP; $('incomeCurrency').value = 'SYP'; $('incomeDescription').value = item.description || ''; $('incomeDate').value = item.date; this.calcEquiv(); let btn = $('incomeForm').querySelector('button[type="submit"]'); btn.textContent = '✏️ تحديث الإيراد'; let self = this; $('incomeForm').onsubmit = function(ev){ ev.preventDefault(); self.updateIncome(); btn.textContent = '✅ إضافة الإيراد'; $('incomeForm').onsubmit = function(ev2){ ev2.preventDefault(); self.addIncome(ev2); }; }; },
+    updateIncome: async function(){ let id = this.editId; if(!id) return; let name = $('incomeName').value; let cur = $('incomeCurrency').value; let amount = parseFloat($('incomeAmount').value); let selectedDate = $('incomeDate').value || today(); let rateUsed = this.getRateForDate(selectedDate); if(!name || !amount){ this.showMsg('⚠️ ملء الحقول الإجبارية','error'); return; } let aSYP = cur==='SYP'? amount : amount*rateUsed; let aUSD = cur==='USD'? amount : amount/rateUsed; let upd = { name:name, amount_syp: parseFloat(aSYP.toFixed(2)), amount_usd: parseFloat(aUSD.toFixed(2)), description: $('incomeDescription').value||'', date:selectedDate, exchange_rate: parseFloat(rateUsed.toFixed(2)) };
+      try{
+        if(this.firestoreReady && this.db && this.syncSettings){ let col = this.syncSettings.collectionName; await this.db.collection(col + '_data').doc(id).update(upd); }
+        else { let idx = this.data.findIndex(d=>d.id===id); if(idx>=0) Object.assign(this.data[idx], { name: upd.name, amountSYP: upd.amount_syp, amountUSD: upd.amount_usd, description: upd.description, date: upd.date, exchangeRate: upd.exchange_rate }); this.saveLocal(); this.renderDashboard(); }
+        this.showMsg('✅ تم التحديث'); this.editId = null; $('incomeForm').reset(); $('incomeDate').value = today(); this.refreshRateFromDate(); this.playSound(660,.2);
+      }catch(err){ console.error(err); this.showMsg('❌ خطأ في التحديث: '+err.message,'error'); }
+    },
+    importBulkIncome: async function(){
+      let text = $('bulkIncomeText').value;
+      if(!normText(text)){ this.showMsg('⚠️ الصق جدول الإيرادات أولاً','error'); return; }
+      let rows = [];
+      const wideRows = parseIncomeWideTable(text, this.mapHeaderName.bind(this));
+      if(wideRows.length){
+        wideRows.forEach((row, rowIndex) => {
+          const rateUsed = this.getRateForDate(row.date);
+          row.items.forEach((item, itemIndex) => {
+            const amountSYP = item.amount;
+            if(amountSYP == null || isNaN(amountSYP) || amountSYP <= 0) return;
+            rows.push({ id: (Date.now() + rowIndex + itemIndex + rows.length).toString() + Math.floor(Math.random()*1000), name: item.name, amount_syp: parseFloat(amountSYP.toFixed(2)), amount_usd: parseFloat((amountSYP / rateUsed).toFixed(2)), description: 'استيراد جدول', date: row.date, exchange_rate: parseFloat(rateUsed.toFixed(2)), created_at: new Date().toISOString() });
+          });
+        });
+      }
+      if(!rows.length){
+        let lines = text.replace(/\r/g,'').split('\n').map(l => normText(l)).filter(Boolean);
+        for(let i=0;i<lines.length;i++){
+          let line = lines[i];
+          let parts = line.split('\t');
+          if(parts.length < 2) parts = line.split(/ {2,}/);
+          parts = parts.map(p => normText(p)).filter(Boolean);
+          if(parts.length < 2) continue;
+          if(i===0 && parts.some(maybeHeader)) continue;
+          let parsed = parseIncomeLine(parts);
+          if(!parsed.date || !parsed.name || parsed.amount == null || parsed.amount <= 0) continue;
+          let rateUsed = this.getRateForDate(parsed.date);
+          let amountSYP = parsed.currencyHint === 'USD' ? parsed.amount * rateUsed : parsed.amount;
+          let amountUSD = parsed.currencyHint === 'USD' ? parsed.amount : parsed.amount / rateUsed;
+          rows.push({ id: (Date.now()+rows.length+i).toString()+Math.floor(Math.random()*1000), name: parsed.name, amount_syp: parseFloat(amountSYP.toFixed(2)), amount_usd: parseFloat(amountUSD.toFixed(2)), description: parsed.description || 'استيراد Excel', date: parsed.date, exchange_rate: parseFloat(rateUsed.toFixed(2)), created_at: new Date().toISOString() });
+        }
+      }
+      if(!rows.length){ this.showMsg('❌ لم أستطع قراءة جدول الإيرادات','error'); return; }
+      try{
+        if(this.firestoreReady && this.db && this.syncSettings){ let col = this.syncSettings.collectionName; let batch = this.db.batch(); rows.forEach(r => { let ref = this.db.collection(col + '_data').doc(r.id); batch.set(ref, r); }); await batch.commit(); }
+        else { rows.forEach(r => { this.data.unshift({ id: r.id, name: r.name, amountSYP: r.amount_syp, amountUSD: r.amount_usd, description: r.description, date: r.date, exchangeRate: r.exchange_rate, createdAt: r.created_at }); }); this.saveLocal(); this.renderDashboard(); }
+        this.showMsg('✅ تم استيراد ' + rows.length + ' سجل من Excel'); $('bulkIncomeText').value = '';
+      }catch(err){ console.error(err); this.showMsg('❌ خطأ في استيراد الإيرادات: ' + err.message,'error'); }
+    },
+    importExchangeRates: async function(){ let text = $('bulkRateText').value; if(!normText(text)){ this.showMsg('⚠️ الصق جدول سعر الصرف أولاً','error'); return; } let rows = parseExchangeRatesFlexible(text); if(!rows.length){ this.showMsg('❌ لم أستطع قراءة جدول أسعار الصرف','error'); return; } let saved = 0; try{ if(this.firestoreReady && this.db && this.syncSettings){ let col = this.syncSettings.collectionName; let batch = this.db.batch(); rows.forEach(r=>{ this.exchangeRates[r.date] = parseFloat(r.rate.toFixed(2)); let ref = this.db.collection(col + '_exchange_rates').doc(r.date); batch.set(ref, { date:r.date, rate: parseFloat(r.rate.toFixed(2)), updatedAt: new Date().toISOString() }, { merge:true }); }); await batch.commit(); saved = rows.length; } else { rows.forEach(r=>{ this.exchangeRates[r.date] = parseFloat(r.rate.toFixed(2)); }); saved = rows.length; } this.saveLocal(); this.updateRatesBadge(); this.refreshRateFromDate(); this.updateRateDisplayByDate(today()); this.showMsg('✅ تم استيراد '+saved+' سعر صرف'); $('bulkRateText').value = ''; } catch(err){ console.error(err); this.showMsg('❌ خطأ في استيراد أسعار الصرف: '+err.message,'error'); } },
+    showSection: function(id, evt){ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active')); if(evt && evt.target) evt.target.classList.add('active'); if(id==='historySection') this.renderHistory(); if(id==='trashSection') this.renderTrash(); if(id==='reportSection'){ this.renderPdfSettings(); this.generateReport(); } },
+    renderDashboard: function(){ this.renderStats(); this.renderCharts(); this.renderHistory(); this.renderTrash(); },
+    getFiltered: function(){ let name = $('dashboardNameFilter').value; let df = $('dashboardDateFrom').value; let dt = $('dashboardDateTo').value; let f = this.data.slice(); if(name) f = f.filter(d=>d.name===name); if(df) f = f.filter(d=>d.date>=df); if(dt) f = f.filter(d=>d.date<=dt); return f; },
+    renderStats: function(){ let data = this.getFiltered(); let tSYP = data.reduce((s,d)=>s+(d.amountSYP||0),0); let tUSD = data.reduce((s,d)=>s+(d.amountUSD||0),0); let ns = {}; this.NAMES.forEach(n=>{ let cd = data.filter(d=>d.name===n); ns[n] = { syp: cd.reduce((s,d)=>s+(d.amountSYP||0),0), usd: cd.reduce((s,d)=>s+(d.amountUSD||0),0) }; }); let html = '<div class="stat-card"><div class="label">🏦 الإجمالي (SYP)</div><div class="value">'+fmt(tSYP.toFixed(0))+'</div></div>'; html += '<div class="stat-card"><div class="label">💵 الإجمالي (USD)</div><div class="value">'+fmt(tUSD.toFixed(2))+'</div></div>'; this.NAMES.slice(0,4).forEach(n=>{ html += '<div class="stat-card"><div class="label">'+n+'</div><div class="value">'+fmt(ns[n].syp.toFixed(0))+'</div><div style="font-size:11px;opacity:.7">$'+fmt(ns[n].usd.toFixed(1))+'</div></div>'; }); $('statsRow').innerHTML = html; $('dashboardStats').innerHTML = '<div style="margin:15px 0"><p style="opacity:.85;margin-bottom:8px">💷 الليرة السورية</p><h3 style="font-size:28px;margin-bottom:15px">'+fmt(tSYP.toFixed(2))+' SYP</h3></div>'+'<div style="margin:15px 0"><p style="opacity:.85;margin-bottom:8px">💵 الدولار الأمريكي</p><h3 style="font-size:28px">'+fmt(tUSD.toFixed(2))+' USD</h3></div>'; },
+    renderCharts: function(){ let data = this.getFiltered(); let cd = {}; this.NAMES.forEach(n=>{ cd[n] = data.filter(d=>d.name===n).reduce((s,d)=>s+(d.amountSYP||0),0); }); let labels = this.NAMES.filter(n=>cd[n]>0); if(!labels.length) labels = this.NAMES.slice(0,6); let values = labels.map(n=>cd[n]||0); let colors = ['rgba(102,126,234,.85)','rgba(240,147,251,.85)','rgba(79,172,254,.85)','rgba(0,242,254,.85)','rgba(240,128,128,.85)','rgba(144,202,249,.85)','rgba(72,187,120,.85)','rgba(251,191,36,.85)']; let nc = $('namesChart'); if(this.charts.names) this.charts.names.destroy(); this.charts.names = new Chart(nc,{ type:'doughnut', data:{ labels:labels, datasets:[{ data:values, backgroundColor:colors.slice(0,labels.length) }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'white', font:{ family:'Cairo' } } } } } }); let dd = {}; data.forEach(d=>{ if(!dd[d.date]) dd[d.date] = { syp:0, usd:0 }; dd[d.date].syp += d.amountSYP||0; dd[d.date].usd += d.amountUSD||0; }); let dates = Object.keys(dd).sort(); let dc = $('dailyChart'); if(this.charts.daily) this.charts.daily.destroy(); this.charts.daily = new Chart(dc,{ type:'line', data:{ labels:dates, datasets:[{ label:'SYP', data:dates.map(d=>dd[d].syp), borderColor:'rgba(102,126,234,.85)', backgroundColor:'rgba(102,126,234,.12)', tension:.4, fill:true },{ label:'USD', data:dates.map(d=>dd[d].usd), borderColor:'rgba(72,187,120,.85)', backgroundColor:'rgba(72,187,120,.12)', tension:.4, fill:true }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'white', font:{ family:'Cairo' } } } }, scales:{ y:{ ticks:{ color:'rgba(255,255,255,.75)' } }, x:{ ticks:{ color:'rgba(255,255,255,.75)' } } } } }); },
+    renderHistory: function(){ let f = $('historyNameFilter').value; let list = this.data.slice(); if(f) list = list.filter(d=>d.name===f); list.sort((a,b)=> new Date(b.date) - new Date(a.date)); $('historyTable').innerHTML = list.map(item=> '<tr><td>'+this.escapeHtml(item.name)+'</td><td>'+fmt(item.amountSYP.toFixed(2))+'</td><td>'+fmt(item.amountUSD.toFixed(2))+'</td><td>'+fmt(item.exchangeRate.toFixed(0))+'</td><td>'+item.date+'</td><td>'+(item.description?this.escapeHtml(item.description):'-')+'</td><td><div class="btn-group"><button class="btn btn-secondary btn-small" onclick="App.editIncome(\''+item.id+'\')">✏️ تعديل</button><button class="btn btn-danger btn-small" onclick="App.deleteIncome(\''+item.id+'\')">🗑️ حذف</button></div></td></tr>').join(''); },
+    escapeHtml: function(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); },
+    renderTrash: function(){ let tl = $('trashList'); if(!this.trash.length){ tl.innerHTML = '<p style="text-align:center;opacity:.7">لا توجد عناصر محذوفة</p>'; return; } tl.innerHTML = '<div class="trash-container">'+ this.trash.map(item=> '<div class="trash-item"><div><strong>'+this.escapeHtml(item.name)+'</strong> — '+fmt((item.amountSYP||0).toFixed(2))+' SYP<br><small style="opacity:.65">حذف في: '+new Date(item.deletedAt||item.deleted_at).toLocaleString('ar-SA')+'</small></div><button class="btn btn-success btn-small" onclick="App.restoreIncome(\''+item.id+'\')">استرجاع ↩️</button></div>').join('') + '</div>'; },
+    generateReport: function(){ let df = $('reportDateFrom').value, dt = $('reportDateTo').value, name = $('reportNameFilter').value; if(!df||!dt){ $('reportContent').innerHTML=''; return; } let list = this.data.filter(d=>d.date>=df && d.date<=dt); if(name) list = list.filter(d=>d.name===name); let tSYP = list.reduce((s,d)=>s+(d.amountSYP||0),0); let tUSD = list.reduce((s,d)=>s+(d.amountUSD||0),0); let nb = {}; this.NAMES.forEach(n=>{ let cd = list.filter(d=>d.name===n); nb[n] = { syp: cd.reduce((s,d)=>s+(d.amountSYP||0),0), usd: cd.reduce((s,d)=>s+(d.amountUSD||0),0), count: cd.length }; }); let html = '<div class="summary-box"><h4 style="margin-bottom:12px">📈 ملخص من '+df+' إلى '+dt+'</h4><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px"><div style="background:rgba(102,126,234,.2);padding:15px;border-radius:8px;text-align:center"><p style="font-size:12px;opacity:.8;margin-bottom:4px">الإجمالي (SYP)</p><h2>'+fmt(tSYP.toFixed(2))+'</h2></div><div style="background:rgba(72,187,120,.2);padding:15px;border-radius:8px;text-align:center"><p style="font-size:12px;opacity:.8;margin-bottom:4px">الإجمالي (USD)</p><h2>$'+fmt(tUSD.toFixed(2))+'</h2></div><div style="background:rgba(240,147,251,.2);padding:15px;border-radius:8px;text-align:center"><p style="font-size:12px;opacity:.8;margin-bottom:4px">عدد العمليات</p><h2>'+list.length+'</h2></div></div></div>'; html += '<div class="card" style="margin-top:15px"><h3>🏙️ توزيع حسب الاسم</h3><table class="data-table"><thead><tr><th>الاسم</th><th>العدد</th><th>SYP</th><th>USD</th><th>النسبة</th></tr></thead><tbody>' + this.NAMES.map(n=>{ let p = tSYP>0? ((nb[n].syp/tSYP)*100).toFixed(1) : 0; return '<tr><td>'+this.escapeHtml(n)+'</td><td>'+nb[n].count+'</td><td>'+fmt(nb[n].syp.toFixed(2))+'</td><td>'+fmt(nb[n].usd.toFixed(2))+'</td><td style="color:#a8e6a1;font-weight:600">'+p+'%</td></tr>'; }).join('') + '</tbody></table></div>'; html += '<div class="card" style="margin-top:15px"><h3>📋 تفاصيل المعاملات</h3><table class="data-table"><thead><tr><th>التاريخ</th><th>الاسم</th><th>SYP</th><th>USD</th><th>الوصف</th></tr></thead><tbody>' + (list.length? list.map(d=> '<tr><td>'+d.date+'</td><td>'+this.escapeHtml(d.name)+'</td><td>'+fmt(d.amountSYP.toFixed(2))+'</td><td>'+fmt(d.amountUSD.toFixed(2))+'</td><td>'+(d.description?this.escapeHtml(d.description):'-')+'</td></tr>').join('') : '<tr><td colspan="5" style="text-align:center">لا توجد بيانات</td></tr>') + '</tbody></table></div>'; $('reportContent').innerHTML = html; },
+
+    buildExport: function(df,dt,name,selectedNames){ let d = this.data.slice(); if(df&&dt) d = d.filter(x=>x.date>=df && x.date<=dt); if(name) d = d.filter(x=>x.name===name); if(selectedNames && selectedNames.length) d = d.filter(x=>selectedNames.includes(x.name)); return d; },
+    getReportFilters: function(){ return { dateFrom:$('reportDateFrom').value, dateTo:$('reportDateTo').value, name:$('reportNameFilter').value, selectedNames:this.getSelectedPdfNames() }; },
+    getRateSummary: function(list){
+      let rates = list.map(x=>parseFloat(x.exchangeRate||0)).filter(x=>Number.isFinite(x) && x>0);
+      if(!rates.length){ return { text:'غير متوفر', min:0, max:0, effective:0 }; }
+      let min = Math.min(...rates), max = Math.max(...rates);
+      let totalSYP = list.reduce((s,d)=>s+(d.amountSYP||0),0);
+      let totalUSD = list.reduce((s,d)=>s+(d.amountUSD||0),0);
+      let effective = totalUSD>0 ? totalSYP/totalUSD : max;
+      let text = min===max ? fmt(min.toFixed(0)) : (fmt(min.toFixed(0))+' - '+fmt(max.toFixed(0)));
+      return { text, min, max, effective };
+    },
+    sanitizeFileName: function(name){ return String(name||'تقرير').replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,'_'); },
+    waitForImages: function(root){ const imgs = Array.from(root.querySelectorAll('img')); return Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res=>{ img.onload = img.onerror = ()=>res(); }))); },
+    nextFrame: function(){ return new Promise(res=>requestAnimationFrame(()=>requestAnimationFrame(res))); },
+    sleep: function(ms){ return new Promise(res=>setTimeout(res, ms)); },
+    renderPDFFile: async function(html, fileName, orientation){
+      let ra = $('pdfRenderArea');
+      ra.innerHTML = html;
+      show(ra);
+      show($('pdfOverlay'));
+      $('pdfOverlayMsg').textContent = '⏳ تجهيز الصفحة النهائية...';
+      if(document.fonts && document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} }
+      await this.waitForImages(ra);
+      await this.nextFrame();
+      await this.sleep(180);
+      $('pdfOverlayMsg').textContent = '⏳ جاري إنشاء الملف...';
+      try{
+        await html2pdf().set({
+          margin:[5,5,5,5],
+          filename:this.sanitizeFileName(fileName),
+          image:{ type:'jpeg', quality:0.98 },
+          html2canvas:{ scale:2.2, useCORS:true, logging:false, backgroundColor:'#ffffff', windowWidth:1400, scrollX:0, scrollY:0 },
+          jsPDF:{ unit:'mm', format:'a4', orientation:orientation || 'landscape', compress:true },
+          pagebreak:{ mode:['avoid-all','css','legacy'] }
+        }).from(ra).save();
+        this.showMsg('✅ تم تحميل PDF ✨');
+        this.playSound(784,.3);
+      }catch(e){
+        console.error(e);
+        this.showMsg('❌ خطأ في PDF','error');
+      }finally{
+        ra.innerHTML = '';
+        hide(ra);
+        hide($('pdfOverlay'));
+      }
+    },
+    buildPdfBaseCss: function(){
+      return `
+      <style>
+        .pdf-wrap{font-family:Arial,sans-serif;direction:rtl;background:#fff;color:#111;padding:10px 12px;width:287mm;min-height:200mm}
+        .pdf-title{text-align:center;font-size:22px;font-weight:700;color:#172554;margin:0 0 4px}
+        .pdf-sub{text-align:center;font-size:12px;color:#475569;margin:0 0 10px}
+        .pdf-badges{text-align:center;font-size:11px;color:#475569;margin:0 0 12px}
+        .pdf-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+        .pdf-card{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;border-radius:10px;padding:10px;text-align:center}
+        .pdf-card .k{font-size:10px;opacity:.86;margin-bottom:4px}
+        .pdf-card .v{font-size:16px;font-weight:700}
+        .pdf-grid{display:grid;grid-template-columns:1.35fr .95fr;gap:10px;margin-bottom:12px;align-items:start}
+        .pdf-box{border:1px solid #dbe3ef;border-radius:10px;padding:8px;background:#fff}
+        .pdf-box h3{margin:0 0 8px;font-size:13px;color:#1e3a8a;border-bottom:2px solid #c7d2fe;padding-bottom:5px}
+        .pdf-table{width:100%;border-collapse:collapse;font-size:11px}
+        .pdf-table th{background:#4f46e5;color:#fff;padding:7px;border:1px solid #4f46e5;text-align:right}
+        .pdf-table td{padding:6px;border:1px solid #dbe3ef;color:#111;vertical-align:top}
+        .pdf-table .center{text-align:center}
+        .pdf-table .money{font-weight:700;color:#0f172a}
+        .pdf-charts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+        .pdf-chart{border:1px solid #dbe3ef;border-radius:10px;padding:8px;text-align:center;background:#f8fafc}
+        .pdf-chart h4{font-size:12px;margin:0 0 6px;color:#1e3a8a}
+        .pdf-chart img{display:block;width:100%;height:180px;object-fit:contain}
+        .pdf-footer{text-align:center;color:#94a3b8;font-size:10px;margin-top:10px}
+      </style>`;
+    },
+    buildNormalPdfHtml: function(dayData, opts){
+      let exportNames = opts.exportNames;
+      let tSYP = dayData.reduce((s,d)=>s+(d.amountSYP||0),0);
+      let tUSD = dayData.reduce((s,d)=>s+(d.amountUSD||0),0);
+      let rateInfo = this.getRateSummary(dayData);
+      let map = {};
+      exportNames.forEach(name=>{ let rows = dayData.filter(d=>d.name===name); map[name] = { count:rows.length, syp:rows.reduce((s,d)=>s+(d.amountSYP||0),0), usd:rows.reduce((s,d)=>s+(d.amountUSD||0),0) }; });
+      let summaryRows = exportNames.map(name=>{ let row = map[name] || {count:0,syp:0,usd:0}; return '<tr><td>'+this.escapeHtml(name)+'</td><td class="center">'+row.count+'</td><td class="money">'+fmt(row.syp.toFixed(0))+'</td><td class="money">'+fmt(row.usd.toFixed(2))+'</td><td class="center">'+(tSYP>0?((row.syp/tSYP)*100).toFixed(1):'0')+'%</td></tr>'; }).join('');
+      let detailRows = dayData.map(d=> '<tr><td>'+d.date+'</td><td>'+this.escapeHtml(d.name)+'</td><td class="money">'+fmt(d.amountSYP.toFixed(0))+'</td><td class="money">'+fmt(d.amountUSD.toFixed(2))+'</td><td class="center">'+fmt((d.exchangeRate||0).toFixed(0))+'</td><td>'+(d.description?this.escapeHtml(d.description):'-')+'</td></tr>').join('');
+      return this.buildPdfBaseCss() + '<div class="pdf-wrap"><h1 class="pdf-title">📊 تقرير الإيراد التفصيلي</h1><p class="pdf-sub">'+opts.rangeLabel+'</p><p class="pdf-badges">العناصر المحددة: '+this.escapeHtml(exportNames.join(' • '))+'</p><div class="pdf-cards"><div class="pdf-card"><div class="k">إجمالي SYP</div><div class="v">'+fmt(tSYP.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">إجمالي USD</div><div class="v">'+fmt(tUSD.toFixed(2))+'</div></div><div class="pdf-card"><div class="k">سعر الصرف الفعّال</div><div class="v">'+fmt(rateInfo.effective.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">نطاق سعر الصرف</div><div class="v">'+rateInfo.text+'</div></div></div><div class="pdf-grid"><div class="pdf-box"><h3>الأسماء والمبالغ</h3><table class="pdf-table"><thead><tr><th>الاسم</th><th class="center">العدد</th><th>SYP</th><th>USD</th><th class="center">النسبة</th></tr></thead><tbody>'+summaryRows+'</tbody></table></div><div class="pdf-box"><h3>الملخص</h3><table class="pdf-table"><tbody><tr><td>الفترة</td><td>'+this.escapeHtml(opts.rangeLabel)+'</td></tr><tr><td>عدد السجلات</td><td>'+dayData.length+'</td></tr><tr><td>إجمالي السوري</td><td class="money">'+fmt(tSYP.toFixed(0))+'</td></tr><tr><td>إجمالي الدولار</td><td class="money">'+fmt(tUSD.toFixed(2))+'</td></tr><tr><td>سعر الصرف الفعّال</td><td class="money">'+fmt(rateInfo.effective.toFixed(0))+'</td></tr><tr><td>نطاق أسعار الصرف</td><td>'+rateInfo.text+'</td></tr></tbody></table></div></div><div class="pdf-charts"><div class="pdf-chart"><h4>توزيع النسب</h4><img src="'+opts.pieImg+'" alt="chart"></div><div class="pdf-chart"><h4>إجمالي المبالغ حسب الاسم</h4><img src="'+opts.barImg+'" alt="chart"></div></div><div class="pdf-box"><h3>تفاصيل العمليات</h3><table class="pdf-table"><thead><tr><th>التاريخ</th><th>الاسم</th><th>SYP</th><th>USD</th><th class="center">سعر الصرف</th><th>الوصف</th></tr></thead><tbody>'+detailRows+'</tbody></table></div><div class="pdf-footer">تم التوليد من متتبع الإيراد 🇸🇾 | '+new Date().toLocaleString('ar-SA')+'</div></div>';
+    },
+    getGroupedList: function(dateFrom,dateTo){ let list = this.data.slice(); if(dateFrom&&dateTo) list = list.filter(d=>d.date>=dateFrom && d.date<=dateTo); return list; },
+    buildGroupedSummary: function(list){
+      return this.GROUPS.map(group=>{ let rows = list.filter(d=>group.names.includes(d.name)); return { label:group.label, sourceNames:group.names.slice(), count:rows.length, syp:rows.reduce((s,d)=>s+(d.amountSYP||0),0), usd:rows.reduce((s,d)=>s+(d.amountUSD||0),0) }; });
+    },
+    buildGroupedPdfHtml: function(summary, list, opts){
+      let totalSYP = summary.reduce((s,x)=>s+x.syp,0), totalUSD = summary.reduce((s,x)=>s+x.usd,0);
+      let rateInfo = this.getRateSummary(list);
+      let rows = summary.map(row=> '<tr><td>'+this.escapeHtml(row.label)+'</td><td class="center">'+row.count+'</td><td class="money">'+fmt(row.syp.toFixed(0))+'</td><td class="money">'+fmt(row.usd.toFixed(2))+'</td><td class="center">'+(totalSYP>0?((row.syp/totalSYP)*100).toFixed(1):'0')+'%</td><td>'+this.escapeHtml(row.sourceNames.join(' + '))+'</td></tr>').join('');
+      return this.buildPdfBaseCss() + '<div class="pdf-wrap"><h1 class="pdf-title">🧾 تقرير الإيراد المجمّع</h1><p class="pdf-sub">'+opts.rangeLabel+'</p><p class="pdf-badges">التجميع: Region 1 + ccbs1 • Region 2 + ccbs2 • Region 3 + ccbs3 • Region 4 + ccbs4</p><div class="pdf-cards"><div class="pdf-card"><div class="k">إجمالي SYP</div><div class="v">'+fmt(totalSYP.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">إجمالي USD</div><div class="v">'+fmt(totalUSD.toFixed(2))+'</div></div><div class="pdf-card"><div class="k">سعر الصرف الفعّال</div><div class="v">'+fmt(rateInfo.effective.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">نطاق سعر الصرف</div><div class="v">'+rateInfo.text+'</div></div></div><div class="pdf-grid"><div class="pdf-box"><h3>الجدول المجمّع</h3><table class="pdf-table"><thead><tr><th>الاسم الظاهر</th><th class="center">العدد</th><th>SYP</th><th>USD</th><th class="center">النسبة</th><th>مصادر التجميع</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="pdf-box"><h3>الملخص</h3><table class="pdf-table"><tbody><tr><td>الفترة</td><td>'+this.escapeHtml(opts.rangeLabel)+'</td></tr><tr><td>عدد السجلات</td><td>'+list.length+'</td></tr><tr><td>المجموع الكلي بالسوري</td><td class="money">'+fmt(totalSYP.toFixed(0))+'</td></tr><tr><td>المجموع الكلي بالدولار</td><td class="money">'+fmt(totalUSD.toFixed(2))+'</td></tr><tr><td>سعر الصرف الفعّال</td><td class="money">'+fmt(rateInfo.effective.toFixed(0))+'</td></tr><tr><td>نطاق أسعار الصرف</td><td>'+rateInfo.text+'</td></tr></tbody></table></div></div><div class="pdf-charts"><div class="pdf-chart"><h4>توزيع الحصص المجمّعة</h4><img src="'+opts.pieImg+'" alt="chart"></div><div class="pdf-chart"><h4>إجمالي SYP لكل مجموعة</h4><img src="'+opts.barImg+'" alt="chart"></div></div><div class="pdf-footer">تم التوليد من متتبع الإيراد 🇸🇾 | '+new Date().toLocaleString('ar-SA')+'</div></div>';
+    },
+    makeChartImages: async function(labels, sypValues, pieValues){
+      show($('pdfOverlay'));
+      $('pdfOverlayMsg').textContent = '⏳ جاري رسم المخططات...';
+      let cD = document.createElement('canvas'); cD.width = 460; cD.height = 300; cD.style.cssText = 'position:fixed;left:-99999px;top:0'; document.body.appendChild(cD);
+      let cB = document.createElement('canvas'); cB.width = 640; cB.height = 300; cB.style.cssText = 'position:fixed;left:-99999px;top:0'; document.body.appendChild(cB);
+      let colors = labels.map((_,i)=>this.CHART_COLORS[i % this.CHART_COLORS.length]);
+      let ch1 = new Chart(cD,{ type:'doughnut', data:{ labels:labels, datasets:[{ data:pieValues, backgroundColor:colors, borderWidth:2, borderColor:'#fff' }] }, options:{ responsive:false, animation:false, plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 }, padding:8, boxWidth:12 } } }, cutout:'55%' } });
+      let ch2 = new Chart(cB,{ type:'bar', data:{ labels:labels, datasets:[{ label:'SYP', data:sypValues, backgroundColor:colors, borderRadius:6, borderWidth:0 }] }, options:{ responsive:false, animation:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ font:{ size:11 } }, grid:{ display:false } }, y:{ ticks:{ font:{ size:10 }, callback:function(v){ return v>=1e6?(v/1e6).toFixed(1)+'M': v>=1000?(v/1000).toFixed(0)+'K' : v; } }, grid:{ color:'#e5e7eb' } } } } });
+      await this.sleep(120);
+      let out = { pieImg:cD.toDataURL('image/png',1), barImg:cB.toDataURL('image/png',1) };
+      ch1.destroy(); ch2.destroy(); document.body.removeChild(cD); document.body.removeChild(cB);
+      return out;
+    },
+    exportPDF: async function(){
+      let { dateFrom, dateTo, name, selectedNames } = this.getReportFilters();
+      let exportNames = (selectedNames && selectedNames.length) ? selectedNames : this.NAMES.slice();
+      let dayData = this.buildExport(dateFrom,dateTo,name,exportNames);
+      if(!dayData.length){ this.showMsg('⚠️ لا توجد بيانات للتصدير','error'); return; }
+      let sums = exportNames.map(n=> dayData.filter(d=>d.name===n).reduce((s,d)=>s+(d.amountSYP||0),0));
+      let activeLabels = exportNames.filter((_,i)=>sums[i]>0);
+      let activeSums = sums.filter(v=>v>0);
+      if(!activeLabels.length){ activeLabels = exportNames.slice(); activeSums = exportNames.map(()=>0); }
+      let total = activeSums.reduce((a,b)=>a+b,0);
+      let pieValues = activeSums.map(v=> total>0 ? parseFloat(((v/total)*100).toFixed(1)) : 0);
+      let charts = await this.makeChartImages(activeLabels, activeSums, pieValues);
+      let rangeLabel = (dateFrom&&dateTo) ? ('من '+dateFrom+' إلى '+dateTo) : 'جميع البيانات';
+      if(name) rangeLabel += ' — '+name;
+      let html = this.buildNormalPdfHtml(dayData, { exportNames, rangeLabel, pieImg:charts.pieImg, barImg:charts.barImg });
+      let fileName = 'تقرير_PDF_عادي'; if(dateFrom&&dateTo) fileName += '_'+dateFrom+'_إلى_'+dateTo; if(exportNames.length===1) fileName += '_'+exportNames[0]; fileName += '.pdf';
+      await this.renderPDFFile(html, fileName, 'landscape');
+    },
+    exportPDFWithFilters: async function(){ let { dateFrom, dateTo, selectedNames } = this.getReportFilters(); if(!dateFrom||!dateTo){ this.showMsg('⚠️ اختر نطاق التاريخ','error'); return; } if(!selectedNames.length){ this.showMsg('⚠️ اختر على الأقل عنصر واحد للتصدير','error'); return; } await this.exportPDF(); },
+    exportGroupedPDF: async function(){
+      let { dateFrom, dateTo } = this.getReportFilters();
+      let list = this.getGroupedList(dateFrom,dateTo);
+      if(!list.length){ this.showMsg('⚠️ لا توجد بيانات للتصدير','error'); return; }
+      let summary = this.buildGroupedSummary(list);
+      let labels = summary.map(x=>x.label);
+      let sypValues = summary.map(x=>x.syp);
+      let total = sypValues.reduce((a,b)=>a+b,0);
+      let pieValues = sypValues.map(v=> total>0 ? parseFloat(((v/total)*100).toFixed(1)) : 0);
+      let charts = await this.makeChartImages(labels, sypValues, pieValues);
+      let rangeLabel = (dateFrom&&dateTo) ? ('من '+dateFrom+' إلى '+dateTo) : 'جميع البيانات';
+      let html = this.buildGroupedPdfHtml(summary, list, { rangeLabel, pieImg:charts.pieImg, barImg:charts.barImg });
+      let fileName = 'تقرير_PDF_مجمّع'; if(dateFrom&&dateTo) fileName += '_'+dateFrom+'_إلى_'+dateTo; fileName += '.pdf';
+      await this.renderPDFFile(html, fileName, 'landscape');
+    },
+    exportGroupedPDFWithFilters: async function(){ let { dateFrom, dateTo } = this.getReportFilters(); if(!dateFrom||!dateTo){ this.showMsg('⚠️ اختر نطاق التاريخ','error'); return; } await this.exportGroupedPDF(); },
+    exportExcelWithFilters: function(){ this.exportExcel(); },
+    exportExcel: function(){ let df=$('reportDateFrom').value, dt=$('reportDateTo').value, c=$('reportNameFilter').value; let list=this.buildExport(df,dt,c); if(!list.length){ this.showMsg('⚠️ لا توجد بيانات','error'); return; } let csv='التاريخ,الاسم,المبلغ SYP,المبلغ USD,سعر الصرف,الوصف\n'; list.forEach(function(d){ csv+= d.date+','+d.name+','+d.amountSYP.toFixed(2)+','+d.amountUSD.toFixed(2)+','+d.exchangeRate.toFixed(0)+',"'+(d.description||'')+'"\n'; }); let blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8;' }); let link = document.createElement('a'); link.href = URL.createObjectURL(blob); let fn='تقرير'; if(df&&dt) fn+='_'+df+'_إلى_'+dt; if(c) fn+='_'+c; fn+='.csv'; link.download = fn; document.body.appendChild(link); link.click(); document.body.removeChild(link); this.showMsg('✅ تم تصدير Excel'); },
+    playSound: function(freq,vol){ try{ let ac = new (window.AudioContext||window.webkitAudioContext)(), osc=ac.createOscillator(), g=ac.createGain(); osc.connect(g); g.connect(ac.destination); let now=ac.currentTime; osc.frequency.setValueAtTime(freq,now); g.gain.setValueAtTime(vol,now); g.gain.exponentialRampToValueAtTime(.01,now+.2); osc.start(now); osc.stop(now+.2); }catch(e){} }
+  };
+  window.addEventListener('DOMContentLoaded', function(){ App.init(); });
+  </script>
+</body>
+</html>
