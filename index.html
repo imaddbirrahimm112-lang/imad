@@ -391,6 +391,7 @@
   function parseArabicDateLoose(value){
     if(!value) return null;
     let s = normalizeArabicDigits(String(value)).trim();
+    s = s.replace(/,/g,' ');
     s = s.replace(/\s+/g,' ').trim();
     // YYYY-MM-DD
     let iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
@@ -402,7 +403,7 @@
     if(slash){
       return `${slash[3]}-${String(slash[2]).padStart(2,'0')}-${String(slash[1]).padStart(2,'0')}`;
     }
-    // 1 مارس 2026
+    // 1 مارس 2026 / 1 مارس, 2026
     const monthNames = Object.keys(MONTH_MAP).sort((a,b)=>b.length-a.length).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
     let rx = new RegExp(`^(\\d{1,2})\\s+(${monthNames})\\s+(\\d{4})$`,'i');
     let m = s.match(rx);
@@ -410,6 +411,24 @@
       let day = String(m[1]).padStart(2,'0');
       let month = MONTH_MAP[m[2]];
       let year = m[3];
+      return `${year}-${month}-${day}`;
+    }
+    // 2026 مارس 28
+    let rxRev = new RegExp(`^(\\d{4})\\s+(${monthNames})\\s+(\\d{1,2})$`,'i');
+    let mr = s.match(rxRev);
+    if(mr){
+      let year = mr[1];
+      let month = MONTH_MAP[mr[2]];
+      let day = String(mr[3]).padStart(2,'0');
+      return `${year}-${month}-${day}`;
+    }
+    // 28 2026 مارس
+    let rxMixed = new RegExp(`^(\\d{1,2})\\s+(\\d{4})\\s+(${monthNames})$`,'i');
+    let mmx = s.match(rxMixed);
+    if(mmx){
+      let day = String(mmx[1]).padStart(2,'0');
+      let year = mmx[2];
+      let month = MONTH_MAP[mmx[3]];
       return `${year}-${month}-${day}`;
     }
     // Fallback to Date.parse
@@ -422,7 +441,9 @@
   function extractDateFromText(line){
     const monthNames = Object.keys(MONTH_MAP).sort((a,b)=>b.length-a.length).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
     const patterns = [
-      new RegExp(`\\d{1,2}\\s+(?:${monthNames})\\s+\\d{4}`, 'i'),
+      new RegExp(`\\d{1,2}\\s+(?:${monthNames})\\s*,?\\s*\\d{4}`, 'i'),
+      new RegExp(`\\d{4}\\s+(?:${monthNames})\\s+\\d{1,2}`, 'i'),
+      new RegExp(`\\d{1,2}\\s+\\d{4}\\s+(?:${monthNames})`, 'i'),
       /\d{4}-\d{1,2}-\d{1,2}/,
       /\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}/
     ];
@@ -508,118 +529,93 @@
   }
   // Helpers for income parsing
   function normText(s){ return String(s||'').trim().replace(/\u200f|\u200e/g,'').replace(/\s+/g,' '); }
-  function maybeHeader(str){ const x = normText(str).toLowerCase(); return /تاريخ|date|اسم|name|city|region|ccbs|masary|amount|مبلغ|syp|usd|rate|سعر/.test(x); }
-  function normalizeHeaderToken(token){
-    let t = normText(token).toUpperCase();
-    t = t.replace(/[_\-]/g,'');
-    t = t.replace(/^R\s*([1-4])$/,'R$1');
-    t = t.replace(/^CCBS\s*([1-4])$/,'CCBS$1');
-    t = t.replace(/^MASARY\s*([1-4])$/,'MASARY$1');
-    t = t.replace(/^MASARI\s*([1-4])$/,'MASARY$1');
-    return t;
-  }
-  function mapHeaderToName(token){
-    const t = normalizeHeaderToken(token);
-    const map = {
-      'R1':'Region 1','R2':'Region 2','R3':'Region 3','R4':'Region 4',
-      'CCBS1':'ccbs1','CCBS2':'ccbs2','CCBS3':'ccbs3','CCBS4':'ccbs4',
-      'MASARY1':'masary1','MASARY2':'masary2','MASARY3':'masary3','MASARY4':'masary4'
-    };
-    return map[t] || null;
-  }
-  function parseIncomeMatrixTokens(rawText){
-    let raw = normalizeArabicDigits(String(rawText||''));
-    raw = raw.replace(/CCBS\s*([1-4])/ig,'CCBS$1');
-    raw = raw.replace(/MASAR[YiI]\s*([1-4])/ig,'MASARY$1');
-    raw = raw.replace(/R\s*([1-4])/ig,'R$1');
-    const tokens = raw.split(/[\s	
-
-]+/).map(normText).filter(Boolean);
-    if(!tokens.length) return [];
-    let firstDateIdx = -1;
-    for(let i=0;i<tokens.length;i++){
-      if(parseArabicDateLoose(tokens[i])){ firstDateIdx = i; break; }
-    }
-    if(firstDateIdx === -1) return [];
-    const headerNames = [];
-    for(let i=0;i<firstDateIdx;i++){
-      const mapped = mapHeaderToName(tokens[i]);
-      if(mapped) headerNames.push(mapped);
-    }
-    if(!headerNames.length) return [];
-    const rows = [];
-    let i = firstDateIdx;
-    while(i < tokens.length){
-      const date = parseArabicDateLoose(tokens[i]);
-      if(!date){ i++; continue; }
-      i++;
-      const values = [];
-      while(i < tokens.length && values.length < headerNames.length){
-        if(parseArabicDateLoose(tokens[i])) break;
-        const num = parseNumberLoose(tokens[i]);
-        if(num !== null){ values.push(num); }
-        i++;
-      }
-      if(values.length === headerNames.length){
-        for(let x=0;x<headerNames.length;x++){
-          const amountSYP = parseFloat(Number(values[x] || 0).toFixed(2));
-          const rateUsed = App ? App.getRateForDate(date) : 1500;
-          const amountUSD = parseFloat((amountSYP / rateUsed).toFixed(2));
-          rows.push({
-            id: (Date.now()+rows.length).toString()+Math.floor(Math.random()*1000),
-            name: headerNames[x],
-            amount_syp: amountSYP,
-            amount_usd: amountUSD,
-            description: 'استيراد Excel',
-            date: date,
-            exchange_rate: parseFloat(rateUsed.toFixed(2)),
-            created_at: new Date().toISOString()
-          });
-        }
-      }
-    }
-    return rows;
-  }
+  function maybeHeader(str){ const x = normText(str).toLowerCase(); return /تاريخ|date|اسم|name|city|region|ccbs|amount|مبلغ|syp|usd|rate|سعر/.test(x); }
   function parseIncomeLine(parts){
     let date = null, name = null, amount = null, description = '', currencyHint='SYP';
+    // Find date
     for(let i=0;i<parts.length;i++){
       if(!date){ let d = parseArabicDateLoose(parts[i]); if(d){ date = d; continue; } }
     }
+    // Find name from list or free text
     for(let j=0;j<parts.length;j++){
       let t = normText(parts[j]);
       if(App && App.NAMES && App.NAMES.indexOf(t) > -1){ name = t; break; }
-      const mapped = mapHeaderToName(t);
-      if(mapped){ name = mapped; break; }
     }
     if(!name){
       for(let k=0;k<parts.length;k++){
         let txt = normText(parts[k]);
-        if(txt && !parseArabicDateLoose(txt) && parseNumberLoose(txt)===null && !maybeHeader(txt)){
+        if(txt && !parseArabicDateLoose(txt) && isNaN(parseNumberLoose(txt)) && !maybeHeader(txt)){
           name = txt; break;
         }
       }
     }
+    // Currency hint
     for(let x=0;x<parts.length;x++){
       const low = normText(parts[x]).toLowerCase();
       if(low.includes('usd') || low.includes('دولار')){ currencyHint = 'USD'; }
     }
+    // Numbers
     let nums = [];
     for(let n=0;n<parts.length;n++){
       let num = parseNumberLoose(parts[n]);
-      if(num !== null){ nums.push(num); }
+      if(!isNaN(num) && num!=null){ nums.push(num); }
     }
     if(nums.length){ nums.sort((a,b)=>Math.abs(b)-Math.abs(a)); amount = nums[0]; }
+    // Description
     for(let z=0;z<parts.length;z++){
       let t = normText(parts[z]);
       if(!t) continue;
       if(parseArabicDateLoose(t)) continue;
-      if(name && (t===name || mapHeaderToName(t)===name)) continue;
-      if(parseNumberLoose(t)!==null) continue;
+      if(name && t===name) continue;
+      if(!isNaN(parseNumberLoose(t))) continue;
       if(maybeHeader(t)) continue;
       description = t;
       break;
     }
     return {date,dateValid:!!date, name,nameValid:!!name, amount, amountValid:amount!=null, description, currencyHint};
+  }
+
+  function parseIncomeWideTable(rawText, mapHeaderNameFn){
+    const text = cleanPastedText(rawText);
+    const headerMatches = text.match(/Date|R\s*1|R\s*2|R\s*3|R\s*4|CCBS\s*1|CCBS\s*2|CCBS\s*3|CCBS\s*4|Region\s*1|Region\s*2|Region\s*3|Region\s*4/gi) || [];
+    const mappedNames = headerMatches
+      .filter(h => !/^date$/i.test(normText(h)))
+      .map(h => mapHeaderNameFn(h))
+      .filter(Boolean);
+
+    if(!mappedNames.length) return [];
+
+    const firstNewline = text.indexOf('\n');
+    const body = firstNewline >= 0 ? text.slice(firstNewline + 1) : text;
+    const dateRegex = /\d{1,2}[\/-]\d{1,2}[\/-]\d{4}/g;
+    const dateMatches = [...body.matchAll(dateRegex)];
+    if(!dateMatches.length) return [];
+
+    const rows = [];
+    for(let i = 0; i < dateMatches.length; i++){
+      const current = dateMatches[i];
+      const next = dateMatches[i + 1];
+      const rawDate = current[0];
+      const date = parseArabicDateLoose(rawDate);
+      if(!date) continue;
+
+      const start = current.index + rawDate.length;
+      const end = next ? next.index : body.length;
+      const segment = body.slice(start, end);
+      const numberTokens = segment.match(/\d[\d,]*/g) || [];
+      const values = numberTokens.map(v => parseNumberLoose(v)).filter(v => v != null);
+      if(values.length < mappedNames.length) continue;
+
+      rows.push({
+        date,
+        items: mappedNames.map((name, idx) => ({
+          name,
+          amount: values[idx] || 0
+        }))
+      });
+    }
+
+    return rows;
   }
   // Format numbers with comma separators
   function fmt(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,','); }
@@ -632,7 +628,15 @@
   // ─────────────────────────────────────────────────────────
   var App = {
     // Names list (replaces cities)
-    NAMES: ['Region 1','Region 2','Region 3','Region 4','ccbs1','ccbs2','ccbs3','ccbs4','masary1','masary2','masary3','masary4'],
+    NAMES: ['Region 1','Region 2','Region 3','Region 4','ccbs1','ccbs2','ccbs3','ccbs4'],
+    mapHeaderName: function(h){
+      if(!h) return null;
+      let t = normText(h).toLowerCase().replace(/\s+/g,'');
+      if(/^r[1-4]$/.test(t)) return 'Region ' + t.replace('r','');
+      if(/^region[1-4]$/.test(t)) return 'Region ' + t.replace('region','');
+      if(/^ccbs[1-4]$/.test(t)) return 'ccbs' + t.replace('ccbs','');
+      return null;
+    },
     data: [],
     trash: [],
     rate: 1500,
@@ -844,11 +848,103 @@
       }catch(err){ console.error(err); this.showMsg('❌ خطأ في التحديث: '+err.message,'error'); }
     },
     // ── IMPORT BULK INCOMES ─────────────────────────
-    importBulkIncome: async function(){ let text = $('bulkIncomeText').value; if(!normText(text)){ this.showMsg('⚠️ الصق جدول الإيرادات أولاً','error'); return; } let lines = text.replace(/\r/g,'').split('\n').filter(l=>normText(l)); let rows = []; for(let i=0;i<lines.length;i++){ let line = lines[i]; let parts = line.split('\t'); if(parts.length<2) parts = line.split(/ {2,}/); parts = parts.map(p=>normText(p)).filter(Boolean); if(parts.length<2) continue; if(i===0 && parts.some(maybeHeader)) continue; let parsed = parseIncomeLine(parts); if(!parsed.date || !parsed.name || parsed.amount==null || parsed.amount<=0) continue; let rateUsed = this.getRateForDate(parsed.date); let amountSYP = parsed.currencyHint==='USD'? parsed.amount*rateUsed : parsed.amount; let amountUSD = parsed.currencyHint==='USD'? parsed.amount : parsed.amount/ rateUsed; rows.push({ id: (Date.now()+i).toString()+Math.floor(Math.random()*1000), name: parsed.name, amount_syp: parseFloat(amountSYP.toFixed(2)), amount_usd: parseFloat(amountUSD.toFixed(2)), description: parsed.description||'استيراد Excel', date: parsed.date, exchange_rate: parseFloat(rateUsed.toFixed(2)), created_at: new Date().toISOString() }); }
-      if(!rows.length){ this.showMsg('❌ لم أستطع قراءة جدول الإيرادات','error'); return; }
-      try{ if(this.firestoreReady && this.db && this.syncSettings){ let col = this.syncSettings.collectionName; let batch = this.db.batch(); rows.forEach(r=>{ let ref = this.db.collection(col + '_data').doc(r.id); batch.set(ref, r); }); await batch.commit(); } else { rows.forEach(r=>{ this.data.unshift({ id:r.id, name:r.name, amountSYP:r.amount_syp, amountUSD:r.amount_usd, description:r.description, date:r.date, exchangeRate:r.exchange_rate, createdAt:r.created_at }); }); this.saveLocal(); this.renderDashboard(); }
-        this.showMsg('✅ تم استيراد '+rows.length+' سجل من Excel'); $('bulkIncomeText').value=''; }
-      catch(err){ console.error(err); this.showMsg('❌ خطأ في استيراد الإيرادات: '+err.message,'error'); }
+    importBulkIncome: async function(){
+      let text = $('bulkIncomeText').value;
+      if(!normText(text)){
+        this.showMsg('⚠️ الصق جدول الإيرادات أولاً','error');
+        return;
+      }
+
+      let rows = [];
+      const wideRows = parseIncomeWideTable(text, this.mapHeaderName.bind(this));
+
+      if(wideRows.length){
+        wideRows.forEach((row, rowIndex) => {
+          const rateUsed = this.getRateForDate(row.date);
+          row.items.forEach((item, itemIndex) => {
+            const amountSYP = item.amount;
+            if(amountSYP == null || isNaN(amountSYP) || amountSYP <= 0) return;
+            rows.push({
+              id: (Date.now() + rowIndex + itemIndex + rows.length).toString() + Math.floor(Math.random()*1000),
+              name: item.name,
+              amount_syp: parseFloat(amountSYP.toFixed(2)),
+              amount_usd: parseFloat((amountSYP / rateUsed).toFixed(2)),
+              description: 'استيراد جدول',
+              date: row.date,
+              exchange_rate: parseFloat(rateUsed.toFixed(2)),
+              created_at: new Date().toISOString()
+            });
+          });
+        });
+      }
+
+      if(!rows.length){
+        let lines = text.replace(/\r/g,'').split('\n').map(l => normText(l)).filter(Boolean);
+        for(let i=0;i<lines.length;i++){
+          let line = lines[i];
+          let parts = line.split('\t');
+          if(parts.length < 2) parts = line.split(/ {2,}/);
+          parts = parts.map(p => normText(p)).filter(Boolean);
+          if(parts.length < 2) continue;
+          if(i===0 && parts.some(maybeHeader)) continue;
+
+          let parsed = parseIncomeLine(parts);
+          if(!parsed.date || !parsed.name || parsed.amount == null || parsed.amount <= 0) continue;
+
+          let rateUsed = this.getRateForDate(parsed.date);
+          let amountSYP = parsed.currencyHint === 'USD' ? parsed.amount * rateUsed : parsed.amount;
+          let amountUSD = parsed.currencyHint === 'USD' ? parsed.amount : parsed.amount / rateUsed;
+
+          rows.push({
+            id: (Date.now()+rows.length+i).toString()+Math.floor(Math.random()*1000),
+            name: parsed.name,
+            amount_syp: parseFloat(amountSYP.toFixed(2)),
+            amount_usd: parseFloat(amountUSD.toFixed(2)),
+            description: parsed.description || 'استيراد Excel',
+            date: parsed.date,
+            exchange_rate: parseFloat(rateUsed.toFixed(2)),
+            created_at: new Date().toISOString()
+          });
+        }
+      }
+
+      if(!rows.length){
+        this.showMsg('❌ لم أستطع قراءة جدول الإيرادات','error');
+        return;
+      }
+
+      try{
+        if(this.firestoreReady && this.db && this.syncSettings){
+          let col = this.syncSettings.collectionName;
+          let batch = this.db.batch();
+          rows.forEach(r => {
+            let ref = this.db.collection(col + '_data').doc(r.id);
+            batch.set(ref, r);
+          });
+          await batch.commit();
+        } else {
+          rows.forEach(r => {
+            this.data.unshift({
+              id: r.id,
+              name: r.name,
+              amountSYP: r.amount_syp,
+              amountUSD: r.amount_usd,
+              description: r.description,
+              date: r.date,
+              exchangeRate: r.exchange_rate,
+              createdAt: r.created_at
+            });
+          });
+          this.saveLocal();
+          this.renderDashboard();
+        }
+
+        this.showMsg('✅ تم استيراد ' + rows.length + ' سجل من Excel');
+        $('bulkIncomeText').value = '';
+      }catch(err){
+        console.error(err);
+        this.showMsg('❌ خطأ في استيراد الإيرادات: ' + err.message,'error');
+      }
     },
     // ── IMPORT EXCHANGE RATES ───────────────────────
     importExchangeRates: async function(){ let text = $('bulkRateText').value; if(!normText(text)){ this.showMsg('⚠️ الصق جدول سعر الصرف أولاً','error'); return; } let rows = parseExchangeRatesFlexible(text); if(!rows.length){ this.showMsg('❌ لم أستطع قراءة جدول أسعار الصرف','error'); return; } let saved = 0; try{
