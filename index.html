@@ -110,11 +110,12 @@
     #fsStatus.disconnected{background:rgba(245,101,101,.25);border:1px solid rgba(245,101,101,.6);color:#ff9999}
     #fsStatus.connecting{background:rgba(240,180,50,.25);border:1px solid rgba(240,180,50,.6);color:#ffd580}
     .sql-box{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:14px;margin:10px 0;font-family:monospace;font-size:11px;color:#a8e6a1;direction:ltr;white-space:pre-wrap;line-height:1.7}
-    #pdfRenderArea{position:fixed;top:0;left:0;width:297mm;min-height:210mm;background:#fff;color:#111;direction:rtl;z-index:9998;overflow:hidden;padding:0;pointer-events:none;opacity:1}
+    #pdfRenderArea{position:fixed;top:0;left:0;width:297mm;min-height:210mm;background:#fff;color:#111;direction:rtl;z-index:-1;overflow:visible;padding:0;pointer-events:none;opacity:0;visibility:hidden}
+    #pdfRenderArea.pdf-render-active{z-index:9998;opacity:1;visibility:visible}
   </style>
 </head>
 <body class="bg-theme-1">
-  <div id="pdfRenderArea" class="hidden-important"></div>
+  <div id="pdfRenderArea" aria-hidden="true"></div>
   <div id="pdfOverlay" class="overlay hidden-important">
     <div class="overlay-content">
       <h2>⏳ جاري إنشاء PDF...</h2>
@@ -747,20 +748,23 @@
     renderPDFFile: async function(html, fileName, orientation){
       let ra = $('pdfRenderArea');
       ra.innerHTML = html;
-      show(ra);
+      ra.classList.add('pdf-render-active');
+      ra.setAttribute('aria-hidden','false');
       show($('pdfOverlay'));
       $('pdfOverlayMsg').textContent = '⏳ تجهيز الصفحة النهائية...';
       if(document.fonts && document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} }
       await this.waitForImages(ra);
       await this.nextFrame();
-      await this.sleep(180);
+      await this.sleep(240);
+      const renderWidth = Math.max(ra.scrollWidth, ra.offsetWidth, 1400);
+      const renderHeight = Math.max(ra.scrollHeight, ra.offsetHeight, 900);
       $('pdfOverlayMsg').textContent = '⏳ جاري إنشاء الملف...';
       try{
         await html2pdf().set({
           margin:[5,5,5,5],
           filename:this.sanitizeFileName(fileName),
           image:{ type:'jpeg', quality:0.98 },
-          html2canvas:{ scale:2.2, useCORS:true, logging:false, backgroundColor:'#ffffff', windowWidth:1400, scrollX:0, scrollY:0 },
+          html2canvas:{ scale:2.2, useCORS:true, logging:false, backgroundColor:'#ffffff', width:renderWidth, height:renderHeight, windowWidth:renderWidth, windowHeight:renderHeight, scrollX:0, scrollY:0 },
           jsPDF:{ unit:'mm', format:'a4', orientation:orientation || 'landscape', compress:true },
           pagebreak:{ mode:['avoid-all','css','legacy'] }
         }).from(ra).save();
@@ -771,7 +775,8 @@
         this.showMsg('❌ خطأ في PDF','error');
       }finally{
         ra.innerHTML = '';
-        hide(ra);
+        ra.classList.remove('pdf-render-active');
+        ra.setAttribute('aria-hidden','true');
         hide($('pdfOverlay'));
       }
     },
@@ -786,7 +791,7 @@
         .pdf-card{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;border-radius:10px;padding:10px;text-align:center}
         .pdf-card .k{font-size:10px;opacity:.86;margin-bottom:4px}
         .pdf-card .v{font-size:16px;font-weight:700}
-        .pdf-grid{display:grid;grid-template-columns:1.35fr .95fr;gap:10px;margin-bottom:12px;align-items:start}
+        .pdf-table-center{width:78%;margin:0 auto 12px}
         .pdf-box{border:1px solid #dbe3ef;border-radius:10px;padding:8px;background:#fff}
         .pdf-box h3{margin:0 0 8px;font-size:13px;color:#1e3a8a;border-bottom:2px solid #c7d2fe;padding-bottom:5px}
         .pdf-table{width:100%;border-collapse:collapse;font-size:11px}
@@ -810,7 +815,7 @@
       exportNames.forEach(name=>{ let rows = dayData.filter(d=>d.name===name); map[name] = { count:rows.length, syp:rows.reduce((s,d)=>s+(d.amountSYP||0),0), usd:rows.reduce((s,d)=>s+(d.amountUSD||0),0) }; });
       let summaryRows = exportNames.map(name=>{ let row = map[name] || {count:0,syp:0,usd:0}; return '<tr><td>'+this.escapeHtml(name)+'</td><td class="center">'+row.count+'</td><td class="money">'+fmt(row.syp.toFixed(0))+'</td><td class="money">'+fmt(row.usd.toFixed(2))+'</td><td class="center">'+(tSYP>0?((row.syp/tSYP)*100).toFixed(1):'0')+'%</td></tr>'; }).join('');
       let detailRows = dayData.map(d=> '<tr><td>'+d.date+'</td><td>'+this.escapeHtml(d.name)+'</td><td class="money">'+fmt(d.amountSYP.toFixed(0))+'</td><td class="money">'+fmt(d.amountUSD.toFixed(2))+'</td><td class="center">'+fmt((d.exchangeRate||0).toFixed(0))+'</td><td>'+(d.description?this.escapeHtml(d.description):'-')+'</td></tr>').join('');
-      return this.buildPdfBaseCss() + '<div class="pdf-wrap"><h1 class="pdf-title">📊 تقرير الإيراد التفصيلي</h1><p class="pdf-sub">'+opts.rangeLabel+'</p><p class="pdf-badges">العناصر المحددة: '+this.escapeHtml(exportNames.join(' • '))+'</p><div class="pdf-cards"><div class="pdf-card"><div class="k">إجمالي SYP</div><div class="v">'+fmt(tSYP.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">إجمالي USD</div><div class="v">'+fmt(tUSD.toFixed(2))+'</div></div><div class="pdf-card"><div class="k">سعر الصرف الفعّال</div><div class="v">'+fmt(rateInfo.effective.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">نطاق سعر الصرف</div><div class="v">'+rateInfo.text+'</div></div></div><div class="pdf-grid"><div class="pdf-box"><h3>الأسماء والمبالغ</h3><table class="pdf-table"><thead><tr><th>الاسم</th><th class="center">العدد</th><th>SYP</th><th>USD</th><th class="center">النسبة</th></tr></thead><tbody>'+summaryRows+'</tbody></table></div><div class="pdf-box"><h3>الملخص</h3><table class="pdf-table"><tbody><tr><td>الفترة</td><td>'+this.escapeHtml(opts.rangeLabel)+'</td></tr><tr><td>عدد السجلات</td><td>'+dayData.length+'</td></tr><tr><td>إجمالي السوري</td><td class="money">'+fmt(tSYP.toFixed(0))+'</td></tr><tr><td>إجمالي الدولار</td><td class="money">'+fmt(tUSD.toFixed(2))+'</td></tr><tr><td>سعر الصرف الفعّال</td><td class="money">'+fmt(rateInfo.effective.toFixed(0))+'</td></tr><tr><td>نطاق أسعار الصرف</td><td>'+rateInfo.text+'</td></tr></tbody></table></div></div><div class="pdf-charts"><div class="pdf-chart"><h4>توزيع النسب</h4><img src="'+opts.pieImg+'" alt="chart"></div><div class="pdf-chart"><h4>إجمالي المبالغ حسب الاسم</h4><img src="'+opts.barImg+'" alt="chart"></div></div><div class="pdf-box"><h3>تفاصيل العمليات</h3><table class="pdf-table"><thead><tr><th>التاريخ</th><th>الاسم</th><th>SYP</th><th>USD</th><th class="center">سعر الصرف</th><th>الوصف</th></tr></thead><tbody>'+detailRows+'</tbody></table></div><div class="pdf-footer">تم التوليد من متتبع الإيراد 🇸🇾 | '+new Date().toLocaleString('ar-SA')+'</div></div>';
+      return this.buildPdfBaseCss() + '<div class="pdf-wrap"><h1 class="pdf-title">تقرير الإيرادات</h1><p class="pdf-sub">'+opts.rangeLabel+'</p><p class="pdf-badges">العناصر المحددة: '+this.escapeHtml(exportNames.join(' • '))+'</p><div class="pdf-cards"><div class="pdf-card"><div class="k">إجمالي SYP</div><div class="v">'+fmt(tSYP.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">إجمالي USD</div><div class="v">'+fmt(tUSD.toFixed(2))+'</div></div><div class="pdf-card"><div class="k">سعر الصرف الفعّال</div><div class="v">'+fmt(rateInfo.effective.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">نطاق سعر الصرف</div><div class="v">'+rateInfo.text+'</div></div></div><div class="pdf-table-center"><div class="pdf-box"><h3>الأسماء والمبالغ</h3><table class="pdf-table"><thead><tr><th>الاسم</th><th class="center">العدد</th><th>SYP</th><th>USD</th><th class="center">النسبة</th></tr></thead><tbody>'+summaryRows+'</tbody></table></div></div><div class="pdf-charts"><div class="pdf-chart"><h4>توزيع النسب</h4><img src="'+opts.pieImg+'" alt="chart"></div><div class="pdf-chart"><h4>إجمالي المبالغ حسب الاسم</h4><img src="'+opts.barImg+'" alt="chart"></div></div><div class="pdf-box"><h3>تفاصيل العمليات</h3><table class="pdf-table"><thead><tr><th>التاريخ</th><th>الاسم</th><th>SYP</th><th>USD</th><th class="center">سعر الصرف</th><th>الوصف</th></tr></thead><tbody>'+detailRows+'</tbody></table></div><div class="pdf-footer">تم التوليد من متتبع الإيراد 🇸🇾 | '+new Date().toLocaleString('ar-SA')+'</div></div>';
     },
     getGroupedList: function(dateFrom,dateTo){ let list = this.data.slice(); if(dateFrom&&dateTo) list = list.filter(d=>d.date>=dateFrom && d.date<=dateTo); return list; },
     buildGroupedSummary: function(list){
@@ -820,7 +825,7 @@
       let totalSYP = summary.reduce((s,x)=>s+x.syp,0), totalUSD = summary.reduce((s,x)=>s+x.usd,0);
       let rateInfo = this.getRateSummary(list);
       let rows = summary.map(row=> '<tr><td>'+this.escapeHtml(row.label)+'</td><td class="center">'+row.count+'</td><td class="money">'+fmt(row.syp.toFixed(0))+'</td><td class="money">'+fmt(row.usd.toFixed(2))+'</td><td class="center">'+(totalSYP>0?((row.syp/totalSYP)*100).toFixed(1):'0')+'%</td><td>'+this.escapeHtml(row.sourceNames.join(' + '))+'</td></tr>').join('');
-      return this.buildPdfBaseCss() + '<div class="pdf-wrap"><h1 class="pdf-title">🧾 تقرير الإيراد المجمّع</h1><p class="pdf-sub">'+opts.rangeLabel+'</p><p class="pdf-badges">التجميع: Region 1 + ccbs1 • Region 2 + ccbs2 • Region 3 + ccbs3 • Region 4 + ccbs4</p><div class="pdf-cards"><div class="pdf-card"><div class="k">إجمالي SYP</div><div class="v">'+fmt(totalSYP.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">إجمالي USD</div><div class="v">'+fmt(totalUSD.toFixed(2))+'</div></div><div class="pdf-card"><div class="k">سعر الصرف الفعّال</div><div class="v">'+fmt(rateInfo.effective.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">نطاق سعر الصرف</div><div class="v">'+rateInfo.text+'</div></div></div><div class="pdf-grid"><div class="pdf-box"><h3>الجدول المجمّع</h3><table class="pdf-table"><thead><tr><th>الاسم الظاهر</th><th class="center">العدد</th><th>SYP</th><th>USD</th><th class="center">النسبة</th><th>مصادر التجميع</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="pdf-box"><h3>الملخص</h3><table class="pdf-table"><tbody><tr><td>الفترة</td><td>'+this.escapeHtml(opts.rangeLabel)+'</td></tr><tr><td>عدد السجلات</td><td>'+list.length+'</td></tr><tr><td>المجموع الكلي بالسوري</td><td class="money">'+fmt(totalSYP.toFixed(0))+'</td></tr><tr><td>المجموع الكلي بالدولار</td><td class="money">'+fmt(totalUSD.toFixed(2))+'</td></tr><tr><td>سعر الصرف الفعّال</td><td class="money">'+fmt(rateInfo.effective.toFixed(0))+'</td></tr><tr><td>نطاق أسعار الصرف</td><td>'+rateInfo.text+'</td></tr></tbody></table></div></div><div class="pdf-charts"><div class="pdf-chart"><h4>توزيع الحصص المجمّعة</h4><img src="'+opts.pieImg+'" alt="chart"></div><div class="pdf-chart"><h4>إجمالي SYP لكل مجموعة</h4><img src="'+opts.barImg+'" alt="chart"></div></div><div class="pdf-footer">تم التوليد من متتبع الإيراد 🇸🇾 | '+new Date().toLocaleString('ar-SA')+'</div></div>';
+      return this.buildPdfBaseCss() + '<div class="pdf-wrap"><h1 class="pdf-title">تقرير الإيرادات</h1><p class="pdf-sub">'+opts.rangeLabel+'</p><p class="pdf-badges">التجميع: Region 1 + ccbs1 • Region 2 + ccbs2 • Region 3 + ccbs3 • Region 4 + ccbs4</p><div class="pdf-cards"><div class="pdf-card"><div class="k">إجمالي SYP</div><div class="v">'+fmt(totalSYP.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">إجمالي USD</div><div class="v">'+fmt(totalUSD.toFixed(2))+'</div></div><div class="pdf-card"><div class="k">سعر الصرف الفعّال</div><div class="v">'+fmt(rateInfo.effective.toFixed(0))+'</div></div><div class="pdf-card"><div class="k">نطاق سعر الصرف</div><div class="v">'+rateInfo.text+'</div></div></div><div class="pdf-table-center"><div class="pdf-box"><h3>الجدول المجمّع</h3><table class="pdf-table"><thead><tr><th>الاسم الظاهر</th><th class="center">العدد</th><th>SYP</th><th>USD</th><th class="center">النسبة</th><th>مصادر التجميع</th></tr></thead><tbody>'+rows+'</tbody></table></div></div><div class="pdf-charts"><div class="pdf-chart"><h4>توزيع الحصص المجمّعة</h4><img src="'+opts.pieImg+'" alt="chart"></div><div class="pdf-chart"><h4>إجمالي SYP لكل مجموعة</h4><img src="'+opts.barImg+'" alt="chart"></div></div><div class="pdf-footer">تم التوليد من متتبع الإيراد 🇸🇾 | '+new Date().toLocaleString('ar-SA')+'</div></div>';
     },
     makeChartImages: async function(labels, sypValues, pieValues){
       show($('pdfOverlay'));
@@ -850,7 +855,7 @@
       let rangeLabel = (dateFrom&&dateTo) ? ('من '+dateFrom+' إلى '+dateTo) : 'جميع البيانات';
       if(name) rangeLabel += ' — '+name;
       let html = this.buildNormalPdfHtml(dayData, { exportNames, rangeLabel, pieImg:charts.pieImg, barImg:charts.barImg });
-      let fileName = 'تقرير_PDF_عادي'; if(dateFrom&&dateTo) fileName += '_'+dateFrom+'_إلى_'+dateTo; if(exportNames.length===1) fileName += '_'+exportNames[0]; fileName += '.pdf';
+      let fileName = 'تقرير_الإيرادات'; if(dateFrom&&dateTo) fileName += '_'+dateFrom+'_إلى_'+dateTo; if(exportNames.length===1) fileName += '_'+exportNames[0]; fileName += '.pdf';
       await this.renderPDFFile(html, fileName, 'landscape');
     },
     exportPDFWithFilters: async function(){ let { dateFrom, dateTo, selectedNames } = this.getReportFilters(); if(!dateFrom||!dateTo){ this.showMsg('⚠️ اختر نطاق التاريخ','error'); return; } if(!selectedNames.length){ this.showMsg('⚠️ اختر على الأقل عنصر واحد للتصدير','error'); return; } await this.exportPDF(); },
@@ -866,7 +871,7 @@
       let charts = await this.makeChartImages(labels, sypValues, pieValues);
       let rangeLabel = (dateFrom&&dateTo) ? ('من '+dateFrom+' إلى '+dateTo) : 'جميع البيانات';
       let html = this.buildGroupedPdfHtml(summary, list, { rangeLabel, pieImg:charts.pieImg, barImg:charts.barImg });
-      let fileName = 'تقرير_PDF_مجمّع'; if(dateFrom&&dateTo) fileName += '_'+dateFrom+'_إلى_'+dateTo; fileName += '.pdf';
+      let fileName = 'تقرير_الإيرادات'; if(dateFrom&&dateTo) fileName += '_'+dateFrom+'_إلى_'+dateTo; fileName += '.pdf';
       await this.renderPDFFile(html, fileName, 'landscape');
     },
     exportGroupedPDFWithFilters: async function(){ let { dateFrom, dateTo } = this.getReportFilters(); if(!dateFrom||!dateTo){ this.showMsg('⚠️ اختر نطاق التاريخ','error'); return; } await this.exportGroupedPDF(); },
