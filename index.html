@@ -556,24 +556,23 @@
       line-height:1.7;
     }
 
-    /* PDF fixed center */
+    /* PDF export surface */
     #pdfRenderArea{
       position:fixed;
-      inset:0;
-      width:100vw;
-      min-height:100vh;
+      top:0;
+      left:0;
+      width:1120px;
+      min-height:790px;
       background:#fff;
       color:#111;
       direction:rtl;
       z-index:-1;
-      overflow:auto;
-      padding:18px;
+      overflow:visible;
+      padding:0;
       pointer-events:none;
       opacity:0;
       visibility:hidden;
-      display:flex;
-      justify-content:center;
-      align-items:flex-start;
+      display:block;
     }
 
     #pdfRenderArea.pdf-render-active{
@@ -583,7 +582,7 @@
     }
 
     #pdfRenderArea .pdf-wrap{
-      margin:0 auto;
+      margin:0;
     }
   </style>
 </head>
@@ -2730,12 +2729,13 @@
 
       await this.waitForImages(ra);
       await this.nextFrame();
-      await this.sleep(300);
+      await this.sleep(350);
 
       const pdfNode = ra.querySelector('.pdf-wrap') || ra;
+      const rect = pdfNode.getBoundingClientRect();
 
-      const renderWidth = Math.ceil(Math.max(pdfNode.scrollWidth, pdfNode.offsetWidth));
-      const renderHeight = Math.ceil(Math.max(pdfNode.scrollHeight, pdfNode.offsetHeight));
+      const renderWidth = Math.ceil(Math.max(rect.width, pdfNode.scrollWidth, 1120));
+      const renderHeight = Math.ceil(Math.max(rect.height, pdfNode.scrollHeight, 790));
 
       $('pdfOverlayMsg').textContent = '⏳ جاري إنشاء الملف...';
 
@@ -2748,7 +2748,7 @@
             quality:0.98
           },
           html2canvas:{
-            scale:2.3,
+            scale:2,
             useCORS:true,
             logging:false,
             backgroundColor:'#ffffff',
@@ -2786,17 +2786,20 @@
     buildPdfBaseCss: function(){
       return `
       <style>
+        *{
+          box-sizing:border-box;
+        }
+
         .pdf-wrap{
           font-family:Arial,sans-serif;
           direction:rtl;
           background:#fff;
           color:#111;
-          padding:10px 12px;
-          width:287mm;
-          min-height:200mm;
-          margin:0 auto;
+          width:1120px;
+          min-height:790px;
+          margin:0;
+          padding:20px 26px 18px;
           overflow:hidden;
-          box-sizing:border-box;
         }
 
         .pdf-title{
@@ -2804,68 +2807,68 @@
           font-size:22px;
           font-weight:700;
           color:#172554;
-          margin:0 0 4px;
+          margin:0 0 6px;
         }
 
         .pdf-sub{
           text-align:center;
-          font-size:12px;
+          font-size:13px;
           color:#475569;
           margin:0 0 10px;
         }
 
         .pdf-badges{
           text-align:center;
-          font-size:11px;
+          font-size:12px;
           color:#475569;
-          margin:0 0 12px;
+          margin:0 0 14px;
         }
 
         .pdf-cards{
           display:grid;
-          grid-template-columns:repeat(4,1fr);
-          gap:8px;
-          margin-bottom:12px;
+          grid-template-columns:repeat(4,minmax(0,1fr));
+          gap:10px;
+          margin-bottom:14px;
         }
 
         .pdf-card{
           background:linear-gradient(135deg,#1e293b,#334155);
           color:#fff;
-          border-radius:10px;
-          padding:10px;
+          border-radius:9px;
+          padding:12px 8px;
           text-align:center;
-          box-sizing:border-box;
+          min-width:0;
         }
 
         .pdf-card .k{
-          font-size:10px;
+          font-size:11px;
           opacity:.86;
-          margin-bottom:4px;
+          margin-bottom:5px;
+          white-space:nowrap;
         }
 
         .pdf-card .v{
-          font-size:16px;
+          font-size:17px;
           font-weight:700;
           line-height:1.35;
           word-break:break-word;
         }
 
         .pdf-table-center{
-          width:78%;
-          margin:0 auto 12px;
+          width:86%;
+          margin:0 auto 14px;
         }
 
         .pdf-box{
           border:1px solid #dbe3ef;
           border-radius:10px;
-          padding:8px;
+          padding:9px;
           background:#fff;
-          box-sizing:border-box;
         }
 
         .pdf-box h3{
           margin:0 0 8px;
-          font-size:13px;
+          font-size:14px;
           color:#1e3a8a;
           border-bottom:2px solid #c7d2fe;
           padding-bottom:5px;
@@ -2875,23 +2878,24 @@
           width:100%;
           border-collapse:collapse;
           font-size:11px;
-          table-layout:auto;
+          table-layout:fixed;
         }
 
         .pdf-table th{
           background:#4f46e5;
           color:#fff;
-          padding:7px;
+          padding:7px 5px;
           border:1px solid #4f46e5;
-          text-align:right;
-          white-space:nowrap;
+          text-align:center;
+          white-space:normal;
         }
 
         .pdf-table td{
-          padding:6px;
+          padding:6px 5px;
           border:1px solid #dbe3ef;
           color:#111;
           vertical-align:top;
+          text-align:center;
           word-break:break-word;
         }
 
@@ -2902,27 +2906,27 @@
         .pdf-table .money{
           font-weight:700;
           color:#0f172a;
-          white-space:nowrap;
+          white-space:normal;
         }
 
         .pdf-charts{
           display:grid;
           grid-template-columns:1fr 1fr;
-          gap:10px;
-          margin-bottom:12px;
+          gap:12px;
+          margin-bottom:14px;
         }
 
         .pdf-chart{
           border:1px solid #dbe3ef;
           border-radius:10px;
-          padding:8px;
+          padding:9px;
           text-align:center;
           background:#f8fafc;
-          box-sizing:border-box;
+          min-width:0;
         }
 
         .pdf-chart h4{
-          font-size:12px;
+          font-size:13px;
           margin:0 0 6px;
           color:#1e3a8a;
         }
