@@ -2720,10 +2720,14 @@
 
     renderPDFFile: async function(html, fileName, orientation){
       const ra = $('pdfRenderArea');
-      const pageW = 1123;
-      const pageMinH = 794;
+      const isPortrait = orientation === 'portrait';
+      const pageW = isPortrait ? 794 : 1123;
+      const pageH = isPortrait ? 1123 : 794;
 
       ra.innerHTML = html;
+      ra.style.width = pageW + 'px';
+      ra.style.minHeight = pageH + 'px';
+      ra.style.background = isPortrait ? '#eef4ff' : '#ffffff';
       ra.classList.add('pdf-render-active');
       ra.setAttribute('aria-hidden','false');
 
@@ -2731,14 +2735,12 @@
       $('pdfOverlayMsg').textContent = '⏳ تجهيز صفحة PDF بشكل مرتب...';
 
       if(document.fonts && document.fonts.ready){
-        try{
-          await document.fonts.ready;
-        }catch(e){}
+        try{ await document.fonts.ready; }catch(e){}
       }
 
       await this.waitForImages(ra);
       await this.nextFrame();
-      await this.sleep(500);
+      await this.sleep(400);
 
       const pdfNode = ra.querySelector('.pdf-wrap') || ra;
 
@@ -2750,8 +2752,14 @@
       pdfNode.style.right = 'auto';
       pdfNode.style.position = 'relative';
 
+      if(isPortrait){
+        pdfNode.style.height = pageH + 'px';
+        pdfNode.style.minHeight = pageH + 'px';
+        pdfNode.style.overflow = 'hidden';
+      }
+
       const renderWidth = pageW;
-      const renderHeight = Math.ceil(Math.max(pdfNode.scrollHeight, pdfNode.offsetHeight, pageMinH));
+      const renderHeight = isPortrait ? pageH : Math.ceil(Math.max(pdfNode.scrollHeight, pdfNode.offsetHeight, pageH));
 
       $('pdfOverlayMsg').textContent = '⏳ جاري إنشاء الملف...';
 
@@ -2759,16 +2767,13 @@
         await html2pdf().set({
           margin:0,
           filename:this.sanitizeFileName(fileName),
-          image:{
-            type:'jpeg',
-            quality:0.99
-          },
+          image:{ type:'jpeg', quality:0.99 },
           html2canvas:{
             scale:2,
             useCORS:true,
             allowTaint:true,
             logging:false,
-            backgroundColor:'#ffffff',
+            backgroundColor:isPortrait ? '#eef4ff' : '#ffffff',
             width:renderWidth,
             height:renderHeight,
             windowWidth:renderWidth,
@@ -2788,11 +2793,11 @@
           pagebreak:{
             mode:['css','legacy'],
             before:'.pdf-force-page',
-            avoid:['.pdf-avoid','.pdf-cards','.pdf-charts','.pdf-table-center']
+            avoid:['.pdf-avoid','.pdf-cards','.pdf-charts','.pdf-table-center','.pdf-box','.pdf-summary-grid']
           }
         }).from(pdfNode).save();
 
-        this.showMsg('✅ تم تحميل PDF بشكل مرتب ✨');
+        this.showMsg(isPortrait ? '✅ تم تحميل PDF صفحة واحدة بشكل مرتب ✨' : '✅ تم تحميل PDF بشكل مرتب ✨');
         this.playSound(784,.3);
       }catch(e){
         console.error(e);
@@ -3161,59 +3166,149 @@
     buildGroupedPdfHtml: function(summary, list, opts){
       let totalSYP = summary.reduce((s,x)=>s+x.syp,0);
       let totalUSD = summary.reduce((s,x)=>s+x.usd,0);
-
       let rateInfo = this.getRateSummary(list);
+      let effectiveRate = rateInfo.effective || (totalUSD>0 ? totalSYP/totalUSD : 0);
+      let maxSyp = Math.max.apply(null, summary.map(x=>x.syp).concat([1]));
 
-      let rows = summary.map(row=>
-        '<tr>'+
-          '<td>'+this.escapeHtml(row.label)+'</td>'+
-          '<td class="center">'+row.count+'</td>'+
-          '<td class="money">'+fmt(row.syp.toFixed(0))+'</td>'+
-          '<td class="money">'+fmt(row.usd.toFixed(2))+'</td>'+
-          '<td class="center">'+(totalSYP>0?((row.syp/totalSYP)*100).toFixed(1):'0')+'%</td>'+
-          '<td>'+this.escapeHtml(row.sourceNames.join(' + '))+'</td>'+
-        '</tr>'
-      ).join('');
+      let filters = [];
+      filters.push(opts.rangeLabel || 'جميع البيانات');
+      filters.push('مصدر سعر الصرف: '+(rateInfo.text || 'غير متوفر'));
 
-      return this.buildPdfBaseCss() +
-        '<div class="pdf-wrap">'+
-          '<h1 class="pdf-title">تقرير الإيرادات</h1>'+
-          '<p class="pdf-sub">'+opts.rangeLabel+'</p>'+
-          '<p class="pdf-badges">التجميع: Region 1 + ccbs1 • Region 2 + ccbs2 • Region 3 + ccbs3 • Region 4 + ccbs4</p>'+
+      let rows = summary.map(row=>{
+        let pct = totalSYP>0 ? ((row.syp/totalSYP)*100).toFixed(1) : '0.0';
+        return '<tr>'+ 
+          '<td><b>'+this.escapeHtml(row.label)+'</b></td>'+ 
+          '<td>'+this.escapeHtml(row.sourceNames.join(' + '))+'</td>'+ 
+          '<td class="center">'+row.count+'</td>'+ 
+          '<td class="money">'+fmt(row.syp.toFixed(0))+'</td>'+ 
+          '<td class="money">'+fmt(row.usd.toFixed(2))+'</td>'+ 
+          '<td class="center">'+pct+'%</td>'+ 
+        '</tr>';
+      }).join('');
 
-          '<div class="pdf-cards">'+
-            '<div class="pdf-card"><div class="k">إجمالي SYP</div><div class="v">'+fmt(totalSYP.toFixed(0))+'</div></div>'+
-            '<div class="pdf-card"><div class="k">إجمالي USD</div><div class="v">'+fmt(totalUSD.toFixed(2))+'</div></div>'+
-            '<div class="pdf-card"><div class="k">سعر الصرف الفعّال</div><div class="v">'+fmt(rateInfo.effective.toFixed(0))+'</div></div>'+
-            '<div class="pdf-card"><div class="k">نطاق سعر الصرف</div><div class="v">'+rateInfo.text+'</div></div>'+
-          '</div>'+
-
-          '<div class="pdf-table-center">'+
-            '<div class="pdf-box">'+
-              '<h3>الجدول المجمّع</h3>'+
-              '<table class="pdf-table">'+
-                '<thead>'+
-                  '<tr>'+
-                    '<th>الاسم الظاهر</th>'+
-                    '<th class="center">العدد</th>'+
-                    '<th>SYP</th>'+
-                    '<th>USD</th>'+
-                    '<th class="center">النسبة</th>'+
-                    '<th>مصادر التجميع</th>'+
-                  '</tr>'+
-                '</thead>'+
-                '<tbody>'+rows+'</tbody>'+
-              '</table>'+
-            '</div>'+
-          '</div>'+
-
-          '<div class="pdf-charts">'+
-            '<div class="pdf-chart"><h4>توزيع الحصص المجمّعة</h4><img src="'+opts.pieImg+'" alt="chart"></div>'+
-            '<div class="pdf-chart"><h4>إجمالي SYP لكل مجموعة</h4><img src="'+opts.barImg+'" alt="chart"></div>'+
-          '</div>'+
-
-          '<div class="pdf-footer">تم التوليد من متتبع الإيراد 🇸🇾 | '+new Date().toLocaleString('ar-SA')+'</div>'+
+      let bars = summary.map((row,i)=>{
+        let colors = ['#38bdf8','#8b5cf6','#10b981','#f59e0b'];
+        let color = colors[i % colors.length];
+        let width = maxSyp>0 ? Math.max(4,(row.syp/maxSyp)*100) : 0;
+        let share = totalSYP>0 ? ((row.syp/totalSYP)*100).toFixed(1) : '0.0';
+        return '<div class="pdf-bar-row">'+
+          '<div class="pdf-bar-name">'+this.escapeHtml(row.label)+'</div>'+ 
+          '<div class="pdf-bar-track"><div class="pdf-bar-fill" style="width:'+width+'%;background:'+color+'"></div></div>'+ 
+          '<div class="pdf-bar-value">'+fmt(row.syp.toFixed(0))+' SYP<br><span>'+share+'%</span></div>'+ 
         '</div>';
+      }).join('');
+
+      let chips = filters.map(item=>'<span class="pdf-chip">'+this.escapeHtml(item)+'</span>').join('');
+
+      return `
+      <style>
+        @page{size:A4 portrait;margin:0}
+        *{box-sizing:border-box!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+        html,body{margin:0!important;padding:0!important;background:#eef4ff!important;direction:rtl!important}
+        .pdf-wrap{
+          font-family:'Cairo',Arial,Tahoma,sans-serif;
+          direction:rtl;
+          width:794px!important;
+          max-width:794px!important;
+          height:1123px!important;
+          min-height:1123px!important;
+          overflow:hidden!important;
+          margin:0 auto!important;
+          padding:30px!important;
+          background:linear-gradient(135deg,#eef7ff 0%,#f8fbff 46%,#eef2ff 100%);
+          color:#0f172a;
+          position:relative!important;
+          text-align:right;
+        }
+        .pdf-hero{
+          background:linear-gradient(135deg,#0f172a,#1e3a8a,#312e81);
+          color:#fff;
+          border-radius:22px;
+          padding:22px 24px;
+          margin-bottom:16px;
+          box-shadow:0 16px 36px rgba(15,23,42,.18);
+          text-align:right;
+        }
+        .pdf-hero h1{margin:0 0 8px;font-size:29px;font-weight:900;line-height:1.25;color:#fff}
+        .pdf-hero p{margin:0;font-size:13px;opacity:.9;line-height:1.7;color:#fff}
+        .pdf-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+        .pdf-card{
+          background:rgba(255,255,255,.82);
+          border:1px solid #dbeafe;
+          border-radius:18px;
+          padding:14px 10px;
+          text-align:center;
+          box-shadow:0 8px 18px rgba(15,23,42,.07);
+          min-width:0;
+        }
+        .pdf-card .k{font-size:11px;color:#64748b;font-weight:800;margin-bottom:6px;white-space:nowrap}
+        .pdf-card .v{font-size:17px;color:#0f172a;font-weight:900;direction:ltr;unicode-bidi:plaintext;line-height:1.35}
+        .pdf-box{
+          background:rgba(255,255,255,.86);
+          border:1px solid #dbeafe;
+          border-radius:20px;
+          padding:16px;
+          margin-bottom:16px;
+          box-shadow:0 8px 18px rgba(15,23,42,.06);
+          overflow:hidden;
+        }
+        .pdf-box-title{font-size:18px;font-weight:900;color:#172554;margin:0 0 12px;text-align:right}
+        .pdf-chip{
+          display:inline-block;
+          background:#dbeafe;
+          color:#1e3a8a;
+          border:1px solid #bfdbfe;
+          padding:6px 10px;
+          border-radius:999px;
+          margin:3px;
+          font-size:10px;
+          font-weight:900;
+        }
+        .pdf-table{width:100%!important;min-width:100%!important;border-collapse:collapse;table-layout:fixed;border-radius:14px;overflow:hidden;margin:0 auto!important}
+        .pdf-table th{background:#1e3a8a;color:#fff;font-size:11px;padding:9px 7px;text-align:center;border:1px solid rgba(255,255,255,.18);font-weight:900;line-height:1.35}
+        .pdf-table td{background:#fff;color:#0f172a;font-size:11px;padding:8px 7px;text-align:center;border:1px solid #dbeafe;word-break:break-word;line-height:1.35}
+        .pdf-table tr:nth-child(even) td{background:#f8fbff}
+        .pdf-table .money{direction:ltr;unicode-bidi:plaintext;font-weight:900;color:#111827}
+        .pdf-table .center{text-align:center}
+        .pdf-bar-chart{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+        .pdf-bar-row{display:grid;grid-template-columns:90px 1fr 145px;gap:10px;align-items:center;direction:ltr}
+        .pdf-bar-name{font-size:12px;font-weight:900;color:#172554;text-align:right;direction:rtl}
+        .pdf-bar-track{height:24px;background:#e2e8f0;border-radius:999px;overflow:hidden;border:1px solid #cbd5e1}
+        .pdf-bar-fill{height:100%;border-radius:999px;box-shadow:inset 0 -5px 10px rgba(0,0,0,.12)}
+        .pdf-bar-value{font-size:11px;font-weight:900;color:#0f172a;line-height:1.35;direction:ltr;unicode-bidi:plaintext;text-align:left}
+        .pdf-bar-value span{color:#64748b;font-size:10px}
+        .pdf-footer{margin-top:12px;text-align:center;color:#64748b;font-size:10px;font-weight:800}
+      </style>`+
+      '<div class="pdf-wrap">'+
+        '<div class="pdf-hero">'+
+          '<h1>تقرير الإيرادات المجمّع</h1>'+ 
+          '<p>التجميع: Region 1 + ccbs1 / Region 2 + ccbs2 / Region 3 + ccbs3 / Region 4 + ccbs4</p>'+ 
+          '<p>النطاق: '+this.escapeHtml(opts.rangeLabel || 'جميع البيانات')+'</p>'+ 
+        '</div>'+ 
+        '<div class="pdf-summary-grid">'+
+          '<div class="pdf-card"><div class="k">إجمالي SYP</div><div class="v">'+fmt(totalSYP.toFixed(0))+'</div></div>'+ 
+          '<div class="pdf-card"><div class="k">إجمالي USD</div><div class="v">'+fmt(totalUSD.toFixed(2))+'</div></div>'+ 
+          '<div class="pdf-card"><div class="k">سعر الصرف</div><div class="v">'+(effectiveRate>0?fmt(effectiveRate.toFixed(0)):'-')+'</div></div>'+ 
+          '<div class="pdf-card"><div class="k">عدد العمليات</div><div class="v">'+fmt(String(list.length))+'</div></div>'+ 
+        '</div>'+ 
+        '<div class="pdf-box">'+
+          '<div class="pdf-box-title">الفلاتر المستخدمة</div>'+ 
+          '<div>'+chips+'</div>'+ 
+          '<div style="margin-top:8px;color:#64748b;font-size:11px;font-weight:800">مصدر سعر الصرف: '+this.escapeHtml(rateInfo.text || 'غير متوفر')+'</div>'+ 
+        '</div>'+ 
+        '<div class="pdf-box">'+
+          '<div class="pdf-box-title">جدول المجموع المجمّع</div>'+ 
+          '<table class="pdf-table">'+
+            '<thead><tr><th>الاسم الظاهر</th><th>الأسماء المدموجة</th><th>العدد</th><th>المجموع SYP</th><th>المجموع USD</th><th>النسبة</th></tr></thead>'+ 
+            '<tbody>'+rows+'</tbody>'+ 
+          '</table>'+ 
+        '</div>'+ 
+        '<div class="pdf-box">'+
+          '<div class="pdf-box-title">الرسم البياني المجمّع</div>'+ 
+          '<div class="pdf-bar-chart">'+bars+'</div>'+ 
+        '</div>'+ 
+        '<div class="pdf-footer">تم إنشاء التقرير بتاريخ '+new Date().toLocaleString('ar-SA')+'</div>'+ 
+      '</div>';
     },
 
     makeChartImages: async function(labels, sypValues, pieValues){
@@ -3394,33 +3489,15 @@
       }
 
       let summary = this.buildGroupedSummary(list);
-
-      let labels = summary.map(x=>x.label);
-      let sypValues = summary.map(x=>x.syp);
-
-      let total = sypValues.reduce((a,b)=>a+b,0);
-
-      let pieValues = sypValues.map(v=>
-        total>0 ? parseFloat(((v/total)*100).toFixed(1)) : 0
-      );
-
-      let charts = await this.makeChartImages(labels, sypValues, pieValues);
-
       let rangeLabel = (dateFrom&&dateTo) ? ('من '+dateFrom+' إلى '+dateTo) : 'جميع البيانات';
 
-      let html = this.buildGroupedPdfHtml(summary, list, {
-        rangeLabel,
-        pieImg:charts.pieImg,
-        barImg:charts.barImg
-      });
+      let html = this.buildGroupedPdfHtml(summary, list, { rangeLabel });
 
-      let fileName = 'تقرير_الإيرادات';
-
+      let fileName = 'تقرير_الإيرادات_المجمع';
       if(dateFrom&&dateTo) fileName += '_'+dateFrom+'_إلى_'+dateTo;
-
       fileName += '.pdf';
 
-      await this.renderPDFFile(html, fileName, 'landscape');
+      await this.renderPDFFile(html, fileName, 'portrait');
     },
 
     exportGroupedPDFWithFilters: async function(){
