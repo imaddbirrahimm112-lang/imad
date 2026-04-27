@@ -223,6 +223,135 @@
       z-index:-1;
     }
 
+    body.bg-theme-neon-city::before{
+      background:linear-gradient(135deg,#020617,#0b1736,#0b3b5a,#0ea5c6,#22d3ee)!important;
+      background-size:400% 400%!important;
+      animation:gradientShift 14s ease infinite!important;
+    }
+
+    body.bg-theme-neon-city::after{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 20% 25%,rgba(34,211,238,.12),transparent 18%),
+        radial-gradient(circle at 78% 72%,rgba(14,165,233,.12),transparent 20%),
+        repeating-linear-gradient(90deg,transparent 0 56px,rgba(255,255,255,.04) 56px 57px);
+      z-index:-1;
+    }
+
+    body.bg-theme-arctic::before{
+      background:linear-gradient(135deg,#021326,#0d3b66,#1f78b4,#78d7ff,#d7f6ff)!important;
+      background-size:400% 400%!important;
+      animation:gradientShift 16s ease infinite!important;
+    }
+
+    body.bg-theme-arctic::after{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:linear-gradient(120deg,rgba(255,255,255,.08),rgba(255,255,255,0) 35%,rgba(255,255,255,.16) 50%,rgba(255,255,255,0) 68%);
+      background-size:240% 240%;
+      animation:glassSweep 9s linear infinite;
+      z-index:-1;
+    }
+
+    body.bg-theme-moonlight::before{
+      background:linear-gradient(135deg,#06051a,#18184a,#40227d,#7b3ebf)!important;
+      background-size:400% 400%!important;
+      animation:gradientShift 18s ease infinite!important;
+    }
+
+    body.bg-theme-moonlight::after{
+      content:'';
+      position:fixed;
+      inset:0;
+      background-image:
+        radial-gradient(2px 2px at 25px 15px,rgba(255,255,255,.9),transparent),
+        radial-gradient(1px 1px at 70px 55px,rgba(255,255,255,.75),transparent),
+        radial-gradient(1.5px 1.5px at 140px 28px,rgba(184,212,255,.75),transparent),
+        radial-gradient(1px 1px at 230px 45px,rgba(255,255,255,.75),transparent);
+      background-repeat:repeat;
+      background-size:360px 180px;
+      opacity:.75;
+      animation:twinkleStar 5s ease-in-out infinite;
+      z-index:-1;
+    }
+
+
+    body.bg-theme-sultan-gold::before{
+      background:linear-gradient(135deg,#120b02,#3f2504,#8a5a0a,#d6a437,#fff0b0)!important;
+      background-size:400% 400%!important;
+      animation:gradientShift 17s ease infinite!important;
+    }
+
+    body.bg-theme-sultan-gold::after{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 18% 22%,rgba(255,225,138,.18),transparent 16%),
+        radial-gradient(circle at 80% 76%,rgba(255,208,92,.16),transparent 18%),
+        linear-gradient(120deg,rgba(255,255,255,.08),rgba(255,255,255,0) 35%,rgba(255,222,140,.12) 50%,rgba(255,255,255,0) 68%);
+      background-size:100% 100%,100% 100%,240% 240%;
+      animation:glassSweep 10s linear infinite;
+      z-index:-1;
+    }
+
+    body.bg-theme-ruby-crown::before{
+      background:linear-gradient(135deg,#12020b,#320116,#65072b,#a60f4f,#ff80b5)!important;
+      background-size:420% 420%!important;
+      animation:gradientShift 18s ease infinite!important;
+    }
+
+    body.bg-theme-ruby-crown::after{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 20% 25%,rgba(255,178,210,.12),transparent 18%),
+        radial-gradient(circle at 82% 28%,rgba(255,75,130,.10),transparent 18%),
+        radial-gradient(circle at 55% 76%,rgba(255,255,255,.08),transparent 20%);
+      z-index:-1;
+    }
+
+    body.bg-theme-opal-dream::before{
+      background:linear-gradient(135deg,#1a1433,#334d73,#5aa8b8,#9fe2d3,#f7d3ff)!important;
+      background-size:450% 450%!important;
+      animation:gradientShift 20s ease infinite!important;
+    }
+
+    body.bg-theme-opal-dream::after{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 16% 22%,rgba(255,255,255,.18),transparent 15%),
+        radial-gradient(circle at 80% 24%,rgba(255,202,244,.16),transparent 16%),
+        radial-gradient(circle at 52% 82%,rgba(171,245,255,.12),transparent 20%),
+        linear-gradient(120deg,rgba(255,255,255,.14),rgba(255,255,255,0) 35%,rgba(255,255,255,.20) 50%,rgba(255,255,255,0) 68%);
+      background-size:100% 100%,100% 100%,100% 100%,250% 250%;
+      animation:glassSweep 11s linear infinite;
+      z-index:-1;
+    }
+
+    body.bg-theme-imperial-night::before{
+      background:linear-gradient(135deg,#05030d,#140d2f,#26104f,#3a1465,#7b2cbf)!important;
+      background-size:400% 400%!important;
+      animation:gradientShift 16s ease infinite!important;
+    }
+
+    body.bg-theme-imperial-night::after{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 15% 18%,rgba(255,255,255,.10),transparent 15%),
+        radial-gradient(circle at 78% 72%,rgba(201,139,255,.12),transparent 18%),
+        repeating-linear-gradient(135deg,transparent 0 34px,rgba(255,255,255,.03) 34px 35px);
+      z-index:-1;
+    }
+
     @keyframes glassSweep{
       0%{background-position:0% 50%}
       100%{background-position:100% 50%}
@@ -502,6 +631,167 @@
     }
 
     .theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+
+    .theme-showcase{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+      gap:14px;
+    }
+
+    .theme-card{
+      position:relative;
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:24px;
+      background:rgba(255,255,255,.10);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      padding:14px;
+      cursor:pointer;
+      transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
+      overflow:hidden;
+      min-height:188px;
+      text-align:right;
+    }
+
+    .theme-card:hover{
+      transform:translateY(-4px) scale(1.01);
+      box-shadow:0 18px 40px rgba(0,0,0,.22);
+      border-color:rgba(255,255,255,.35);
+      background:rgba(255,255,255,.14);
+    }
+
+    .theme-card.active{
+      border-color:rgba(255,255,255,.88);
+      box-shadow:0 0 0 2px rgba(255,255,255,.28),0 18px 40px rgba(0,0,0,.24);
+      background:rgba(255,255,255,.18);
+    }
+
+    .theme-card-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .theme-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:64px;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      color:#efe8ff;
+      background:rgba(122,92,255,.25);
+      border:1px solid rgba(255,255,255,.16);
+    }
+
+    .theme-card.active .theme-badge{
+      background:rgba(255,255,255,.20);
+      color:#fff;
+    }
+
+    .theme-icon{font-size:22px;line-height:1}
+
+    .theme-preview{
+      position:relative;
+      height:82px;
+      border-radius:24px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+      margin-bottom:14px;
+      isolation:isolate;
+    }
+
+    .theme-preview::before,
+    .theme-preview::after{content:'';position:absolute;inset:auto;pointer-events:none}
+
+    .theme-preview .spark{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:24px;
+      color:rgba(255,255,255,.92);
+      text-shadow:0 0 12px rgba(255,255,255,.35);
+      animation:previewFloat 4s ease-in-out infinite;
+    }
+
+    .theme-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px}
+    .theme-desc{font-size:12px;line-height:1.7;opacity:.82;color:#e9f2ff}
+
+    .theme-preview-aurora{background:linear-gradient(135deg,#130044,#1d1f89,#2f6cff)}
+    .theme-preview-aurora::before{width:140px;height:140px;right:-28px;top:-46px;background:radial-gradient(circle,rgba(87,228,255,.60),transparent 60%);animation:blobMove 7s ease-in-out infinite}
+    .theme-preview-aurora::after{width:140px;height:140px;left:-24px;bottom:-54px;background:radial-gradient(circle,rgba(173,89,255,.60),transparent 60%);animation:blobMove2 8s ease-in-out infinite}
+
+    .theme-preview-depth{background:linear-gradient(135deg,#02102f,#063d8e,#2e6fe7)}
+    .theme-preview-depth::before{inset:0;background:linear-gradient(120deg,rgba(255,255,255,.18),transparent 35%,rgba(255,255,255,.06) 50%,transparent 65%);background-size:220% 220%;animation:glassSweep 6s linear infinite}
+
+    .theme-preview-sunset{background:linear-gradient(135deg,#5d0838,#b3166a,#ff6a3d)}
+    .theme-preview-sunset::before{width:120px;height:120px;left:-18px;bottom:-58px;background:radial-gradient(circle,rgba(255,179,95,.68),transparent 58%);animation:pulseGlow 4s ease-in-out infinite}
+    .theme-preview-sunset::after{width:120px;height:120px;right:-20px;top:-54px;background:radial-gradient(circle,rgba(255,73,139,.50),transparent 58%);animation:pulseGlow 5s ease-in-out infinite reverse}
+
+    .theme-preview-forest{background:linear-gradient(135deg,#06210f,#0c5f34,#49a36f)}
+    .theme-preview-forest::before{inset:0;background:linear-gradient(135deg,transparent 0%,rgba(255,255,255,.06) 50%,transparent 100%);background-size:200% 200%;animation:forestWind 5s linear infinite}
+
+    .theme-preview-glass{background:linear-gradient(135deg,#03223d,#0f6f9b,#76dfff)}
+    .theme-preview-glass::before{width:150px;height:150px;right:-40px;top:-62px;background:radial-gradient(circle,rgba(255,255,255,.34),transparent 58%);animation:blobMove 7s ease-in-out infinite}
+    .theme-preview-glass::after{inset:0;background:linear-gradient(120deg,rgba(255,255,255,.16),rgba(255,255,255,0) 35%,rgba(255,255,255,.24) 50%,rgba(255,255,255,0) 68%);background-size:260% 260%;animation:glassSweep 7s linear infinite}
+
+    .theme-preview-royal{background:linear-gradient(135deg,#1a0138,#5222ad,#ba7cff)}
+    .theme-preview-royal::before{width:136px;height:136px;left:-34px;top:-54px;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 60%);animation:blobMove2 8s ease-in-out infinite}
+
+    .theme-preview-neon{background:linear-gradient(135deg,#020617,#0a2342,#0e7490)}
+    .theme-preview-neon::before{inset:0;background:repeating-linear-gradient(90deg,transparent 0 24px,rgba(34,211,238,.13) 24px 25px);animation:neonScan 9s linear infinite}
+    .theme-preview-neon::after{width:140px;height:140px;right:-44px;bottom:-68px;background:radial-gradient(circle,rgba(34,211,238,.35),transparent 58%);animation:pulseGlow 5s ease-in-out infinite}
+
+    .theme-preview-ice{background:linear-gradient(135deg,#06182f,#0d3f79,#9ae8ff)}
+    .theme-preview-ice::before{inset:0;background:linear-gradient(140deg,rgba(255,255,255,.04),rgba(255,255,255,.20),rgba(255,255,255,.04));background-size:220% 220%;animation:glassSweep 5.5s linear infinite}
+
+    .theme-preview-moon{background:linear-gradient(135deg,#040418,#191d52,#5c2aa7)}
+    .theme-preview-moon::before{width:104px;height:104px;left:-20px;top:-18px;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 58%);animation:twinkleStar 4s ease-in-out infinite}
+    .theme-preview-moon::after{inset:0;background-image:radial-gradient(1.6px 1.6px at 25px 15px,rgba(255,255,255,.8),transparent),radial-gradient(1px 1px at 70px 55px,rgba(255,255,255,.75),transparent),radial-gradient(1.4px 1.4px at 130px 22px,rgba(181,210,255,.7),transparent),radial-gradient(1px 1px at 210px 50px,rgba(255,255,255,.75),transparent);background-repeat:repeat;background-size:240px 100px;opacity:.8;animation:twinkleStar 5s ease-in-out infinite}
+
+
+    .theme-preview-sultan{background:linear-gradient(135deg,#120b02,#8a5a0a,#fff0b0)}
+    .theme-preview-sultan::before{inset:0;background:linear-gradient(120deg,rgba(255,255,255,.10),rgba(255,255,255,0) 35%,rgba(255,225,138,.22) 50%,rgba(255,255,255,0) 68%);background-size:240% 240%;animation:glassSweep 6.5s linear infinite}
+    .theme-preview-sultan::after{width:120px;height:120px;right:-24px;top:-42px;background:radial-gradient(circle,rgba(255,225,138,.32),transparent 58%);animation:pulseGlow 4.5s ease-in-out infinite}
+
+    .theme-preview-ruby{background:linear-gradient(135deg,#17010c,#80113d,#ff8bbc)}
+    .theme-preview-ruby::before{width:120px;height:120px;left:-18px;bottom:-48px;background:radial-gradient(circle,rgba(255,176,208,.32),transparent 58%);animation:pulseGlow 4.5s ease-in-out infinite}
+    .theme-preview-ruby::after{width:120px;height:120px;right:-18px;top:-50px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 58%);animation:blobMove 7s ease-in-out infinite}
+
+    .theme-preview-opal{background:linear-gradient(135deg,#24345d,#6abfc8,#ffd8f5)}
+    .theme-preview-opal::before{inset:0;background:linear-gradient(120deg,rgba(255,255,255,.16),rgba(255,255,255,0) 34%,rgba(255,255,255,.28) 50%,rgba(255,255,255,0) 66%);background-size:260% 260%;animation:glassSweep 7s linear infinite}
+    .theme-preview-opal::after{width:130px;height:130px;left:-20px;top:-46px;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 58%);animation:blobMove2 7s ease-in-out infinite}
+
+    .theme-preview-imperial{background:linear-gradient(135deg,#05030d,#3a1465,#b67aff)}
+    .theme-preview-imperial::before{inset:0;background:repeating-linear-gradient(135deg,transparent 0 22px,rgba(255,255,255,.05) 22px 23px);animation:neonScan 10s linear infinite}
+    .theme-preview-imperial::after{width:120px;height:120px;right:-24px;bottom:-52px;background:radial-gradient(circle,rgba(201,139,255,.30),transparent 58%);animation:pulseGlow 5s ease-in-out infinite}
+
+    @keyframes previewFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.05)}}
+    @keyframes blobMove{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-10px,8px) scale(1.08)}}
+    @keyframes blobMove2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(12px,-8px) scale(1.10)}}
+    @keyframes pulseGlow{0%,100%{opacity:.72;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+    @keyframes forestWind{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+    @keyframes neonScan{0%{transform:translateX(-20px)}100%{transform:translateX(20px)}}
+
+    @media(max-width:768px){
+      .theme-showcase{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+      .theme-card{min-height:176px;padding:12px;border-radius:20px}
+      .theme-preview{height:76px;border-radius:20px}
+      .theme-title{font-size:13px}
+      .theme-desc{font-size:11px;line-height:1.6}
+    }
+
+    @media(max-width:520px){
+      .theme-showcase{grid-template-columns:1fr}
+    }
 
     .import-box{
       background:rgba(255,255,255,.08);
@@ -901,31 +1191,109 @@
             <div class="form-group">
               <label>🎨 مظهر الخلفية</label>
 
-              <div class="theme-grid">
-                <button class="btn" onclick="App.setTheme('bg-theme-1')" style="background:linear-gradient(135deg,#1a1a6e,#4a2c8a,#3a7bd5);color:white;border:none">🌌 كوني داكن</button>
-                <button class="btn" onclick="App.setTheme('bg-theme-2')" style="background:linear-gradient(135deg,#8b0057,#e91e8c,#ff5722);color:white;border:none">🌹 ورود ملتهبة</button>
-                <button class="btn" onclick="App.setTheme('bg-theme-3')" style="background:linear-gradient(135deg,#004d29,#00897b,#0288d1);color:white;border:none">🌊 محيط استوائي</button>
-                <button class="btn" onclick="App.setTheme('bg-theme-4')" style="background:linear-gradient(135deg,#bf360c,#ff6f00,#ffd740);color:white;border:none">🌅 غروب ذهبي</button>
+              <div class="theme-showcase">
+                <button type="button" class="theme-card active" data-theme="bg-theme-dual-blue" onclick="App.setTheme('bg-theme-dual-blue')">
+                  <div class="theme-card-head">
+                    <span class="theme-badge">زجاجية</span>
+                    <span class="theme-icon">✨</span>
+                  </div>
+                  <div class="theme-preview theme-preview-depth"><span class="spark">✦</span></div>
+                  <div class="theme-title">أعماق</div>
+                  <div class="theme-desc">أزرق هادئ عميق بحركة ناعمة ولمعة زجاجية مريحة للعين.</div>
+                </button>
+
+                <button type="button" class="theme-card" data-theme="bg-theme-1" onclick="App.setTheme('bg-theme-1')">
+                  <div class="theme-card-head">
+                    <span class="theme-badge">مميز</span>
+                    <span class="theme-icon">🌌</span>
+                  </div>
+                  <div class="theme-preview theme-preview-aurora"><span class="spark">✦</span></div>
+                  <div class="theme-title">أورورا</div>
+                  <div class="theme-desc">تدرج بنفسجي أزرق متحرك يعطي إحساس فاخر وواجهة عصرية.</div>
+                </button>
+
+                <button type="button" class="theme-card" data-theme="bg-theme-purple-pink" onclick="App.setTheme('bg-theme-purple-pink')">
+                  <div class="theme-card-head">
+                    <span class="theme-badge">حيوي</span>
+                    <span class="theme-icon">🌇</span>
+                  </div>
+                  <div class="theme-preview theme-preview-sunset"><span class="spark">✦</span></div>
+                  <div class="theme-title">غروب ساحر</div>
+                  <div class="theme-desc">وردي مع برتقالي بحركة لطيفة يعطي دفء وأناقة بدون إزعاج.</div>
+                </button>
+
+                <button type="button" class="theme-card" data-theme="bg-theme-sultan-gold" onclick="App.setTheme('bg-theme-sultan-gold')">
+                  <div class="theme-card-head">
+                    <span class="theme-badge">ملكي</span>
+                    <span class="theme-icon">👑</span>
+                  </div>
+                  <div class="theme-preview theme-preview-sultan"><span class="spark">✦</span></div>
+                  <div class="theme-title">عرش ذهبي</div>
+                  <div class="theme-desc">أسود مع ذهبي متحرك بلمعة فاخرة تعطي إحساس قصر حقيقي.</div>
+                </button>
+
+                <button type="button" class="theme-card" data-theme="bg-theme-ruby-crown" onclick="App.setTheme('bg-theme-ruby-crown')">
+                  <div class="theme-card-head">
+                    <span class="theme-badge">جوهرة</span>
+                    <span class="theme-icon">💎</span>
+                  </div>
+                  <div class="theme-preview theme-preview-ruby"><span class="spark">✦</span></div>
+                  <div class="theme-title">تاج ياقوت</div>
+                  <div class="theme-desc">قرمزي مخملي مع وهج ناعم، شكله فاخر وغريب بشكل جميل.</div>
+                </button>
+
+                <button type="button" class="theme-card" data-theme="bg-theme-opal-dream" onclick="App.setTheme('bg-theme-opal-dream')">
+                  <div class="theme-card-head">
+                    <span class="theme-badge">أسطوري</span>
+                    <span class="theme-icon">🪄</span>
+                  </div>
+                  <div class="theme-preview theme-preview-opal"><span class="spark">✦</span></div>
+                  <div class="theme-title">حلم الأوبال</div>
+                  <div class="theme-desc">ألوان لؤلؤية متبدلة تعطي لمعة ناعمة ومظهر مختلف فعلاً.</div>
+                </button>
+
+                <button type="button" class="theme-card" data-theme="bg-theme-imperial-night" onclick="App.setTheme('bg-theme-imperial-night')">
+                  <div class="theme-card-head">
+                    <span class="theme-badge">هيبة</span>
+                    <span class="theme-icon">🌒</span>
+                  </div>
+                  <div class="theme-preview theme-preview-imperial"><span class="spark">✦</span></div>
+                  <div class="theme-title">ليل إمبراطوري</div>
+                  <div class="theme-desc">بنفسجي ليلي داكن بنقشات خفيفة، فخم ومبهر بدون ما يزعج العين.</div>
+                </button>
+
+                <button type="button" class="theme-card" data-theme="bg-theme-neon-city" onclick="App.setTheme('bg-theme-neon-city')">
+                  <div class="theme-card-head">
+                    <span class="theme-badge">جديد</span>
+                    <span class="theme-icon">⚡</span>
+                  </div>
+                  <div class="theme-preview theme-preview-neon"><span class="spark">✦</span></div>
+                  <div class="theme-title">نيون ليلي</div>
+                  <div class="theme-desc">أزرق سيبراني متوهج بحركة بسيطة يلفت النظر بدون فوضى.</div>
+                </button>
+
+                <button type="button" class="theme-card" data-theme="bg-theme-arctic" onclick="App.setTheme('bg-theme-arctic')">
+                  <div class="theme-card-head">
+                    <span class="theme-badge">بارد</span>
+                    <span class="theme-icon">❄️</span>
+                  </div>
+                  <div class="theme-preview theme-preview-ice"><span class="spark">✦</span></div>
+                  <div class="theme-title">جليد</div>
+                  <div class="theme-desc">سماوي بارد ونظيف، ممتاز لو بدك واجهة راكدة ومريحة.</div>
+                </button>
+
+                <button type="button" class="theme-card" data-theme="bg-theme-moonlight" onclick="App.setTheme('bg-theme-moonlight')">
+                  <div class="theme-card-head">
+                    <span class="theme-badge">حالم</span>
+                    <span class="theme-icon">🌙</span>
+                  </div>
+                  <div class="theme-preview theme-preview-moon"><span class="spark">✦</span></div>
+                  <div class="theme-title">ضوء القمر</div>
+                  <div class="theme-desc">بنفسجي ليلي مع نجوم خفيفة يعطي طابع ساحر وأنيق.</div>
+                </button>
               </div>
 
-              <div class="theme-grid" style="margin-top:8px">
-                <button class="btn" onclick="App.setTheme('bg-theme-5')" style="background:linear-gradient(135deg,#0a0015,#2d0055);color:white;border:none">🌙 ليل بنفسجي</button>
-                <button class="btn" onclick="App.setTheme('bg-theme-7')" style="background:linear-gradient(135deg,#001529,#005580);color:white;border:none">🔷 عمق المحيط</button>
-                <button class="btn" onclick="App.setTheme('bg-theme-starry-night')" style="background:linear-gradient(135deg,#010b19,#0a2550);color:#a8d8ff;border:none">⭐ سماء النجوم</button>
-                <button class="btn" onclick="App.setTheme('bg-theme-dragon')" style="background:linear-gradient(135deg,#8b0000,#ff6b00);color:white;border:none">🐉 نار التنين</button>
-              </div>
-
-              <div class="theme-grid" style="margin-top:8px">
-                <button class="btn" onclick="App.setTheme('bg-theme-emerald')" style="background:linear-gradient(135deg,#001a0d,#00793f);color:white;border:none">💎 زمرد ملكي</button>
-                <button class="btn" onclick="App.setTheme('bg-theme-dual-blue')" style="background:linear-gradient(135deg,#000428,#00a8ff);color:white;border:none">⚡ أزرق كهربائي</button>
-                <button class="btn" onclick="App.setTheme('bg-theme-purple-pink')" style="background:linear-gradient(135deg,#1a0030,#ff0055);color:white;border:none">💜 نيون بنفسجي</button>
-                <button class="btn" onclick="App.setTheme('bg-theme-6')" style="background:radial-gradient(ellipse,#1a0040,#050010);color:white;border:none">🕳️ الفراغ الكوني</button>
-              </div>
-
-              <div class="theme-grid" style="margin-top:8px">
-                <button class="btn" onclick="App.setTheme('bg-theme-crystal-glass')" style="background:linear-gradient(135deg,#031b34,#17a2b8,#d6f6ff);color:white;border:none">🧊 زجاج كريستالي</button>
-                <button class="btn" onclick="App.setTheme('bg-theme-royal-glass')" style="background:linear-gradient(135deg,#140026,#7c3aed,#c084fc);color:white;border:none">👑 زجاج ملكي</button>
-              </div>
+              <div class="small-pill">كل الخلفيات متحركة بخفة حتى تبقى جميلة ومريحة وما تثقل التطبيق.</div>
             </div>
 
             <div class="form-group">
@@ -1545,12 +1913,20 @@
       if(dark) document.body.classList.add('dark-mode');
 
       localStorage.setItem('fsTheme', t);
+      this.syncThemeCards(t);
       this.showMsg('✅ تم تغيير المظهر');
     },
 
+    syncThemeCards: function(activeTheme){
+      document.querySelectorAll('.theme-card').forEach(card=>{
+        card.classList.toggle('active', card.dataset.theme === activeTheme);
+      });
+    },
+
     loadTheme: function(){
-      let t = localStorage.getItem('fsTheme') || 'bg-theme-1';
+      let t = localStorage.getItem('fsTheme') || 'bg-theme-dual-blue';
       document.body.className = t;
+      this.syncThemeCards(t);
 
       if(localStorage.getItem('fsDarkMode') === 'true'){
         document.body.classList.add('dark-mode');
@@ -2720,14 +3096,10 @@
 
     renderPDFFile: async function(html, fileName, orientation){
       const ra = $('pdfRenderArea');
-      const isPortrait = orientation === 'portrait';
-      const pageW = isPortrait ? 794 : 1123;
-      const pageH = isPortrait ? 1123 : 794;
+      const pageW = 1123;
+      const pageMinH = 794;
 
       ra.innerHTML = html;
-      ra.style.width = pageW + 'px';
-      ra.style.minHeight = pageH + 'px';
-      ra.style.background = isPortrait ? '#eef4ff' : '#ffffff';
       ra.classList.add('pdf-render-active');
       ra.setAttribute('aria-hidden','false');
 
@@ -2735,12 +3107,14 @@
       $('pdfOverlayMsg').textContent = '⏳ تجهيز صفحة PDF بشكل مرتب...';
 
       if(document.fonts && document.fonts.ready){
-        try{ await document.fonts.ready; }catch(e){}
+        try{
+          await document.fonts.ready;
+        }catch(e){}
       }
 
       await this.waitForImages(ra);
       await this.nextFrame();
-      await this.sleep(400);
+      await this.sleep(500);
 
       const pdfNode = ra.querySelector('.pdf-wrap') || ra;
 
@@ -2752,14 +3126,8 @@
       pdfNode.style.right = 'auto';
       pdfNode.style.position = 'relative';
 
-      if(isPortrait){
-        pdfNode.style.height = pageH + 'px';
-        pdfNode.style.minHeight = pageH + 'px';
-        pdfNode.style.overflow = 'hidden';
-      }
-
       const renderWidth = pageW;
-      const renderHeight = isPortrait ? pageH : Math.ceil(Math.max(pdfNode.scrollHeight, pdfNode.offsetHeight, pageH));
+      const renderHeight = Math.ceil(Math.max(pdfNode.scrollHeight, pdfNode.offsetHeight, pageMinH));
 
       $('pdfOverlayMsg').textContent = '⏳ جاري إنشاء الملف...';
 
@@ -2767,13 +3135,16 @@
         await html2pdf().set({
           margin:0,
           filename:this.sanitizeFileName(fileName),
-          image:{ type:'jpeg', quality:0.99 },
+          image:{
+            type:'jpeg',
+            quality:0.99
+          },
           html2canvas:{
             scale:2,
             useCORS:true,
             allowTaint:true,
             logging:false,
-            backgroundColor:isPortrait ? '#eef4ff' : '#ffffff',
+            backgroundColor:'#ffffff',
             width:renderWidth,
             height:renderHeight,
             windowWidth:renderWidth,
@@ -2793,11 +3164,11 @@
           pagebreak:{
             mode:['css','legacy'],
             before:'.pdf-force-page',
-            avoid:['.pdf-avoid','.pdf-cards','.pdf-charts','.pdf-table-center','.pdf-box','.pdf-summary-grid']
+            avoid:['.pdf-avoid','.pdf-cards','.pdf-charts','.pdf-table-center']
           }
         }).from(pdfNode).save();
 
-        this.showMsg(isPortrait ? '✅ تم تحميل PDF صفحة واحدة بشكل مرتب ✨' : '✅ تم تحميل PDF بشكل مرتب ✨');
+        this.showMsg('✅ تم تحميل PDF بشكل مرتب ✨');
         this.playSound(784,.3);
       }catch(e){
         console.error(e);
@@ -3166,149 +3537,59 @@
     buildGroupedPdfHtml: function(summary, list, opts){
       let totalSYP = summary.reduce((s,x)=>s+x.syp,0);
       let totalUSD = summary.reduce((s,x)=>s+x.usd,0);
+
       let rateInfo = this.getRateSummary(list);
-      let effectiveRate = rateInfo.effective || (totalUSD>0 ? totalSYP/totalUSD : 0);
-      let maxSyp = Math.max.apply(null, summary.map(x=>x.syp).concat([1]));
 
-      let filters = [];
-      filters.push(opts.rangeLabel || 'جميع البيانات');
-      filters.push('مصدر سعر الصرف: '+(rateInfo.text || 'غير متوفر'));
+      let rows = summary.map(row=>
+        '<tr>'+
+          '<td>'+this.escapeHtml(row.label)+'</td>'+
+          '<td class="center">'+row.count+'</td>'+
+          '<td class="money">'+fmt(row.syp.toFixed(0))+'</td>'+
+          '<td class="money">'+fmt(row.usd.toFixed(2))+'</td>'+
+          '<td class="center">'+(totalSYP>0?((row.syp/totalSYP)*100).toFixed(1):'0')+'%</td>'+
+          '<td>'+this.escapeHtml(row.sourceNames.join(' + '))+'</td>'+
+        '</tr>'
+      ).join('');
 
-      let rows = summary.map(row=>{
-        let pct = totalSYP>0 ? ((row.syp/totalSYP)*100).toFixed(1) : '0.0';
-        return '<tr>'+ 
-          '<td><b>'+this.escapeHtml(row.label)+'</b></td>'+ 
-          '<td>'+this.escapeHtml(row.sourceNames.join(' + '))+'</td>'+ 
-          '<td class="center">'+row.count+'</td>'+ 
-          '<td class="money">'+fmt(row.syp.toFixed(0))+'</td>'+ 
-          '<td class="money">'+fmt(row.usd.toFixed(2))+'</td>'+ 
-          '<td class="center">'+pct+'%</td>'+ 
-        '</tr>';
-      }).join('');
+      return this.buildPdfBaseCss() +
+        '<div class="pdf-wrap">'+
+          '<h1 class="pdf-title">تقرير الإيرادات</h1>'+
+          '<p class="pdf-sub">'+opts.rangeLabel+'</p>'+
+          '<p class="pdf-badges">التجميع: Region 1 + ccbs1 • Region 2 + ccbs2 • Region 3 + ccbs3 • Region 4 + ccbs4</p>'+
 
-      let bars = summary.map((row,i)=>{
-        let colors = ['#38bdf8','#8b5cf6','#10b981','#f59e0b'];
-        let color = colors[i % colors.length];
-        let width = maxSyp>0 ? Math.max(4,(row.syp/maxSyp)*100) : 0;
-        let share = totalSYP>0 ? ((row.syp/totalSYP)*100).toFixed(1) : '0.0';
-        return '<div class="pdf-bar-row">'+
-          '<div class="pdf-bar-name">'+this.escapeHtml(row.label)+'</div>'+ 
-          '<div class="pdf-bar-track"><div class="pdf-bar-fill" style="width:'+width+'%;background:'+color+'"></div></div>'+ 
-          '<div class="pdf-bar-value">'+fmt(row.syp.toFixed(0))+' SYP<br><span>'+share+'%</span></div>'+ 
+          '<div class="pdf-cards">'+
+            '<div class="pdf-card"><div class="k">إجمالي SYP</div><div class="v">'+fmt(totalSYP.toFixed(0))+'</div></div>'+
+            '<div class="pdf-card"><div class="k">إجمالي USD</div><div class="v">'+fmt(totalUSD.toFixed(2))+'</div></div>'+
+            '<div class="pdf-card"><div class="k">سعر الصرف الفعّال</div><div class="v">'+fmt(rateInfo.effective.toFixed(0))+'</div></div>'+
+            '<div class="pdf-card"><div class="k">نطاق سعر الصرف</div><div class="v">'+rateInfo.text+'</div></div>'+
+          '</div>'+
+
+          '<div class="pdf-table-center">'+
+            '<div class="pdf-box">'+
+              '<h3>الجدول المجمّع</h3>'+
+              '<table class="pdf-table">'+
+                '<thead>'+
+                  '<tr>'+
+                    '<th>الاسم الظاهر</th>'+
+                    '<th class="center">العدد</th>'+
+                    '<th>SYP</th>'+
+                    '<th>USD</th>'+
+                    '<th class="center">النسبة</th>'+
+                    '<th>مصادر التجميع</th>'+
+                  '</tr>'+
+                '</thead>'+
+                '<tbody>'+rows+'</tbody>'+
+              '</table>'+
+            '</div>'+
+          '</div>'+
+
+          '<div class="pdf-charts">'+
+            '<div class="pdf-chart"><h4>توزيع الحصص المجمّعة</h4><img src="'+opts.pieImg+'" alt="chart"></div>'+
+            '<div class="pdf-chart"><h4>إجمالي SYP لكل مجموعة</h4><img src="'+opts.barImg+'" alt="chart"></div>'+
+          '</div>'+
+
+          '<div class="pdf-footer">تم التوليد من متتبع الإيراد 🇸🇾 | '+new Date().toLocaleString('ar-SA')+'</div>'+
         '</div>';
-      }).join('');
-
-      let chips = filters.map(item=>'<span class="pdf-chip">'+this.escapeHtml(item)+'</span>').join('');
-
-      return `
-      <style>
-        @page{size:A4 portrait;margin:0}
-        *{box-sizing:border-box!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-        html,body{margin:0!important;padding:0!important;background:#eef4ff!important;direction:rtl!important}
-        .pdf-wrap{
-          font-family:'Cairo',Arial,Tahoma,sans-serif;
-          direction:rtl;
-          width:794px!important;
-          max-width:794px!important;
-          height:1123px!important;
-          min-height:1123px!important;
-          overflow:hidden!important;
-          margin:0 auto!important;
-          padding:30px!important;
-          background:linear-gradient(135deg,#eef7ff 0%,#f8fbff 46%,#eef2ff 100%);
-          color:#0f172a;
-          position:relative!important;
-          text-align:right;
-        }
-        .pdf-hero{
-          background:linear-gradient(135deg,#0f172a,#1e3a8a,#312e81);
-          color:#fff;
-          border-radius:22px;
-          padding:22px 24px;
-          margin-bottom:16px;
-          box-shadow:0 16px 36px rgba(15,23,42,.18);
-          text-align:right;
-        }
-        .pdf-hero h1{margin:0 0 8px;font-size:29px;font-weight:900;line-height:1.25;color:#fff}
-        .pdf-hero p{margin:0;font-size:13px;opacity:.9;line-height:1.7;color:#fff}
-        .pdf-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-        .pdf-card{
-          background:rgba(255,255,255,.82);
-          border:1px solid #dbeafe;
-          border-radius:18px;
-          padding:14px 10px;
-          text-align:center;
-          box-shadow:0 8px 18px rgba(15,23,42,.07);
-          min-width:0;
-        }
-        .pdf-card .k{font-size:11px;color:#64748b;font-weight:800;margin-bottom:6px;white-space:nowrap}
-        .pdf-card .v{font-size:17px;color:#0f172a;font-weight:900;direction:ltr;unicode-bidi:plaintext;line-height:1.35}
-        .pdf-box{
-          background:rgba(255,255,255,.86);
-          border:1px solid #dbeafe;
-          border-radius:20px;
-          padding:16px;
-          margin-bottom:16px;
-          box-shadow:0 8px 18px rgba(15,23,42,.06);
-          overflow:hidden;
-        }
-        .pdf-box-title{font-size:18px;font-weight:900;color:#172554;margin:0 0 12px;text-align:right}
-        .pdf-chip{
-          display:inline-block;
-          background:#dbeafe;
-          color:#1e3a8a;
-          border:1px solid #bfdbfe;
-          padding:6px 10px;
-          border-radius:999px;
-          margin:3px;
-          font-size:10px;
-          font-weight:900;
-        }
-        .pdf-table{width:100%!important;min-width:100%!important;border-collapse:collapse;table-layout:fixed;border-radius:14px;overflow:hidden;margin:0 auto!important}
-        .pdf-table th{background:#1e3a8a;color:#fff;font-size:11px;padding:9px 7px;text-align:center;border:1px solid rgba(255,255,255,.18);font-weight:900;line-height:1.35}
-        .pdf-table td{background:#fff;color:#0f172a;font-size:11px;padding:8px 7px;text-align:center;border:1px solid #dbeafe;word-break:break-word;line-height:1.35}
-        .pdf-table tr:nth-child(even) td{background:#f8fbff}
-        .pdf-table .money{direction:ltr;unicode-bidi:plaintext;font-weight:900;color:#111827}
-        .pdf-table .center{text-align:center}
-        .pdf-bar-chart{display:flex;flex-direction:column;gap:12px;margin-top:4px}
-        .pdf-bar-row{display:grid;grid-template-columns:90px 1fr 145px;gap:10px;align-items:center;direction:ltr}
-        .pdf-bar-name{font-size:12px;font-weight:900;color:#172554;text-align:right;direction:rtl}
-        .pdf-bar-track{height:24px;background:#e2e8f0;border-radius:999px;overflow:hidden;border:1px solid #cbd5e1}
-        .pdf-bar-fill{height:100%;border-radius:999px;box-shadow:inset 0 -5px 10px rgba(0,0,0,.12)}
-        .pdf-bar-value{font-size:11px;font-weight:900;color:#0f172a;line-height:1.35;direction:ltr;unicode-bidi:plaintext;text-align:left}
-        .pdf-bar-value span{color:#64748b;font-size:10px}
-        .pdf-footer{margin-top:12px;text-align:center;color:#64748b;font-size:10px;font-weight:800}
-      </style>`+
-      '<div class="pdf-wrap">'+
-        '<div class="pdf-hero">'+
-          '<h1>تقرير الإيرادات المجمّع</h1>'+ 
-          '<p>التجميع: Region 1 + ccbs1 / Region 2 + ccbs2 / Region 3 + ccbs3 / Region 4 + ccbs4</p>'+ 
-          '<p>النطاق: '+this.escapeHtml(opts.rangeLabel || 'جميع البيانات')+'</p>'+ 
-        '</div>'+ 
-        '<div class="pdf-summary-grid">'+
-          '<div class="pdf-card"><div class="k">إجمالي SYP</div><div class="v">'+fmt(totalSYP.toFixed(0))+'</div></div>'+ 
-          '<div class="pdf-card"><div class="k">إجمالي USD</div><div class="v">'+fmt(totalUSD.toFixed(2))+'</div></div>'+ 
-          '<div class="pdf-card"><div class="k">سعر الصرف</div><div class="v">'+(effectiveRate>0?fmt(effectiveRate.toFixed(0)):'-')+'</div></div>'+ 
-          '<div class="pdf-card"><div class="k">عدد العمليات</div><div class="v">'+fmt(String(list.length))+'</div></div>'+ 
-        '</div>'+ 
-        '<div class="pdf-box">'+
-          '<div class="pdf-box-title">الفلاتر المستخدمة</div>'+ 
-          '<div>'+chips+'</div>'+ 
-          '<div style="margin-top:8px;color:#64748b;font-size:11px;font-weight:800">مصدر سعر الصرف: '+this.escapeHtml(rateInfo.text || 'غير متوفر')+'</div>'+ 
-        '</div>'+ 
-        '<div class="pdf-box">'+
-          '<div class="pdf-box-title">جدول المجموع المجمّع</div>'+ 
-          '<table class="pdf-table">'+
-            '<thead><tr><th>الاسم الظاهر</th><th>الأسماء المدموجة</th><th>العدد</th><th>المجموع SYP</th><th>المجموع USD</th><th>النسبة</th></tr></thead>'+ 
-            '<tbody>'+rows+'</tbody>'+ 
-          '</table>'+ 
-        '</div>'+ 
-        '<div class="pdf-box">'+
-          '<div class="pdf-box-title">الرسم البياني المجمّع</div>'+ 
-          '<div class="pdf-bar-chart">'+bars+'</div>'+ 
-        '</div>'+ 
-        '<div class="pdf-footer">تم إنشاء التقرير بتاريخ '+new Date().toLocaleString('ar-SA')+'</div>'+ 
-      '</div>';
     },
 
     makeChartImages: async function(labels, sypValues, pieValues){
@@ -3489,15 +3770,33 @@
       }
 
       let summary = this.buildGroupedSummary(list);
+
+      let labels = summary.map(x=>x.label);
+      let sypValues = summary.map(x=>x.syp);
+
+      let total = sypValues.reduce((a,b)=>a+b,0);
+
+      let pieValues = sypValues.map(v=>
+        total>0 ? parseFloat(((v/total)*100).toFixed(1)) : 0
+      );
+
+      let charts = await this.makeChartImages(labels, sypValues, pieValues);
+
       let rangeLabel = (dateFrom&&dateTo) ? ('من '+dateFrom+' إلى '+dateTo) : 'جميع البيانات';
 
-      let html = this.buildGroupedPdfHtml(summary, list, { rangeLabel });
+      let html = this.buildGroupedPdfHtml(summary, list, {
+        rangeLabel,
+        pieImg:charts.pieImg,
+        barImg:charts.barImg
+      });
 
-      let fileName = 'تقرير_الإيرادات_المجمع';
+      let fileName = 'تقرير_الإيرادات';
+
       if(dateFrom&&dateTo) fileName += '_'+dateFrom+'_إلى_'+dateTo;
+
       fileName += '.pdf';
 
-      await this.renderPDFFile(html, fileName, 'portrait');
+      await this.renderPDFFile(html, fileName, 'landscape');
     },
 
     exportGroupedPDFWithFilters: async function(){
